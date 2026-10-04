@@ -1,0 +1,82 @@
+Employee_ID,Employee_Name,Age,Gender,Department,Job_Role,Experience_Years,Education,Employment_Type,Salary,Performance_Rating,Joining_Date,Projects_Completed,Working_Hours_Per_Day,Bonus,Attendance_Percentage,Training_Hours,Leave_Days,Job_Satisfaction,Promotion_Eligible,Overtime_Hours,Manager_Rating
+EMP001,Employee_001,31,Female,Marketing,Marketing Analyst,2,Graduate,Full-Time,44273.0,5.0,2012-03-05,3,8.4,1764.0,82.7,3,7,2.0,No,15,3
+EMP002,Employee_002,34,Female,Marketing,Marketing Executive,12,Postgraduate,Full-Time,75636.0,3.0,2012-04-03,29,6.7,2432.0,92.9,1,14,1.0,No,10,2
+EMP003,Employee_003,36,Female,HR,HR Analyst,10,Graduate,Full-Time,75148.0,3.0,2022-02-03,16,9.1,3220.0,91.6,3,16,3.0,No,15,4
+EMP004,Employee_004,27,Male,IT,Software Engineer,1,Graduate,Full-Time,58946.0,2.0,2011-12-19,2,9.1,1941.0,94.1,8,13,5.0,No,12,2
+EMP005,Employee_005,37,Female,HR,Recruiter,15,Graduate,Part-Time,79886.0,3.0,2020-08-06,20,9.1,6159.0,97.0,5,13,4.0,No,16,4
+EMP006,Employee_006,35,Female,Sales,Sales Analyst,7,Graduate,Full-Time,50677.0,4.0,2013-08-25,13,7.3,2252.0,89.1,7,7,4.0,No,7,4
+EMP007,Employee_007,26,Male,Finance,Financial Analyst,1,Postgraduate,Part-Time,48048.0,3.0,2015-12-01,5,8.9,3432.0,81.7,4,4,4.0,No,7,4
+EMP008,Employee_008,40,Male,IT,Web Developer,14,Graduate,Full-Time,102700.0,4.0,2017-12-27,31,8.0,6340.0,80.8,7,5,4.0,Yes,3,2
+EMP009,Employee_009,41,Female,Marketing,Digital Marketer,14,Postgraduate,Full-Time,81525.0,2.0,2017-06-08,23,8.3,1675.0,93.9,2,7,3.0,No,18,2
+EMP010,Employee_010,39,Female,IT,Data Analyst,10,Postgraduate,Full-Time,86434.0,2.0,2013-08-24,24,10.7,4305.0,83.9,1,16,4.0,No,18,3
+EMP011,Employee_011,33,Male,Sales,Sales Executive,7,Graduate,Full-Time,57297.0,4.0,2023-05-16,16,9.3,6348.0,89.3,3,14,3.0,Yes,13,5
+EMP012,Employee_012,28,Female,IT,Data Analyst,7,Graduate,Full-Time,68969.0,4.0,2014-10-08,11,8.7,1743.0,78.3,3,11,4.0,Yes,13,3
+EMP013,Employee_013,39,Female,Marketing,Marketing Executive,14,,Full-Time,88501.0,4.0,2016-03-19,17,10.2,3401.0,89.4,2,18,3.0,No,20,5
+EMP014,Employee_014,40,Male,Sales,Sales Analyst,14,Postgraduate,Full-Time,70834.0,4.0,2022-04-12,16,9.5,5763.0,84.7,2,10,2.0,No,0,3
+EMP015,Employee_015,27,Female,Marketing,Marketing Executive,2,Graduate,Full-Time,44983.0,3.0,2011-10-06,4,7.9,2255.0,98.8,8,8,3.0,No,8,3
+EMP016,Employee_016,23,Male,IT,Web Developer,1,Graduate,Full-Time,53993.0,2.0,2017-09-03,2,7.6,1741.0,87.3,7,4,4.0,No,13,5
+EMP017,Employee_017,41,Male,IT,Data Analyst,14,Postgraduate,Full-Time,85317.0,3.0,2020-12-02,17,8.8,3321.0,88.1,7,16,2.0,No,11,5
+EMP018,Employee_018,31,Female,Sales,Sales Executive,5,Postgraduate,Full-Time,50015.0,3.0,2012-01-13,11,7.5,1514.0,93.1,1,4,3.0,No,12,5
+EMP019,Employee_019,24,Male,IT,Web Developer,3,Postgraduate,Full-Time,63663.0,4.0,2016-09-12,5,7.3,2118.0,97.9,3,18,4.0,No,17,5
+EMP020,Employee_020,30,Male,IT,Web Developer,2,Graduate,Full-Time,55784.0,4.0,2023-11-27,5,7.5,4790.0,91.8,8,4,5.0,No,11,3
+EMP021,Employee_021,38,Male,Marketing,Marketing Analyst,11,Postgraduate,Full-Time,84311.0,3.0,2024-11-15,23,8.7,3871.0,94.4,1,4,3.0,No,13,4
+EMP022,Employee_022,33,Male,Marketing,Marketing Executive,6,Graduate,Full-Time,57179.0,1.0,2018-05-22,13,8.2,1387.0,87.6,1,8,5.0,No,15,5
+EMP023,Employee_023,29,Male,IT,Software Engineer,6,Postgraduate,Full-Time,79215.0,1.0,2014-12-03,9,8.6,1787.0,94.1,2,9,3.0,No,0,4
+EMP024,Employee_024,37,Female,Sales,Business Development Executive,9,Graduate,Full-Time,54272.0,3.0,2021-06-24,19,9.8,1790.0,85.2,5,10,4.0,No,7,3
+EMP025,Employee_025,27,Female,Marketing,Marketing Analyst,2,Graduate,Full-Time,50566.0,3.0,2018-12-03,3,9.2,2531.0,85.1,7,4,4.0,No,15,5
+EMP026,Employee_026,28,Male,HR,HR Analyst,6,Graduate,Full-Time,58675.0,4.0,2021-11-16,16,9.9,5124.0,95.6,5,8,4.0,Yes,10,5
+EMP027,Employee_027,23,Female,Marketing,Marketing Analyst,2,Graduate,Full-Time,44045.0,3.0,2022-07-22,4,8.0,1087.0,89.4,6,16,5.0,No,4,4
+EMP028,Employee_028,36,Male,Marketing,Marketing Analyst,11,Graduate,Full-Time,74388.0,,2011-03-01,24,7.9,5734.0,89.8,6,6,4.0,Yes,16,4
+EMP029,Employee_029,29,Female,HR,HR Executive,4,Postgraduate,Full-Time,51253.0,2.0,2011-04-19,7,8.0,2521.0,93.0,8,9,3.0,No,3,4
+EMP030,Employee_030,26,Female,IT,Software Engineer,5,Postgraduate,Full-Time,71497.0,1.0,2022-10-16,10,8.1,1630.0,86.6,3,7,4.0,No,13,4
+EMP031,Employee_031,28,Male,Sales,Sales Executive,5,Postgraduate,Full-Time,58354.0,2.0,2012-03-12,7,9.1,2160.0,89.8,3,4,3.0,No,13,4
+EMP032,Employee_032,41,Male,IT,Data Analyst,12,Graduate,Full-Time,92634.0,5.0,2020-03-18,20,8.2,3997.0,89.4,6,14,3.0,Yes,2,3
+EMP033,Employee_033,30,Female,HR,Recruiter,4,Postgraduate,Part-Time,54258.0,3.0,2012-03-06,8,8.7,4231.0,99.5,4,3,4.0,No,18,5
+EMP034,Employee_034,37,Male,Sales,Sales Analyst,8,Graduate,Full-Time,63905.0,3.0,2021-08-12,10,8.7,1151.0,89.4,8,10,5.0,No,17,4
+EMP035,Employee_035,26,Male,Marketing,Digital Marketer,5,Graduate,Full-Time,60967.0,3.0,2023-09-09,10,9.6,2834.0,90.3,4,11,5.0,No,3,1
+EMP036,Employee_036,36,Female,IT,Web Developer,9,Graduate,Part-Time,81889.0,4.0,2016-06-25,23,7.6,5552.0,82.8,4,7,4.0,No,15,2
+EMP037,Employee_037,38,Male,Marketing,Marketing Analyst,11,Postgraduate,Full-Time,79302.0,4.0,2022-09-08,22,8.7,3683.0,85.3,8,17,2.0,Yes,12,4
+EMP038,Employee_038,41,Male,Finance,Accountant,15,Postgraduate,Full-Time,84920.0,4.0,2021-09-10,23,9.3,4196.0,93.3,4,9,2.0,Yes,1,3
+EMP039,Employee_039,33,Male,HR,HR Analyst,10,Graduate,Part-Time,72447.0,4.0,2020-11-17,15,7.7,4804.0,80.5,8,6,3.0,No,15,3
+EMP040,Employee_040,26,Male,HR,HR Analyst,4,Graduate,Full-Time,48697.0,5.0,2019-11-10,9,6.5,4220.0,90.1,7,11,3.0,No,19,3
+EMP041,Employee_041,36,Male,Finance,Accountant,9,Graduate,Full-Time,70458.0,4.0,2020-02-26,22,8.7,7070.0,93.6,5,14,3.0,Yes,16,2
+EMP042,Employee_042,27,Female,Marketing,Marketing Analyst,6,Postgraduate,Full-Time,67639.0,4.0,2020-02-16,17,9.4,2569.0,87.3,5,12,4.0,Yes,5,5
+EMP043,Employee_043,32,Male,Marketing,Digital Marketer,5,Graduate,Full-Time,52849.0,1.0,2016-09-15,7,7.6,1174.0,91.3,2,7,4.0,No,13,4
+EMP044,Employee_044,28,Female,HR,HR Executive,1,Postgraduate,Full-Time,36521.0,2.0,2024-09-27,6,7.4,1576.0,90.3,7,11,4.0,No,19,4
+EMP045,Employee_045,35,Female,Finance,Accountant,9,Graduate,Full-Time,,4.0,2012-04-09,19,8.6,5327.0,85.8,4,13,4.0,Yes,3,4
+EMP046,Employee_046,42,Male,Sales,Business Development Executive,15,Graduate,Full-Time,75609.0,5.0,2011-09-07,21,8.8,2645.0,91.9,5,5,4.0,Yes,10,5
+EMP047,Employee_047,28,Female,Sales,Sales Executive,1,Graduate,Full-Time,41702.0,4.0,2016-11-06,5,7.8,2677.0,88.4,7,13,5.0,No,18,2
+EMP048,Employee_048,38,Female,Finance,Accountant,12,Graduate,Full-Time,89540.0,4.0,2016-11-19,22,9.2,8085.0,95.4,4,18,5.0,No,2,4
+EMP049,Employee_049,36,Male,Finance,Accountant,10,Graduate,Full-Time,63927.0,3.0,2023-11-14,16,10.0,2337.0,92.4,6,6,4.0,No,7,4
+EMP050,Employee_050,33,Male,HR,HR Executive,4,Postgraduate,Full-Time,47995.0,4.0,2021-04-13,10,7.2,3070.0,99.1,2,9,5.0,No,20,5
+EMP051,Employee_051,31,Male,Marketing,Digital Marketer,8,Postgraduate,Full-Time,62553.0,1.0,2016-12-05,15,7.9,1489.0,86.3,5,15,4.0,No,20,3
+EMP052,Employee_052,39,Female,IT,Software Engineer,11,Postgraduate,Full-Time,76925.0,5.0,2016-12-04,19,8.9,10271.0,91.2,2,18,3.0,No,7,1
+EMP053,Employee_053,38,Female,HR,Recruiter,9,Graduate,Full-Time,62976.0,4.0,2013-07-10,14,8.6,2277.0,83.8,7,17,4.0,Yes,11,4
+EMP054,Employee_054,44,Male,IT,Web Developer,15,Postgraduate,Full-Time,86093.0,4.0,2020-02-07,32,8.9,4967.0,97.3,3,16,2.0,No,0,3
+EMP055,Employee_055,32,Female,Finance,Financial Analyst,7,Postgraduate,Full-Time,64029.0,5.0,2020-10-19,9,9.1,8869.0,93.9,2,7,4.0,Yes,18,3
+EMP056,Employee_056,31,Male,HR,Recruiter,10,Postgraduate,Full-Time,57225.0,4.0,2019-08-10,16,8.1,3997.0,86.5,2,17,3.0,Yes,0,5
+EMP057,Employee_057,37,Male,Sales,Business Development Executive,12,Graduate,Part-Time,73961.0,4.0,2015-09-24,18,7.4,2160.0,81.4,5,15,4.0,Yes,7,1
+EMP058,Employee_058,40,Male,Marketing,Digital Marketer,15,Graduate,Full-Time,74734.0,3.0,2024-12-10,34,8.2,2301.0,91.4,6,13,3.0,No,14,5
+EMP059,Employee_059,34,Male,Finance,Financial Analyst,12,Postgraduate,Full-Time,81806.0,3.0,2016-12-17,20,8.0,5532.0,93.1,4,5,,No,2,3
+EMP060,Employee_060,36,Male,Sales,Sales Executive,7,Graduate,Full-Time,63767.0,5.0,2018-10-19,14,7.2,2141.0,90.9,3,6,3.0,Yes,18,3
+EMP061,Employee_061,35,Male,Finance,Financial Analyst,8,Postgraduate,Full-Time,77386.0,2.0,2012-04-02,11,9.2,1203.0,87.1,3,8,5.0,No,5,5
+EMP062,Employee_062,30,Female,Finance,Financial Analyst,8,Postgraduate,Full-Time,62908.0,4.0,2019-05-09,14,9.4,6591.0,86.5,5,17,3.0,No,9,3
+EMP063,Employee_063,29,Female,Marketing,Marketing Executive,8,Postgraduate,Full-Time,55282.0,4.0,2023-04-13,11,8.4,2206.0,89.9,8,9,2.0,Yes,5,3
+EMP064,Employee_064,27,Female,IT,System Engineer,3,Postgraduate,Full-Time,58076.0,3.0,2023-12-21,5,8.5,2224.0,85.6,3,18,2.0,No,2,4
+EMP065,Employee_065,35,Female,HR,Recruiter,7,Graduate,Full-Time,51864.0,5.0,2022-09-24,11,8.4,2275.0,96.7,1,9,3.0,Yes,9,2
+EMP066,Employee_066,40,Male,IT,System Engineer,12,Postgraduate,Full-Time,94572.0,1.0,2022-05-03,28,8.0,1034.0,93.2,3,15,4.0,No,15,4
+EMP067,Employee_067,36,Male,Marketing,Digital Marketer,8,Postgraduate,Full-Time,72000.0,4.0,2018-11-08,17,8.2,4866.0,86.0,2,11,4.0,No,5,4
+EMP068,Employee_068,26,Male,Marketing,Digital Marketer,3,Postgraduate,Full-Time,55480.0,4.0,2012-06-05,9,7.4,4504.0,91.9,3,9,4.0,No,4,3
+EMP069,Employee_069,30,Female,HR,HR Executive,9,Graduate,Full-Time,63274.0,3.0,2020-01-01,18,8.9,3524.0,99.5,4,12,3.0,No,9,4
+EMP070,Employee_070,28,Female,Marketing,Marketing Analyst,7,Graduate,Full-Time,67405.0,5.0,2022-02-06,13,8.5,7192.0,82.8,8,11,4.0,Yes,7,4
+EMP071,Employee_071,25,Female,Sales,Sales Analyst,3,Postgraduate,Full-Time,46830.0,4.0,2014-08-02,6,9.7,3323.0,,2,4,3.0,No,1,4
+EMP072,Employee_072,25,Female,Marketing,Marketing Analyst,2,Postgraduate,Full-Time,50299.0,3.0,2014-05-05,8,8.0,2272.0,87.9,3,14,3.0,No,19,3
+EMP073,Employee_073,32,Female,IT,System Engineer,10,Graduate,Full-Time,82656.0,3.0,2014-12-19,20,7.8,5300.0,89.0,6,13,3.0,No,13,4
+EMP074,Employee_074,29,Male,Sales,Sales Analyst,2,Postgraduate,Full-Time,39410.0,4.0,2012-06-22,5,7.5,3798.0,91.1,3,3,2.0,No,2,3
+EMP075,Employee_075,27,Female,Finance,Financial Analyst,2,Postgraduate,Full-Time,57339.0,4.0,2012-01-13,5,7.2,5056.0,92.9,8,8,5.0,No,19,4
+EMP076,Employee_076,34,Female,Finance,Financial Analyst,11,Graduate,Full-Time,76746.0,4.0,2020-01-15,23,8.9,5144.0,91.1,2,16,3.0,Yes,12,3
+EMP077,Employee_077,36,Female,HR,Recruiter,15,Postgraduate,Full-Time,83125.0,4.0,2024-12-11,18,9.4,,91.9,5,11,3.0,Yes,9,3
+EMP078,Employee_078,29,Female,IT,System Engineer,4,Graduate,Full-Time,70243.0,2.0,2012-03-18,6,9.3,2947.0,82.5,8,10,3.0,No,10,4
+EMP079,Employee_079,29,Female,Finance,Financial Analyst,1,Graduate,Part-Time,49613.0,1.0,2022-04-18,2,7.4,487.0,89.7,4,7,3.0,No,1,5
+EMP080,Employee_080,32,Male,HR,HR Analyst,8,Graduate,Full-Time,69796.0,3.0,2013-02-22,20,9.7,4259.0,88.6,4,12,3.0,No,18,5
+EMP081,Employee_081,36,Male,HR,Recruiter,8,Graduate,Full-Time,69133.0,3.0,2012-01-09,17,8.2,4719.0,93.8,6,7,3.0,No,7,3

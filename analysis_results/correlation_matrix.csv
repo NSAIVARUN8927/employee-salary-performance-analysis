@@ -1,0 +1,8 @@
+,Age,Experience_Years,Joining_Year,Basic_Salary,Bonus,Total_Salary,Performance_Score
+Age,1.0,0.865,0.138,0.709,0.249,0.704,0.184
+Experience_Years,0.865,1.0,0.21,0.827,0.323,0.826,0.196
+Joining_Year,0.138,0.21,1.0,0.106,0.039,0.106,0.065
+Basic_Salary,0.709,0.827,0.106,1.0,0.342,0.993,0.03
+Bonus,0.249,0.323,0.039,0.342,1.0,0.452,0.536
+Total_Salary,0.704,0.826,0.106,0.993,0.452,1.0,0.097
+Performance_Score,0.184,0.196,0.065,0.03,0.536,0.097,1.0
