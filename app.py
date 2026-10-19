@@ -335,7 +335,11 @@ def main():
     with st.sidebar:
         st.markdown(f"### {user['full_name'] or user['username']}")
         st.caption(f"{user['role'].title()} account")
-        page = st.radio("Go to", pages)
+        page = st.selectbox(
+            "Navigate to page",
+            pages,
+            key="page_navigation"
+        )
         up = st.session_state.get("upload")
         src = st.selectbox("Data source", ["Employee database"] + (["Uploaded file"] if up is not None else []))
         if st.button("Sign out"):
