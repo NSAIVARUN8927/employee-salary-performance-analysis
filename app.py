@@ -58,31 +58,166 @@ def show(fig):
     plt.close(fig)
 
 
+
 def page_dashboard(df):
-    banner("Executive dashboard", f"Welcome, {st.session_state.user['full_name'] or st.session_state.user['username']}")
-    depts = sorted(df["Department"].unique())
-    f = df[df["Department"].isin(st.multiselect("Departments", depts, default=depts))]
-    if f.empty:
-        st.warning("Select at least one department to see results.")
+    banner(
+        "Executive Dashboard",
+        f"Welcome, {st.session_state.user['full_name'] or st.session_state.user['username']}"
+    )
+
+    st.subheader("Dashboard Filters")
+
+    # Department and designation filters
+    c1, c2, c3 = st.columns(3)
+
+    departments = sorted(df["Department"].dropna().unique().tolist())
+    designations = sorted(df["Designation"].dropna().astype(str).unique().tolist())
+
+    with c1:
+        selected_departments = st.multiselect(
+            "Department",
+            departments,
+            default=departments,
+            key="dashboard_departments"
+        )
+
+    with c2:
+        selected_designations = st.multiselect(
+            "Designation",
+            designations,
+            default=designations,
+            key="dashboard_designations"
+        )
+
+    with c3:
+        chart_choice = st.selectbox(
+            "Chart to display",
+            [
+                "All charts",
+                "Department-wise salary",
+                "Salary distribution",
+                "Department-wise performance",
+                "Salary vs. performance"
+            ],
+            key="dashboard_chart"
+        )
+
+    # Salary filter
+    salary_min = float(df["Basic_Salary"].min())
+    salary_max = float(df["Basic_Salary"].max())
+
+    if salary_min == salary_max:
+        selected_salary = (salary_min, salary_max)
+        st.caption(f"Salary filter: {salary_min:,.0f}")
+    else:
+        selected_salary = st.slider(
+            "Basic salary range",
+            min_value=salary_min,
+            max_value=salary_max,
+            value=(salary_min, salary_max),
+            key="dashboard_salary"
+        )
+
+    # Experience and performance filters
+    c4, c5 = st.columns(2)
+
+    exp_min = int(df["Experience_Years"].min())
+    exp_max = int(df["Experience_Years"].max())
+
+    with c4:
+        if exp_min == exp_max:
+            selected_experience = (exp_min, exp_max)
+            st.caption(f"Experience: {exp_min} years")
+        else:
+            selected_experience = st.slider(
+                "Experience (years)",
+                min_value=exp_min,
+                max_value=exp_max,
+                value=(exp_min, exp_max),
+                key="dashboard_experience"
+            )
+
+    perf_min = float(df["Performance_Score"].min())
+    perf_max = float(df["Performance_Score"].max())
+
+    with c5:
+        if perf_min == perf_max:
+            selected_performance = (perf_min, perf_max)
+            st.caption(f"Performance score: {perf_min}")
+        else:
+            selected_performance = st.slider(
+                "Performance score",
+                min_value=perf_min,
+                max_value=perf_max,
+                value=(perf_min, perf_max),
+                key="dashboard_performance"
+            )
+
+    # Apply filters
+    filtered_df = df[
+        df["Department"].isin(selected_departments)
+        & df["Designation"].astype(str).isin(selected_designations)
+        & df["Basic_Salary"].between(*selected_salary)
+        & df["Experience_Years"].between(*selected_experience)
+        & df["Performance_Score"].between(*selected_performance)
+    ]
+
+    if filtered_df.empty:
+        st.warning("No employees match your selected filters.")
         return
-    k = an.kpis(f)
-    kpis([("Employees", k["total_employees"]), ("Average salary", f"{k['average_salary']:,.0f}"),
-          ("Median salary", f"{k['median_salary']:,.0f}"), ("Minimum salary", f"{k['minimum_salary']:,.0f}")])
+
+    st.caption(
+        f"Showing {len(filtered_df):,} of {len(df):,} employee records."
+    )
+
+    # KPI cards
+    k = an.kpis(filtered_df)
+
+    kpis([
+        ("Employees", f"{k['total_employees']:,}"),
+        ("Average salary", f"{k['average_salary']:,.0f}"),
+        ("Median salary", f"{k['median_salary']:,.0f}"),
+        ("Minimum salary", f"{k['minimum_salary']:,.0f}")
+    ])
+
     st.write("")
-    kpis([("Maximum salary", f"{k['maximum_salary']:,.0f}"), ("Average performance", f"{k['average_performance']:.2f}"),
-          ("Maximum performance", f"{k['maximum_performance']:.2f}")])
-    st.subheader("Automated insights")
-    for line in an.insights(f):
+
+    kpis([
+        ("Maximum salary", f"{k['maximum_salary']:,.0f}"),
+        ("Average performance", f"{k['average_performance']:.2f}"),
+        ("Maximum performance", f"{k['maximum_performance']:.2f}")
+    ])
+
+    # Automated insights
+    st.subheader("Automated Insights")
+
+    for line in an.insights(filtered_df):
         st.info(line)
-    a, b = st.columns(2)
-    with a:
-        show(an.fig_dept_salary(f))
-        show(an.fig_salary_dist(f))
-    with b:
-        show(an.fig_dept_perf(f))
-        show(an.fig_salary_vs_perf(f))
 
+    # Chart selection
+    st.subheader("Visual Analytics")
 
+    chart_functions = {
+        "Department-wise salary": an.fig_dept_salary,
+        "Salary distribution": an.fig_salary_dist,
+        "Department-wise performance": an.fig_dept_perf,
+        "Salary vs. performance": an.fig_salary_vs_perf
+    }
+
+    if chart_choice == "All charts":
+        a, b = st.columns(2)
+
+        with a:
+            show(an.fig_dept_salary(filtered_df))
+            show(an.fig_salary_dist(filtered_df))
+
+        with b:
+            show(an.fig_dept_perf(filtered_df))
+            show(an.fig_salary_vs_perf(filtered_df))
+
+    else:
+        show(chart_functions[chart_choice](filtered_df))
+        
 def manage_employees(df):
     uid = st.session_state.user["id"]
     with st.expander("Add an employee"), st.form("add_emp"):
