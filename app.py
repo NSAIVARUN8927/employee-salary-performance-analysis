@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-
+import extra_streamlit_components as stx
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from backend import analytics as an, auth, database as db, sql_queries as Q
