@@ -56,14 +56,9 @@ cookie_manager = stx.CookieManager(
 
 
 def save_login_cookie(user):
-    token = create_auth_token(user)  # Keep your existing token-generation logic
-
-    cookie_manager.set(
-        cookie=COOKIE_NAME,
-        val=token,
-        key="staffmetrics_save_auth_cookie",
-    )
-
+    # Persistent cookie login is disabled until secure token
+    # generation and server-side validation are implemented.
+    return
 def restore_login_cookie():
     token = cookie_manager.get(COOKIE_NAME)
 
