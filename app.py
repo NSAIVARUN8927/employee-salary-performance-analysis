@@ -230,7 +230,7 @@ def auth_page():
 
                         # This flag records the user's preference for
                         # the current Streamlit session only.
-                        st.session_state.remember_me = remember_me
+                        
 
                         st.rerun()
                     else:
