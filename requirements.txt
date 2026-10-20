@@ -1,5 +1,5 @@
-streamlit>=1.40
+streamlit
 pandas
-numpy
 matplotlib
-seaborn
+extra-streamlit-components
+itsdangerous
