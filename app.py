@@ -56,22 +56,13 @@ cookie_manager = stx.CookieManager(
 
 
 def save_login_cookie(user):
-    safe_user = {
-        "id": user["id"],
-        "username": user["username"],
-        "full_name": user.get("full_name") or user["username"],
-        "role": user["role"],
-    }
-
-    token = auth_serializer.dumps(safe_user)
+    token = create_auth_token(user)  # Keep your existing token-generation logic
 
     cookie_manager.set(
         cookie=COOKIE_NAME,
-        value=token,
-        expires_at=datetime.now() + timedelta(days=7),
+        val=token,
         key="staffmetrics_save_auth_cookie",
     )
-
 
 def restore_login_cookie():
     token = cookie_manager.get(COOKIE_NAME)
