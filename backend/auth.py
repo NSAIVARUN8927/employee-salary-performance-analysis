@@ -34,9 +34,24 @@ def register(username, email, full_name, password):
 
 def login(username, password):
     init_db()
+
+    login_id = username.strip()
+
     with get_conn() as c:
-        row = c.execute("SELECT * FROM users WHERE username=?", (username.strip(),)).fetchone()
-    if row and hmac.compare_digest(row["password_hash"], _hash(password, row["salt"])):
+        row = c.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE username = ? OR email = ?
+            """,
+            (login_id, login_id.lower())
+        ).fetchone()
+
+    if row and hmac.compare_digest(
+        row["password_hash"],
+        _hash(password, row["salt"])
+    ):
         log_activity(row["id"], "signed in")
         return dict(row)
+
     return None
