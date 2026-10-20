@@ -70,13 +70,11 @@ def save_login_cookie(user):
     token = auth_serializer.dumps(safe_user)
 
     cookie_manager.set(
-        cookie=COOKIE_NAME,
-        value=token,
+        COOKIE_NAME,
+        token,
         expires_at=datetime.now() + timedelta(days=7),
         key="staffmetrics_save_auth_cookie",
     )
-
-
 def restore_login_cookie():
     """Restore the signed-in user after a browser refresh."""
 
