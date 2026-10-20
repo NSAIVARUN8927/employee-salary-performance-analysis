@@ -1,13 +1,14 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+import extra_streamlit_components as stx
 
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from backend import analytics as an, auth, database as db
 
 
@@ -16,7 +17,7 @@ from backend import analytics as an, auth, database as db
 # ============================================================
 
 st.set_page_config(
-    page_title="Employee Salary & Performance Analysis",
+    page_title="StaffMetrics | Employee Analytics",
     page_icon="📊",
     layout="wide",
 )
@@ -30,11 +31,8 @@ if not db.is_seeded():
 
 
 # ============================================================
-# SESSION AND LOGIN CONFIGURATION
+# LOGIN COOKIE CONFIGURATION
 # ============================================================
-
-# The app uses Streamlit session state for login.
-# This avoids the extra_streamlit_components dependency.
 
 COOKIE_NAME = "staffmetrics_auth"
 COOKIE_MAX_AGE = 7 * 24 * 60 * 60
@@ -45,21 +43,19 @@ if not APP_SECRET:
     try:
         APP_SECRET = st.secrets["STAFFMETRICS_SECRET_KEY"]
     except (KeyError, FileNotFoundError):
-        APP_SECRET = (
-            "local-development-only-change-this-secret-before-deploying"
-        )
+        APP_SECRET = "local-development-only-change-this-secret"
 
 auth_serializer = URLSafeTimedSerializer(
     APP_SECRET,
     salt="staffmetrics-auth-v1",
 )
 
+cookie_manager = stx.CookieManager(
+    key="staffmetrics_cookie_manager"
+)
+
 
 def save_login_cookie(user):
-    """
-    Create a signed token for possible future cookie integration.
-    This function does not write a browser cookie.
-    """
     safe_user = {
         "id": user["id"],
         "username": user["username"],
@@ -67,126 +63,308 @@ def save_login_cookie(user):
         "role": user["role"],
     }
 
-    return auth_serializer.dumps(safe_user)
+    token = auth_serializer.dumps(safe_user)
+
+    cookie_manager.set(
+        cookie=COOKIE_NAME,
+        value=token,
+        expires_at=datetime.now() + timedelta(days=7),
+        key="staffmetrics_save_auth_cookie",
+    )
 
 
 def restore_login_cookie():
-    """
-    Browser-cookie restoration is not enabled in this version.
-    Users sign in again after their Streamlit session ends.
-    """
-    return None
+    token = cookie_manager.get(COOKIE_NAME)
+
+    if not token:
+        return None
+
+    try:
+        user = auth_serializer.loads(
+            token,
+            max_age=COOKIE_MAX_AGE,
+        )
+
+        required_fields = {
+            "id",
+            "username",
+            "full_name",
+            "role",
+        }
+
+        if (
+            not required_fields.issubset(user)
+            or user["role"] not in {"admin", "user"}
+        ):
+            clear_login_cookie()
+            return None
+
+        return user
+
+    except (BadSignature, SignatureExpired):
+        clear_login_cookie()
+        return None
 
 
 def clear_login_cookie():
-    """Clear the current Streamlit login session."""
-    st.session_state.pop("user", None)
+    try:
+        cookie_manager.delete(COOKIE_NAME)
+    except Exception:
+        pass
 
 
 # ============================================================
-# GLOBAL STYLING
+# THEME CONFIGURATION
+# ============================================================
+
+if "theme_choice" not in st.session_state:
+    st.session_state["theme_choice"] = "Light"
+
+APP_THEME = st.session_state.get("theme_choice", "Light")
+
+if APP_THEME == "Dark":
+    BG = "#0b1120"
+    CARD = "#151e30"
+    SIDEBAR_BG = "#111827"
+    TEXT = "#e5e7eb"
+    MUTED = "#aab6c8"
+    BORDER = "#334155"
+    INPUT_BG = "#1e293b"
+    TABLE_BG = "#151e30"
+    ACCENT = "#2dd4bf"
+    BANNER_BG = "#14213d"
+    KPI_BG = "#182538"
+else:
+    BG = "#f5f7fb"
+    CARD = "#ffffff"
+    SIDEBAR_BG = "#ffffff"
+    TEXT = "#172033"
+    MUTED = "#64748b"
+    BORDER = "#dbe3ee"
+    INPUT_BG = "#ffffff"
+    TABLE_BG = "#ffffff"
+    ACCENT = "#0f766e"
+    BANNER_BG = "#14213d"
+    KPI_BG = "#ffffff"
+
+
+# ============================================================
+# GLOBAL CSS — LIGHT AND DARK THEMES
 # ============================================================
 
 st.markdown(
-    """
+    f"""
     <style>
     @import url(
         'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap'
     );
 
-    html, body, [class*="css"] {
+    :root {{
+        color-scheme: {"dark" if APP_THEME == "Dark" else "light"};
+        --app-bg: {BG};
+        --card-bg: {CARD};
+        --sidebar-bg: {SIDEBAR_BG};
+        --text-color: {TEXT};
+        --muted-color: {MUTED};
+        --border-color: {BORDER};
+        --input-bg: {INPUT_BG};
+        --table-bg: {TABLE_BG};
+        --accent-color: {ACCENT};
+        --banner-bg: {BANNER_BG};
+        --kpi-bg: {KPI_BG};
+    }}
+
+    html, body, [class*="css"] {{
         font-family: 'IBM Plex Sans', sans-serif;
-    }
+    }}
 
-    .block-container {
+    .stApp {{
+        background: var(--app-bg);
+        color: var(--text-color);
+    }}
+
+    [data-testid="stAppViewContainer"] {{
+        background: var(--app-bg);
+    }}
+
+    [data-testid="stHeader"] {{
+        background: var(--app-bg);
+    }}
+
+    .block-container {{
+        max-width: 1350px;
         padding-top: 1.6rem;
-        max-width: 1250px;
-    }
+        padding-bottom: 3rem;
+    }}
 
-    [data-testid="stSidebar"] {
-        background: #14213d;
-    }
+    /* Sidebar background and text */
+    [data-testid="stSidebar"] {{
+        background: var(--sidebar-bg) !important;
+        border-right: 1px solid var(--border-color);
+    }}
 
-    [data-testid="stSidebar"] * {
-        color: #e6ebf5;
-    }
+    [data-testid="stSidebar"] * {{
+        color: var(--text-color);
+    }}
 
-    h1, h2, h3 {
-        color: #14213d;
-        font-weight: 600;
-    }
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {{
+        color: var(--text-color) !important;
+    }}
 
-    .banner {
-        background: #14213d;
-        color: #fff;
-        padding: 22px 28px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
+    /* Dropdowns and selected values */
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+    [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {{
+        background: var(--input-bg) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-color) !important;
+    }}
 
-    .banner h1 {
-        color: #fff;
+    [data-testid="stSelectbox"] input,
+    [data-testid="stMultiSelect"] input {{
+        color: var(--text-color) !important;
+    }}
+
+    /* Dropdown popup options */
+    [data-baseweb="popover"] {{
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border-color) !important;
+    }}
+
+    [data-baseweb="menu"] {{
+        background: var(--card-bg) !important;
+    }}
+
+    [role="option"] {{
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+    }}
+
+    [role="option"]:hover {{
+        background: var(--input-bg) !important;
+    }}
+
+    /* Text inputs */
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stTextArea"] textarea {{
+        background: var(--input-bg) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }}
+
+    /* Main text */
+    h1, h2, h3, h4, p, label, li {{
+        color: var(--text-color);
+    }}
+
+    [data-testid="stCaptionContainer"] {{
+        color: var(--muted-color) !important;
+    }}
+
+    /* Banner */
+    .banner {{
+        background: var(--banner-bg);
+        color: #ffffff;
+        padding: 24px 28px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+    }}
+
+    .banner h1 {{
+        color: #ffffff !important;
         margin: 0;
-        font-size: 1.7rem;
-    }
+        font-size: 1.8rem;
+        font-weight: 700;
+    }}
 
-    .banner p {
-        margin: 4px 0 0;
-        color: #b9c4dc;
-    }
+    .banner p {{
+        color: #dbeafe !important;
+        margin: 8px 0 0;
+    }}
 
-    [data-testid="stButton"] > button {
+    /* General cards */
+    [data-testid="stMetric"] {{
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 18px;
+        border-radius: 14px;
+    }}
+
+    /* Dataframes and tables */
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"] {{
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+    }}
+
+    /* Buttons */
+    [data-testid="stButton"] > button,
+    [data-testid="stDownloadButton"] > button {{
+        border-radius: 10px;
         transition:
             transform 180ms ease,
-            box-shadow 180ms ease,
-            border-color 180ms ease;
-    }
+            box-shadow 180ms ease;
+    }}
 
-    [data-testid="stButton"] > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 9px 24px rgba(20, 33, 61, 0.13);
-        border-color: #0f766e;
-    }
+    [data-testid="stButton"] > button:hover,
+    [data-testid="stDownloadButton"] > button:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 118, 110, 0.15);
+        border-color: var(--accent-color);
+    }}
 
-    [class*="st-key-dashboard_kpi_"] [data-testid="stButton"] > button {
-        position: relative;
+    /* KPI cards */
+    [class*="st-key-dashboard_kpi_"] [data-testid="stButton"] > button {{
         width: 100%;
-        min-height: 124px;
-        height: 124px;
+        height: 125px;
         white-space: pre-line;
         text-align: left;
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f2f8fb 100%
-        ) !important;
-        border: 1px solid #dce7ef !important;
-        border-left: 5px solid #0f766e !important;
-        border-radius: 18px !important;
-        padding: 17px 18px !important;
-        color: #14213d !important;
-        box-shadow: 0 7px 18px rgba(20, 33, 61, 0.07);
-    }
+        background: var(--kpi-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+        border-left: 5px solid var(--accent-color) !important;
+        border-radius: 16px !important;
+        padding: 16px !important;
+        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
+    }}
 
-    [class*="st-key-dashboard_kpi_"] [data-testid="stButton"] > button:hover {
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #e9f7f5 100%
-        ) !important;
-        transform: translateY(-5px);
-        box-shadow: 0 15px 28px rgba(15, 118, 110, 0.14);
-    }
+    [class*="st-key-dashboard_kpi_"] [data-testid="stButton"] > button p {{
+        color: var(--text-color) !important;
+    }}
 
-    [data-testid="stDialog"] [role="dialog"] {
-        border-radius: 16px;
-    }
+    /* Expanders and tabs */
+    [data-testid="stExpander"] {{
+        background: var(--card-bg);
+        border-color: var(--border-color);
+        border-radius: 12px;
+    }}
 
-    @media (prefers-reduced-motion: reduce) {
-        [data-testid="stButton"] > button {
+    [data-testid="stTabs"] button {{
+        color: var(--text-color) !important;
+    }}
+
+    /* Dividers */
+    hr {{
+        border-color: var(--border-color) !important;
+    }}
+
+    /* Theme selector */
+    .theme-note {{
+        color: var(--muted-color);
+        font-size: 0.8rem;
+    }}
+
+    @media (prefers-reduced-motion: reduce) {{
+        [data-testid="stButton"] > button {{
             transition: none !important;
-        }
-    }
+        }}
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -194,7 +372,7 @@ st.markdown(
 
 
 # ============================================================
-# SHARED UI FUNCTIONS
+# COMMON UI HELPERS
 # ============================================================
 
 def banner(title, subtitle=""):
@@ -222,14 +400,14 @@ def kpis(items):
 
 
 # ============================================================
-# KPI INFORMATION
+# INTERACTIVE KPI CARDS
 # ============================================================
 
 KPI_DETAILS = {
     "Average salary": {
         "icon": "💰",
         "description": (
-            "The average basic salary across employees matching "
+            "The average basic salary for employees matching "
             "the current dashboard filters."
         ),
         "module": "Analysis",
@@ -237,41 +415,35 @@ KPI_DETAILS = {
     "Median salary": {
         "icon": "⚖️",
         "description": (
-            "The median is the middle salary after salaries are "
-            "ordered. It can describe a typical salary more "
-            "robustly than the average when unusual values exist."
+            "The middle salary value when salaries are sorted."
         ),
         "module": "Analysis",
     },
     "Minimum salary": {
         "icon": "📉",
         "description": (
-            "The lowest basic salary among employees matching "
-            "the current dashboard filters."
+            "The lowest basic salary in the selected employee group."
         ),
         "module": "Analysis",
     },
     "Maximum salary": {
         "icon": "📈",
         "description": (
-            "The highest basic salary among employees matching "
-            "the current dashboard filters."
+            "The highest basic salary in the selected employee group."
         ),
         "module": "Analysis",
     },
     "Average performance": {
         "icon": "⭐",
         "description": (
-            "The average performance score for employees "
-            "matching the current dashboard filters."
+            "The average performance score for the selected employees."
         ),
         "module": "Analysis",
     },
     "Maximum performance": {
         "icon": "🏆",
         "description": (
-            "The highest performance score among employees "
-            "matching the current dashboard filters."
+            "The highest performance score in the selected employee group."
         ),
         "module": "Analysis",
     },
@@ -304,9 +476,9 @@ def interactive_kpi_cards(items, section_key):
                 key=f"{section_key}_{index}",
                 use_container_width=True,
                 help=(
-                    "Open the Employees module"
+                    "Open Employees"
                     if label == "Employees"
-                    else f"Learn what {label.lower()} means"
+                    else f"Learn about {label.lower()}"
                 ),
             )
 
@@ -318,7 +490,7 @@ def interactive_kpi_cards(items, section_key):
                 st.rerun()
 
 
-@st.dialog("Metric overview", width="small")
+@st.dialog("Metric information", width="small")
 def metric_information_dialog():
     label = st.session_state.get("_metric_dialog")
     details = KPI_DETAILS.get(label)
@@ -331,21 +503,14 @@ def metric_information_dialog():
     st.write(details["description"])
     st.divider()
 
-    st.caption(f"Recommended module: {details['module']}")
-
     if st.button(
-        f"Open {details['module']} module →",
-        key="metric_dialog_open_module",
+        f"Open {details['module']} →",
         type="primary",
         use_container_width=True,
     ):
         request_page_navigation(details["module"])
 
-    if st.button(
-        "Close",
-        key="metric_dialog_close",
-        use_container_width=True,
-    ):
+    if st.button("Close", use_container_width=True):
         st.session_state.pop("_metric_dialog", None)
         st.rerun()
 
@@ -358,41 +523,33 @@ def auth_page():
     st.markdown(
         """
         <style>
-        .stApp {
-            background:
-                radial-gradient(
-                    circle at 8% 8%,
-                    rgba(20,184,166,.13),
-                    transparent 30%
-                ),
-                radial-gradient(
-                    circle at 92% 90%,
-                    rgba(59,130,246,.13),
-                    transparent 32%
-                ),
-                linear-gradient(135deg, #f7faff, #edf3fb);
-        }
-
         [data-testid="stSidebar"] {
             display: none;
         }
 
-        .block-container {
-            max-width: 1120px;
-            padding-top: 2rem;
+        .login-panel {
+            padding: 28px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
         }
 
-        .login-heading {
-            color: #14213d;
-            font-size: 1.9rem;
-            font-weight: 800;
-            margin-bottom: 5px;
+        .login-brand {
+            background: linear-gradient(145deg, #101d38, #0f766e);
+            color: #ffffff;
+            border-radius: 18px;
+            padding: 40px 30px;
+            min-height: 430px;
         }
 
-        .login-description {
-            color: #64748b;
-            margin-bottom: 20px;
-            line-height: 1.6;
+        .login-brand h1 {
+            color: #ffffff !important;
+            font-size: 2.5rem;
+        }
+
+        .login-brand p {
+            color: #e0f2fe !important;
+            line-height: 1.8;
         }
         </style>
         """,
@@ -400,150 +557,83 @@ def auth_page():
     )
 
     left, right = st.columns(
-        [1, 1.08],
-        gap="medium",
+        [1, 1.1],
+        gap="large",
         vertical_alignment="center",
     )
 
     with left:
-        components.html(
-            """
-            <!doctype html>
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <style>
-                    * { box-sizing: border-box; }
-                    body {
-                        margin: 0;
-                        font-family: Arial, sans-serif;
-                    }
-                    .brand {
-                        min-height: 510px;
-                        padding: 38px 30px;
-                        border-radius: 22px;
-                        color: white;
-                        background: linear-gradient(
-                            145deg,
-                            #101d38,
-                            #1e3a66 58%,
-                            #0f766e 130%
-                        );
-                        box-shadow: 0 22px 55px rgba(20,33,61,.18);
-                    }
-                    .logo {
-                        width: 76px;
-                        height: 76px;
-                        display: grid;
-                        place-items: center;
-                        border-radius: 23px;
-                        margin-bottom: 24px;
-                        font-size: 38px;
-                        background: rgba(255,255,255,.13);
-                        border: 1px solid rgba(255,255,255,.28);
-                    }
-                    h1 {
-                        font-size: 38px;
-                        letter-spacing: -1px;
-                        margin: 0 0 12px;
-                    }
-                    .tagline {
-                        color: #dbeafe;
-                        font-size: 15px;
-                        line-height: 1.8;
-                        margin-bottom: 25px;
-                    }
-                    .feature {
-                        margin: 15px 0;
-                        color: #f0fdfa;
-                    }
-                    @media(max-width:700px) {
-                        .brand { min-height: auto; padding: 28px 24px; }
-                        h1 { font-size: 30px; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="brand">
-                    <div class="logo">📊</div>
-                    <h1>StaffMetrics</h1>
-                    <p class="tagline">
-                        Turn employee data into meaningful insights.
-                        Understand salaries, track performance, and
-                        make confident workforce decisions.
-                    </p>
-                    <div class="feature">✓ Smart employee analytics</div>
-                    <div class="feature">↗ Clear salary insights</div>
-                    <div class="feature">★ Performance reporting</div>
-                    <div class="feature">⌘ Workforce management</div>
-                </div>
-            </body>
-            </html>
-            """,
-            height=530,
-            scrolling=False,
-        )
-
-    with right:
         st.markdown(
             """
-            <div class="login-heading">Welcome back</div>
-            <div class="login-description">
-                Sign in to continue to your employee analytics workspace.
+            <div class="login-brand">
+                <h1>📊 StaffMetrics</h1>
+                <p>
+                    Turn employee data into meaningful insights.
+                    Understand salaries, monitor performance,
+                    and make better workforce decisions.
+                </p>
+                <p>✓ Employee analytics</p>
+                <p>✓ Salary insights</p>
+                <p>✓ Performance reports</p>
+                <p>✓ Workforce management</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
+    with right:
+        st.markdown('<div class="login-panel">', unsafe_allow_html=True)
+
+        st.subheader("Welcome to StaffMetrics")
+        st.caption("Sign in or create an account to continue.")
+
         login_tab, register_tab = st.tabs(
             ["🔐 Sign in", "✨ Create account"]
         )
 
-        # ----------------------------------------------------
-        # SIGN IN
-        # ----------------------------------------------------
         with login_tab:
-            st.subheader("Sign in to your account")
-
             login_id = st.text_input(
                 "Username or email",
                 key="login_username",
             )
 
-            show_login_password = st.checkbox(
+            show_password = st.checkbox(
                 "Show password",
                 key="show_login_password",
             )
 
-            login_password = st.text_input(
+            password = st.text_input(
                 "Password",
-                type="default" if show_login_password else "password",
+                type="default" if show_password else "password",
                 key="login_password",
+            )
+
+            remember_me = st.checkbox(
+                "Keep me signed in for 7 days",
+                value=True,
+                key="remember_me",
             )
 
             if st.button(
                 "Sign in →",
                 key="login_button",
-                use_container_width=True,
                 type="primary",
+                use_container_width=True,
             ):
-                if not login_id.strip() or not login_password:
+                if not login_id.strip() or not password:
                     st.warning(
                         "Enter your username/email and password."
                     )
                 else:
-                    user = auth.login(
-                        login_id,
-                        login_password,
-                    )
+                    user = auth.login(login_id, password)
 
                     if user:
                         st.session_state["user"] = user
 
-                        db.log_activity(
-                            user["id"],
-                            "signed in",
-                        )
+                        if remember_me:
+                            save_login_cookie(user)
+                        else:
+                            clear_login_cookie()
 
                         st.rerun()
                     else:
@@ -553,16 +643,11 @@ def auth_page():
 
             with st.expander("Forgot your password?"):
                 st.write(
-                    "Password recovery requires a configured email "
-                    "or authentication provider."
+                    "Password recovery requires a configured "
+                    "email or authentication provider."
                 )
 
-        # ----------------------------------------------------
-        # REGISTRATION
-        # ----------------------------------------------------
         with register_tab:
-            st.subheader("Create your account")
-
             full_name = st.text_input(
                 "Full name",
                 key="register_full_name",
@@ -584,10 +669,12 @@ def auth_page():
             )
 
             password_type = (
-                "default" if show_register_password else "password"
+                "default"
+                if show_register_password
+                else "password"
             )
 
-            password = st.text_input(
+            new_password = st.text_input(
                 "Create password",
                 type=password_type,
                 key="register_password",
@@ -599,14 +686,14 @@ def auth_page():
                 key="register_confirm_password",
             )
 
-            if password:
+            if new_password:
                 score = sum(
                     [
-                        len(password) >= 8,
-                        bool(re.search(r"[A-Z]", password)),
-                        bool(re.search(r"[a-z]", password)),
-                        bool(re.search(r"[0-9]", password)),
-                        bool(re.search(r"[^A-Za-z0-9]", password)),
+                        len(new_password) >= 8,
+                        bool(re.search(r"[A-Z]", new_password)),
+                        bool(re.search(r"[a-z]", new_password)),
+                        bool(re.search(r"[0-9]", new_password)),
+                        bool(re.search(r"[^A-Za-z0-9]", new_password)),
                     ]
                 )
 
@@ -617,32 +704,27 @@ def auth_page():
                 else:
                     st.success("Password strength: Strong")
 
-            st.caption(
-                "Use at least 8 characters. A mix of letters, "
-                "numbers, and symbols is recommended."
-            )
-
             if st.button(
                 "Create account →",
                 key="register_button",
-                use_container_width=True,
                 type="primary",
+                use_container_width=True,
             ):
                 if not all(
                     [
                         full_name.strip(),
                         email.strip(),
                         username.strip(),
-                        password,
+                        new_password,
                         confirm_password,
                     ]
                 ):
-                    st.warning("Please complete all the fields.")
+                    st.warning("Please complete all fields.")
 
-                elif password != confirm_password:
+                elif new_password != confirm_password:
                     st.error("The passwords do not match.")
 
-                elif len(password) < 8:
+                elif len(new_password) < 8:
                     st.error(
                         "Your password must contain at least 8 characters."
                     )
@@ -652,7 +734,7 @@ def auth_page():
                         username,
                         email,
                         full_name,
-                        password,
+                        new_password,
                     )
 
                     if success:
@@ -681,16 +763,17 @@ def page_dashboard(df):
         f"Welcome, {user.get('full_name') or user['username']}",
     )
 
-    if df.empty:
+    if df is None or df.empty:
         st.warning("No employee records are available.")
         return
 
     st.subheader("Dashboard Filters")
 
+    # Department and designation dropdowns
     c1, c2, c3 = st.columns(3)
 
     departments = sorted(
-        df["Department"].dropna().unique().tolist()
+        df["Department"].dropna().astype(str).unique().tolist()
     )
 
     designations = sorted(
@@ -698,19 +781,17 @@ def page_dashboard(df):
     )
 
     with c1:
-        selected_departments = st.multiselect(
+        selected_department = st.selectbox(
             "Department",
-            departments,
-            default=departments,
-            key="dashboard_departments",
+            ["All departments"] + departments,
+            key="dashboard_department_dropdown",
         )
 
     with c2:
-        selected_designations = st.multiselect(
+        selected_designation = st.selectbox(
             "Designation",
-            designations,
-            default=designations,
-            key="dashboard_designations",
+            ["All designations"] + designations,
+            key="dashboard_designation_dropdown",
         )
 
     with c3:
@@ -726,15 +807,13 @@ def page_dashboard(df):
             key="dashboard_chart",
         )
 
-    # --------------------------------------------------------
-    # SALARY FILTER
-    # --------------------------------------------------------
+    # Salary range
     salary_min = float(df["Basic_Salary"].min())
     salary_max = float(df["Basic_Salary"].max())
 
     if salary_min == salary_max:
         selected_salary = (salary_min, salary_max)
-        st.caption(f"Salary filter: {salary_min:,.0f}")
+        st.caption(f"Salary: {salary_min:,.0f}")
     else:
         selected_salary = st.slider(
             "Basic salary range",
@@ -744,76 +823,106 @@ def page_dashboard(df):
             key="dashboard_salary",
         )
 
-    # --------------------------------------------------------
-    # EXPERIENCE FILTER
-    # --------------------------------------------------------
-    c4, c5 = st.columns(2)
+    # Experience range
+    experience_min = int(df["Experience_Years"].min())
+    experience_max = int(df["Experience_Years"].max())
 
-    exp_min = int(df["Experience_Years"].min())
-    exp_max = int(df["Experience_Years"].max())
+    if experience_min == experience_max:
+        selected_experience = (
+            experience_min,
+            experience_max,
+        )
+        st.caption(
+            f"Experience range: {experience_min} years"
+        )
+    else:
+        selected_experience = st.slider(
+            "Experience range (years)",
+            min_value=experience_min,
+            max_value=experience_max,
+            value=(experience_min, experience_max),
+            key="dashboard_experience",
+        )
 
-    with c4:
-        if exp_min == exp_max:
-            selected_experience = (exp_min, exp_max)
-            st.caption(f"Experience: {exp_min} years")
-        else:
-            selected_experience = st.slider(
-                "Experience (years)",
-                min_value=exp_min,
-                max_value=exp_max,
-                value=(exp_min, exp_max),
-                key="dashboard_experience",
-            )
+    # Performance range
+    performance_min = float(df["Performance_Score"].min())
+    performance_max = float(df["Performance_Score"].max())
 
-    # --------------------------------------------------------
-    # PERFORMANCE FILTER
-    # --------------------------------------------------------
-    perf_min = float(df["Performance_Score"].min())
-    perf_max = float(df["Performance_Score"].max())
+    if performance_min == performance_max:
+        selected_performance = (
+            performance_min,
+            performance_max,
+        )
+        st.caption(
+            f"Performance score: {performance_min}"
+        )
+    else:
+        selected_performance = st.slider(
+            "Performance score range",
+            min_value=performance_min,
+            max_value=performance_max,
+            value=(performance_min, performance_max),
+            key="dashboard_performance",
+        )
 
-    with c5:
-        if perf_min == perf_max:
-            selected_performance = (perf_min, perf_max)
-            st.caption(f"Performance score: {perf_min}")
-        else:
-            selected_performance = st.slider(
-                "Performance score",
-                min_value=perf_min,
-                max_value=perf_max,
-                value=(perf_min, perf_max),
-                key="dashboard_performance",
-            )
+    # Apply filters
+    filtered_df = df.copy()
 
-    # --------------------------------------------------------
-    # APPLY FILTERS
-    # --------------------------------------------------------
-    filtered_df = df[
-        df["Department"].isin(selected_departments)
-        & df["Designation"].astype(str).isin(selected_designations)
-        & df["Basic_Salary"].between(*selected_salary)
-        & df["Experience_Years"].between(*selected_experience)
-        & df["Performance_Score"].between(*selected_performance)
+    if selected_department != "All departments":
+        filtered_df = filtered_df[
+            filtered_df["Department"].astype(str)
+            == selected_department
+        ]
+
+    if selected_designation != "All designations":
+        filtered_df = filtered_df[
+            filtered_df["Designation"].astype(str)
+            == selected_designation
+        ]
+
+    filtered_df = filtered_df[
+        filtered_df["Basic_Salary"].between(*selected_salary)
+        & filtered_df["Experience_Years"].between(
+            *selected_experience
+        )
+        & filtered_df["Performance_Score"].between(
+            *selected_performance
+        )
     ]
 
     if filtered_df.empty:
-        st.warning("No employees match your selected filters.")
+        st.warning(
+            "No employees match the selected filters. "
+            "Try changing the department, designation, "
+            "or range values."
+        )
         return
 
     st.caption(
-        f"Showing {len(filtered_df):,} of {len(df):,} employee records."
+        f"Showing {len(filtered_df):,} of {len(df):,} employees."
     )
 
-    # --------------------------------------------------------
-    # KPI CARDS
-    # --------------------------------------------------------
-    k = an.kpis(filtered_df)
+    # KPI cards
+    metrics = an.kpis(filtered_df)
 
     interactive_kpi_cards(
         [
-            ("Employees", f"{k['total_employees']:,}"),
-            ("Average salary", f"{k['average_salary']:,.0f}"),
-            ("Median salary", f"{k['median_salary']:,.0f}"),
-            ("Minimum salary", f"{k['minimum_salary']:,.0f}"),
+            (
+                "Employees",
+                f"{metrics['total_employees']:,}",
+            ),
+            (
+                "Average salary",
+                f"{metrics['average_salary']:,.2f}",
+            ),
+            (
+                "Median salary",
+                f"{metrics['median_salary']:,.2f}",
+            ),
+            (
+                "Minimum salary",
+                f"{metrics['minimum_salary']:,.2f}",
+            ),
         ],
         section_key="dashboard_kpi_top",
     )
@@ -822,9 +931,18 @@ def page_dashboard(df):
 
     interactive_kpi_cards(
         [
-            ("Maximum salary", f"{k['maximum_salary']:,.0f}"),
-            ("Average performance", f"{k['average_performance']:.2f}"),
-            ("Maximum performance", f"{k['maximum_performance']:.2f}"),
+            (
+                "Maximum salary",
+                f"{metrics['maximum_salary']:,.2f}",
+            ),
+            (
+                "Average performance",
+                f"{metrics['average_performance']:.2f}",
+            ),
+            (
+                "Maximum performance",
+                f"{metrics['maximum_performance']:.2f}",
+            ),
         ],
         section_key="dashboard_kpi_bottom",
     )
@@ -832,17 +950,13 @@ def page_dashboard(df):
     if st.session_state.get("_metric_dialog"):
         metric_information_dialog()
 
-    # --------------------------------------------------------
-    # AUTOMATED INSIGHTS
-    # --------------------------------------------------------
+    # Insights
     st.subheader("Automated Insights")
 
-    for line in an.insights(filtered_df):
-        st.info(line)
+    for insight in an.insights(filtered_df):
+        st.info(insight)
 
-    # --------------------------------------------------------
-    # VISUAL ANALYTICS
-    # --------------------------------------------------------
+    # Charts
     st.subheader("Visual Analytics")
 
     chart_functions = {
@@ -853,13 +967,13 @@ def page_dashboard(df):
     }
 
     if chart_choice == "All charts":
-        a, b = st.columns(2)
+        left, right = st.columns(2)
 
-        with a:
+        with left:
             show(an.fig_dept_salary(filtered_df))
             show(an.fig_salary_dist(filtered_df))
 
-        with b:
+        with right:
             show(an.fig_dept_perf(filtered_df))
             show(an.fig_salary_vs_perf(filtered_df))
 
@@ -872,56 +986,78 @@ def page_dashboard(df):
 # ============================================================
 
 def manage_employees(df):
-    uid = st.session_state.user["id"]
+    user_id = st.session_state.user["id"]
 
     departments = sorted(
-        df["Department"].dropna().unique().tolist()
+        df["Department"].dropna().astype(str).unique().tolist()
     )
 
-    with st.expander("Add an employee"):
-        with st.form("add_emp"):
-            c = st.columns(3)
+    with st.expander("➕ Add an employee"):
+        with st.form("add_employee_form"):
+            c1, c2, c3 = st.columns(3)
 
             employee = {
-                "Employee_ID": c[0].text_input("Employee ID"),
-                "Name": c[1].text_input("Name"),
-                "Age": c[2].number_input(
-                    "Age", 18, 70, 30
+                "Employee_ID": c1.text_input("Employee ID"),
+                "Name": c2.text_input("Name"),
+                "Age": c3.number_input(
+                    "Age",
+                    min_value=18,
+                    max_value=70,
+                    value=30,
                 ),
-                "Gender": c[0].selectbox(
-                    "Gender", ["Female", "Male"]
+                "Gender": c1.selectbox(
+                    "Gender",
+                    ["Female", "Male"],
                 ),
-                "Department": c[1].selectbox(
-                    "Department", departments
+                "Department": c2.selectbox(
+                    "Department",
+                    departments,
                 ),
-                "Designation": c[2].text_input("Designation"),
-                "Experience_Years": c[0].number_input(
-                    "Experience (years)", 0, 45, 3
+                "Designation": c3.text_input("Designation"),
+                "Experience_Years": c1.number_input(
+                    "Experience (years)",
+                    min_value=0,
+                    max_value=45,
+                    value=3,
                 ),
-                "Joining_Year": c[1].number_input(
-                    "Joining year", 1990, 2030, 2024
+                "Joining_Year": c2.number_input(
+                    "Joining year",
+                    min_value=1990,
+                    max_value=2030,
+                    value=2024,
                 ),
-                "Basic_Salary": c[2].number_input(
-                    "Basic salary", 1.0, 1e7, 50000.0
+                "Basic_Salary": c3.number_input(
+                    "Basic salary",
+                    min_value=1.0,
+                    max_value=10000000.0,
+                    value=50000.0,
                 ),
-                "Bonus": c[0].number_input(
-                    "Bonus", 0.0, 1e6, 0.0
+                "Bonus": c1.number_input(
+                    "Bonus",
+                    min_value=0.0,
+                    max_value=1000000.0,
+                    value=0.0,
                 ),
-                "Performance_Score": c[1].number_input(
-                    "Performance score (0-5)",
-                    0.0,
-                    5.0,
-                    3.0,
-                    0.5,
+                "Performance_Score": c2.number_input(
+                    "Performance score",
+                    min_value=0.0,
+                    max_value=5.0,
+                    value=3.0,
+                    step=0.5,
                 ),
             }
 
-            if st.form_submit_button("Add employee"):
+            submitted = st.form_submit_button(
+                "Add employee",
+                use_container_width=True,
+            )
+
+            if submitted:
                 try:
                     db.add_employee(employee)
 
                     db.log_activity(
-                        uid,
+                        user_id,
                         f"added employee {employee['Employee_ID']}",
                     )
 
@@ -930,25 +1066,28 @@ def manage_employees(df):
 
                 except Exception as ex:
                     st.error(
-                        f"The employee could not be added: {ex}"
+                        f"Unable to add employee: {ex}"
                     )
 
-    with st.expander("Delete an employee"):
+    with st.expander("🗑️ Delete an employee"):
         employee_ids = df["Employee_ID"].tolist()
 
         if employee_ids:
             selected_id = st.selectbox(
-                "Employee",
+                "Select employee ID",
                 employee_ids,
                 key="delete_employee_id",
             )
 
-            if st.button("Delete employee"):
+            if st.button(
+                "Delete employee",
+                type="secondary",
+            ):
                 try:
                     db.delete_employee(selected_id)
 
                     db.log_activity(
-                        uid,
+                        user_id,
                         f"deleted employee {selected_id}",
                     )
 
@@ -957,9 +1096,13 @@ def manage_employees(df):
 
                 except Exception as ex:
                     st.error(
-                        f"The employee could not be deleted: {ex}"
+                        f"Unable to delete employee: {ex}"
                     )
 
+
+# ============================================================
+# EMPLOYEES PAGE
+# ============================================================
 
 def page_employees(df, is_db):
     banner(
@@ -967,65 +1110,90 @@ def page_employees(df, is_db):
         "Search, filter and manage employee records",
     )
 
-    if df.empty:
+    if df is None or df.empty:
         st.warning("No employee records are available.")
         return
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2 = st.columns(2)
 
     departments = sorted(
-        df["Department"].dropna().unique().tolist()
+        df["Department"].dropna().astype(str).unique().tolist()
     )
 
     designations = sorted(
         df["Designation"].dropna().astype(str).unique().tolist()
     )
 
-    dept = c1.multiselect("Department", departments)
-    role = c2.multiselect("Designation", designations)
-
-    lo = int(df["Experience_Years"].min())
-    hi = int(df["Experience_Years"].max())
-
-    if lo == hi:
-        exp = (lo, hi)
-        c3.caption(f"Experience: {lo} years")
-    else:
-        exp = c3.slider(
-            "Experience (years)",
-            lo,
-            hi,
-            (lo, hi),
-            key="employee_experience_filter",
+    with c1:
+        selected_department = st.selectbox(
+            "Department",
+            ["All departments"] + departments,
+            key="employees_department",
         )
 
-    query = st.text_input("Search by ID or name")
+    with c2:
+        selected_designation = st.selectbox(
+            "Designation",
+            ["All designations"] + designations,
+            key="employees_designation",
+        )
 
-    filtered = df[
-        df["Experience_Years"].between(*exp)
+    exp_min = int(df["Experience_Years"].min())
+    exp_max = int(df["Experience_Years"].max())
+
+    if exp_min == exp_max:
+        experience_range = (exp_min, exp_max)
+        st.caption(f"Experience: {exp_min} years")
+    else:
+        experience_range = st.slider(
+            "Experience range (years)",
+            min_value=exp_min,
+            max_value=exp_max,
+            value=(exp_min, exp_max),
+            key="employees_experience_range",
+        )
+
+    search_text = st.text_input(
+        "Search by employee ID or name",
+    )
+
+    filtered = df.copy()
+
+    if selected_department != "All departments":
+        filtered = filtered[
+            filtered["Department"].astype(str)
+            == selected_department
+        ]
+
+    if selected_designation != "All designations":
+        filtered = filtered[
+            filtered["Designation"].astype(str)
+            == selected_designation
+        ]
+
+    filtered = filtered[
+        filtered["Experience_Years"].between(
+            *experience_range
+        )
     ]
 
-    if dept:
-        filtered = filtered[
-            filtered["Department"].isin(dept)
-        ]
+    if search_text.strip():
+        query = search_text.strip()
 
-    if role:
-        filtered = filtered[
-            filtered["Designation"].astype(str).isin(role)
-        ]
-
-    if query:
         filtered = filtered[
             filtered["Employee_ID"].astype(str).str.contains(
-                query, case=False, na=False
+                query,
+                case=False,
+                na=False,
             )
             | filtered["Name"].astype(str).str.contains(
-                query, case=False, na=False
+                query,
+                case=False,
+                na=False,
             )
         ]
 
-    st.caption(f"{len(filtered)} employees")
+    st.caption(f"{len(filtered):,} employee records")
 
     st.dataframe(
         filtered,
@@ -1034,9 +1202,9 @@ def page_employees(df, is_db):
     )
 
     st.download_button(
-        "Download filtered records (CSV)",
-        filtered.to_csv(index=False),
-        "employees_filtered.csv",
+        "Download filtered employees (CSV)",
+        data=filtered.to_csv(index=False),
+        file_name="employees_filtered.csv",
         mime="text/csv",
     )
 
@@ -1045,28 +1213,48 @@ def page_employees(df, is_db):
 
 
 # ============================================================
-# SALARY AND PERFORMANCE ANALYSIS
+# ANALYSIS PAGE
 # ============================================================
 
 def page_analysis(df):
     banner(
-        "Salary and performance analysis",
-        "Statistics, experience trends and correlations",
+        "Salary and Performance Analysis",
+        "Compare summary statistics, experience trends and correlations",
     )
 
-    if df.empty:
+    if df is None or df.empty:
         st.warning("No employee records are available.")
         return
 
-    tab_salary, tab_performance, tab_correlation = st.tabs(
-        ["Salary", "Performance", "Correlation"]
+    salary_tab, performance_tab, correlation_tab = st.tabs(
+        [
+            "💰 Salary",
+            "⭐ Performance",
+            "📊 Correlation",
+        ]
     )
 
-    with tab_salary:
+    # --------------------------------------------------------
+    # SALARY ANALYSIS
+    # --------------------------------------------------------
+    with salary_tab:
         st.subheader("Salary Summary")
 
+        salary_summary = an.salary_summary(df)
+
+        # Display a clear column called Salary.
+        salary_table = (
+            salary_summary
+            .rename_axis("Metric")
+            .rename("Salary")
+            .reset_index()
+        )
+
+        salary_table["Salary"] = salary_table["Salary"].round(2)
+
         st.dataframe(
-            an.salary_summary(df).round(2).to_frame("Value"),
+            salary_table,
+            hide_index=True,
             use_container_width=True,
         )
 
@@ -1074,32 +1262,55 @@ def page_analysis(df):
 
         st.subheader("Salary by Experience")
 
+        experience_table = an.by_experience(df)
+
         st.dataframe(
-            an.by_experience(df),
+            experience_table,
             hide_index=True,
             use_container_width=True,
         )
 
         show(an.fig_experience(df))
 
-    with tab_performance:
+    # --------------------------------------------------------
+    # PERFORMANCE ANALYSIS
+    # --------------------------------------------------------
+    with performance_tab:
         st.subheader("Performance Summary")
 
+        performance_summary = an.performance_summary(df)
+
+        # Display a clear column called Performance.
+        performance_table = (
+            performance_summary
+            .rename_axis("Metric")
+            .rename("Performance")
+            .reset_index()
+        )
+
+        performance_table["Performance"] = (
+            performance_table["Performance"].round(2)
+        )
+
         st.dataframe(
-            an.performance_summary(df)
-            .round(2)
-            .to_frame("Value"),
+            performance_table,
+            hide_index=True,
             use_container_width=True,
         )
 
         show(an.fig_perf_dist(df))
         show(an.fig_dept_perf(df))
 
-    with tab_correlation:
+    # --------------------------------------------------------
+    # CORRELATION ANALYSIS
+    # --------------------------------------------------------
+    with correlation_tab:
         st.subheader("Correlation Matrix")
 
+        correlation_table = an.correlation(df)
+
         st.dataframe(
-            an.correlation(df).round(2),
+            correlation_table.round(2),
             use_container_width=True,
         )
 
@@ -1107,7 +1318,7 @@ def page_analysis(df):
 
 
 # ============================================================
-# DEPARTMENTS
+# DEPARTMENTS PAGE
 # ============================================================
 
 def page_departments(df):
@@ -1116,9 +1327,11 @@ def page_departments(df):
         "Employee count, salary and performance by department",
     )
 
-    if df.empty:
+    if df is None or df.empty:
         st.warning("No employee records are available.")
         return
+
+    st.subheader("Department Summary")
 
     st.dataframe(
         an.dept_table(df),
@@ -1126,12 +1339,12 @@ def page_departments(df):
         use_container_width=True,
     )
 
-    col1, col2 = st.columns(2)
+    left, right = st.columns(2)
 
-    with col1:
+    with left:
         show(an.fig_dept_count(df))
 
-    with col2:
+    with right:
         show(an.fig_dept_salary(df))
 
 
@@ -1141,17 +1354,20 @@ def page_departments(df):
 
 def page_data(df):
     banner(
-        "Upload and export",
-        "Analyse your own CSV and download results",
+        "Upload and Export",
+        "Analyse a CSV dataset and download reports",
     )
 
     uploaded_file = st.file_uploader(
-        "Upload a CSV with the same columns as the sample dataset",
+        "Upload a CSV with the required employee columns",
         type=["csv"],
         key="employee_csv_upload",
     )
 
-    if uploaded_file and st.button("Analyse this file"):
+    if uploaded_file and st.button(
+        "Analyse uploaded file",
+        type="primary",
+    ):
         try:
             uploaded_df, log = an.prepare(
                 an.load_data(uploaded_file)
@@ -1159,7 +1375,10 @@ def page_data(df):
 
             st.session_state["upload"] = uploaded_df
 
-            st.success("File analysed successfully.")
+            st.success(
+                "File processed successfully. "
+                "Choose Uploaded file in the sidebar."
+            )
 
             if log:
                 st.write(log)
@@ -1167,54 +1386,54 @@ def page_data(df):
             st.rerun()
 
         except Exception as ex:
-            st.error(f"Could not process the file: {ex}")
+            st.error(f"Unable to process CSV: {ex}")
 
     st.subheader("Export")
 
     if df is None or df.empty:
-        st.warning("There is no data available to export.")
+        st.warning("No data is available to export.")
         return
 
-    col1, col2 = st.columns(2)
-    col3, col4 = st.columns(2)
+    c1, c2 = st.columns(2)
+    c3, c4 = st.columns(2)
 
-    with col1:
+    with c1:
         st.download_button(
-            "Cleaned data (CSV)",
-            df.to_csv(index=False),
-            "Employee_Salary_Performance_Cleaned.csv",
+            "Download cleaned data",
+            data=df.to_csv(index=False),
+            file_name="Employee_Salary_Performance_Cleaned.csv",
             mime="text/csv",
             use_container_width=True,
         )
 
-    with col2:
+    with c2:
         st.download_button(
-            "KPI summary (CSV)",
-            pd.Series(
+            "Download KPI summary",
+            data=pd.Series(
                 an.kpis(df)
-            ).rename("value").to_csv(),
-            "kpi_summary.csv",
+            ).rename("Value").to_csv(),
+            file_name="kpi_summary.csv",
             mime="text/csv",
             use_container_width=True,
         )
 
-    with col3:
+    with c3:
         st.download_button(
-            "Correlation matrix (CSV)",
-            an.correlation(df).round(3).to_csv(),
-            "correlation_matrix.csv",
+            "Download correlation matrix",
+            data=an.correlation(df).round(3).to_csv(),
+            file_name="correlation_matrix.csv",
             mime="text/csv",
             use_container_width=True,
         )
 
-    with col4:
+    with c4:
         st.download_button(
-            "Printable report (HTML)",
-            an.report_html(
+            "Download HTML report",
+            data=an.report_html(
                 df,
                 st.session_state.user["username"],
             ),
-            "report.html",
+            file_name="employee_report.html",
             mime="text/html",
             use_container_width=True,
         )
@@ -1234,35 +1453,29 @@ def page_admin():
 
     users = db.list_users()
 
-    if users:
-        st.dataframe(
-            pd.DataFrame(users),
-            hide_index=True,
-            use_container_width=True,
-        )
-    else:
-        st.info("No registered users were found.")
+    st.dataframe(
+        pd.DataFrame(users),
+        hide_index=True,
+        use_container_width=True,
+    )
 
     st.subheader("Recent Activity")
 
-    activity = db.recent_activity()
+    activities = db.recent_activity()
 
-    if activity:
-        st.dataframe(
-            pd.DataFrame(activity),
-            hide_index=True,
-            use_container_width=True,
-        )
-    else:
-        st.info("No recent activity was found.")
+    st.dataframe(
+        pd.DataFrame(activities),
+        hide_index=True,
+        use_container_width=True,
+    )
 
 
 # ============================================================
-# MAIN APPLICATION
+# MAIN APPLICATION AND SIDEBAR
 # ============================================================
 
 def main():
-    user = st.session_state["user"]
+    user = st.session_state.user
 
     pages = [
         "Dashboard",
@@ -1275,7 +1488,7 @@ def main():
     if user.get("role") == "admin":
         pages.append("Administration")
 
-    # Apply pending navigation before creating the widget.
+    # Apply requested navigation before creating the widget.
     pending_page = st.session_state.pop(
         "_pending_page_navigation",
         None,
@@ -1289,9 +1502,7 @@ def main():
     # --------------------------------------------------------
     with st.sidebar:
         st.markdown("## 📊 StaffMetrics")
-
         st.caption("Employee Salary & Performance")
-
         st.divider()
 
         st.markdown(
@@ -1301,6 +1512,30 @@ def main():
         st.caption(
             f"{user.get('role', 'user').title()} account"
         )
+
+        st.divider()
+
+        # Theme switcher
+        selected_theme = st.selectbox(
+            "🎨 Website Theme",
+            ["Light", "Dark"],
+            index=(
+                0
+                if st.session_state.get("theme_choice", "Light") == "Light"
+                else 1
+            ),
+            key="theme_selector",
+        )
+
+        if selected_theme != st.session_state.get("theme_choice"):
+            st.session_state["theme_choice"] = selected_theme
+            st.rerun()
+
+        st.caption(
+            f"Current theme: {selected_theme}"
+        )
+
+        st.divider()
 
         page = st.selectbox(
             "Navigate to page",
@@ -1326,7 +1561,7 @@ def main():
         st.divider()
 
         if st.button(
-            "Sign out",
+            "🚪 Sign out",
             use_container_width=True,
         ):
             try:
@@ -1338,6 +1573,7 @@ def main():
                 pass
 
             clear_login_cookie()
+            st.session_state.pop("user", None)
             st.rerun()
 
     # --------------------------------------------------------
@@ -1364,7 +1600,7 @@ def main():
         return
 
     # --------------------------------------------------------
-    # ROUTE TO THE SELECTED PAGE
+    # ROUTING
     # --------------------------------------------------------
     if page == "Dashboard":
         page_dashboard(df)
@@ -1393,6 +1629,12 @@ def main():
 # ============================================================
 # APPLICATION ENTRY POINT
 # ============================================================
+
+if "user" not in st.session_state:
+    saved_user = restore_login_cookie()
+
+    if saved_user is not None:
+        st.session_state["user"] = saved_user
 
 if "user" in st.session_state:
     main()
