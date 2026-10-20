@@ -358,7 +358,8 @@ def auth_page():
             'StaffMetrics · Employee Salary & Performance Analysis'
             '</div>',
             unsafe_allow_html=True
-        )def show(fig):
+        )
+def show(fig):
     st.pyplot(fig)
     plt.close(fig)
 
