@@ -31,29 +31,334 @@ def kpis(items):
     for col, (label, value) in zip(st.columns(len(items)), items):
         col.markdown(f'<div class="kpi"><span>{label}</span><b>{value}</b></div>', unsafe_allow_html=True)
 def auth_page():
-    banner("StaffMetrics", "Employee salary and performance analytics for HR teams")
-    _, mid, _ = st.columns([1, 1.5, 1])
-    with mid:
-        t_in, t_up = st.tabs(["Sign in", "Create account"])
-        with t_in, st.form("login_form"):
-            u, p = st.text_input("Username"), st.text_input("Password", type="password")
-            if st.form_submit_button("Sign in"):
-                user = auth.login(u, p)
-                if user:
-                    st.session_state.user = user
-                    st.rerun()
-                st.error("The username or password is incorrect.")
-        with t_up, st.form("register_form"):
-            name, email = st.text_input("Full name"), st.text_input("Email")
-            uname = st.text_input("Choose a username")
-            p1, p2 = st.text_input("Password (8+ characters)", type="password"), st.text_input("Confirm password", type="password")
-            if st.form_submit_button("Create account"):
-                if p1 != p2:
-                    st.error("The passwords do not match.")
+    # Login page styling
+    st.markdown("""
+    <style>
+    .stApp {
+        background:
+            radial-gradient(
+                circle at top left,
+                rgba(59, 130, 246, 0.15),
+                transparent 35%
+            ),
+            linear-gradient(135deg, #f8fafc, #eaf0fb);
+    }
+
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+
+    .block-container {
+        max-width: 1100px;
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+
+    .login-brand {
+        background: linear-gradient(145deg, #14213d, #233e70);
+        color: white;
+        padding: 45px 32px;
+        border-radius: 22px 0 0 22px;
+        min-height: 450px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 15px 40px rgba(20, 33, 61, 0.15);
+    }
+
+    .login-brand h1 {
+        color: white !important;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .login-brand p {
+        color: #dbeafe;
+        font-size: 1.05rem;
+        line-height: 1.8;
+    }
+
+    .login-brand .brand-icon {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.92);
+        padding: 25px 28px;
+        border: 1px solid #e2e8f0;
+        border-radius: 0 22px 22px 0;
+        min-height: 450px;
+        box-shadow: 0 15px 40px rgba(20, 33, 61, 0.10);
+    }
+
+    .login-heading {
+        color: #14213d;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .login-description {
+        color: #64748b;
+        margin-bottom: 20px;
+    }
+
+    .stButton > button {
+        width: 100%;
+        border-radius: 10px;
+        min-height: 45px;
+        font-weight: 600;
+        border: none;
+        background: linear-gradient(90deg, #2563eb, #0f766e);
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 18px rgba(37, 99, 235, 0.2);
+        color: white;
+    }
+
+    [data-testid="stTextInput"] input {
+        border-radius: 9px;
+        border: 1px solid #cbd5e1;
+    }
+
+    [data-testid="stTabs"] button {
+        font-weight: 600;
+    }
+
+    .security-note {
+        font-size: 0.8rem;
+        color: #64748b;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    @media (max-width: 700px) {
+        .block-container {
+            padding-top: 1rem;
+        }
+
+        .login-brand {
+            border-radius: 18px 18px 0 0;
+            min-height: auto;
+            padding: 25px;
+        }
+
+        .login-card {
+            border-radius: 0 0 18px 18px;
+            min-height: auto;
+            padding: 20px;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Two-column layout
+    left, right = st.columns([1, 1.15], gap="small")
+
+    with left:
+        st.markdown("""
+        <div class="login-brand">
+            <div class="brand-icon">📊</div>
+            <h1>StaffMetrics</h1>
+            <p>
+                Turn employee data into meaningful insights.
+                Analyze salaries, monitor performance, and
+                make better workforce decisions.
+            </p>
+            <p>
+                ✓ Employee analytics<br>
+                ✓ Salary insights<br>
+                ✓ Performance reports<br>
+                ✓ Workforce management
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with right:
+        st.markdown("""
+        <div class="login-card">
+            <div class="login-heading">Welcome back!</div>
+            <div class="login-description">
+                Sign in to access your analytics dashboard.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        login_tab, register_tab = st.tabs(
+            ["🔐 Sign in", "✨ Create account"]
+        )
+
+        # ---------------- LOGIN ----------------
+        with login_tab:
+            st.subheader("Sign in to your account")
+
+            login_id = st.text_input(
+                "Username or email",
+                key="login_username"
+            )
+
+            show_login_password = st.checkbox(
+                "Show password",
+                key="show_login_password"
+            )
+
+            login_password = st.text_input(
+                "Password",
+                type="default" if show_login_password else "password",
+                key="login_password"
+            )
+
+            remember_me = st.checkbox(
+                "Remember me on this session",
+                key="remember_me"
+            )
+
+            if st.button("Sign in", key="login_button"):
+                if not login_id.strip() or not login_password:
+                    st.warning("Enter your username/email and password.")
                 else:
-                    ok, msg = auth.register(uname, email, name, p1)
-                    (st.success if ok else st.error)(msg)
-def show(fig):
+                    user = auth.login(login_id, login_password)
+
+                    if user:
+                        st.session_state.user = user
+
+                        # This flag records the user's preference for
+                        # the current Streamlit session only.
+                        st.session_state.remember_me = remember_me
+
+                        st.rerun()
+                    else:
+                        st.error(
+                            "The username/email or password is incorrect."
+                        )
+
+            with st.expander("Forgot your password?"):
+                st.write(
+                    "Password recovery requires a configured email "
+                    "or authentication provider."
+                )
+                st.info(
+                    "The password-reset service must be configured "
+                    "before a recovery email can be sent."
+                )
+
+        # ---------------- REGISTRATION ----------------
+        with register_tab:
+            st.subheader("Create your account")
+
+            full_name = st.text_input(
+                "Full name",
+                key="register_full_name"
+            )
+
+            email = st.text_input(
+                "Email address",
+                key="register_email"
+            )
+
+            username = st.text_input(
+                "Choose a username",
+                key="register_username"
+            )
+
+            show_register_password = st.checkbox(
+                "Show registration passwords",
+                key="show_register_password"
+            )
+
+            password_type = (
+                "default" if show_register_password else "password"
+            )
+
+            password = st.text_input(
+                "Create password",
+                type=password_type,
+                key="register_password"
+            )
+
+            confirm_password = st.text_input(
+                "Confirm password",
+                type=password_type,
+                key="register_confirm_password"
+            )
+
+            # Password-strength feedback
+            if password:
+                import re
+
+                score = 0
+
+                if len(password) >= 8:
+                    score += 1
+                if re.search(r"[A-Z]", password):
+                    score += 1
+                if re.search(r"[a-z]", password):
+                    score += 1
+                if re.search(r"[0-9]", password):
+                    score += 1
+                if re.search(r"[^A-Za-z0-9]", password):
+                    score += 1
+
+                if score <= 2:
+                    st.warning("Password strength: Weak")
+                elif score <= 4:
+                    st.info("Password strength: Moderate")
+                else:
+                    st.success("Password strength: Strong")
+
+            st.caption(
+                "Use at least 8 characters. A combination of "
+                "uppercase letters, lowercase letters, numbers, "
+                "and symbols is recommended."
+            )
+
+            if st.button("Create account", key="register_button"):
+                if not all([
+                    full_name.strip(),
+                    email.strip(),
+                    username.strip(),
+                    password,
+                    confirm_password
+                ]):
+                    st.warning("Please complete all the fields.")
+
+                elif password != confirm_password:
+                    st.error("The passwords do not match.")
+
+                elif len(password) < 8:
+                    st.error(
+                        "Your password must contain at least 8 characters."
+                    )
+
+                else:
+                    success, message = auth.register(
+                        username,
+                        email,
+                        full_name,
+                        password
+                    )
+
+                    if success:
+                        st.success(message)
+                        st.info(
+                            "Your account has been created. "
+                            "Switch to Sign in to continue."
+                        )
+                    else:
+                        st.error(message)
+
+        st.markdown(
+            '<div class="security-note">'
+            'StaffMetrics · Employee Salary & Performance Analysis'
+            '</div>',
+            unsafe_allow_html=True
+        )def show(fig):
     st.pyplot(fig)
     plt.close(fig)
 
