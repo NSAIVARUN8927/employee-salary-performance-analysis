@@ -1,3 +1,6 @@
+import html
+from urllib.parse import quote
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
@@ -87,6 +90,22 @@ h1, h2, h3 {
     font-size: 1.55rem;
     color: #14213d;
     font-weight: 650;
+}
+
+/* Clickable cards without changing their original appearance */
+
+.kpi-link {
+    display: block;
+    color: inherit !important;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.kpi-link:hover,
+.kpi-link:focus,
+.kpi-link:active {
+    color: inherit !important;
+    text-decoration: none !important;
 }
 
 /* Button animations */
@@ -345,36 +364,31 @@ def request_page_navigation(module):
 # ==================== INTERACTIVE KPI CARDS ====================
 
 def interactive_kpi_cards(items, section_key):
+    """
+    Keep the existing KPI card appearance and make each card clickable.
+
+    Clicking Employees opens the Employees module.
+    Clicking another metric opens its information dialog.
+    """
     columns = st.columns(len(items))
 
-    for index, (label, value) in enumerate(items):
+    for col, (label, value) in zip(columns, items):
+        action = quote(str(label), safe="")
+        safe_label = html.escape(str(label))
+        safe_value = html.escape(str(value))
 
-        icon = (
-            "👥"
-            if label == "Employees"
-            else KPI_DETAILS[label]["icon"]
-        )
-
-        with columns[index]:
-            clicked = st.button(
-                f"{icon}  **{label}**\n\n"
-                f"# {value}\n\n"
-                "Click to explore  ↗",
-                key=f"{section_key}_{index}",
-                use_container_width=True,
-                help=(
-                    "Open the Employees module"
-                    if label == "Employees"
-                    else f"Learn what {label.lower()} means"
-                ),
+        with col:
+            st.markdown(
+                f"""
+                <a class="kpi-link" href="?kpi_action={action}">
+                    <div class="kpi">
+                        <span>{safe_label}</span>
+                        <b>{safe_value}</b>
+                    </div>
+                </a>
+                """,
+                unsafe_allow_html=True,
             )
-
-        if clicked:
-            if label == "Employees":
-                request_page_navigation("Employees")
-            else:
-                st.session_state["_metric_dialog"] = label
-                st.rerun()
 
 
 # ==================== KPI INFORMATION POP-UP ====================
@@ -678,6 +692,8 @@ def auth_page():
             '</div>',
             unsafe_allow_html=True
         )
+
+
 # ==================== EXECUTIVE DASHBOARD ====================
 
 def page_dashboard(df):
@@ -1118,6 +1134,8 @@ def page_employees(df, is_db):
         and st.session_state.user["role"] == "admin"
     ):
         manage_employees(df)
+
+
 # ==================== ANALYSIS PAGE ====================
 
 def page_analysis(df):
@@ -1452,10 +1470,30 @@ def main():
             )
 
 
+# ==================== KPI CARD CLICK HANDLER ====================
+
+def handle_kpi_card_action():
+    """Read the clicked KPI from the URL and trigger its action."""
+    action = st.query_params.get("kpi_action")
+
+    if not action:
+        return
+
+    if action == "Employees":
+        st.session_state["_pending_page_navigation"] = "Employees"
+
+    elif action in KPI_DETAILS:
+        st.session_state["_metric_dialog"] = action
+
+    # Clear the action so refreshing the page does not repeat it.
+    if "kpi_action" in st.query_params:
+        del st.query_params["kpi_action"]
+
+
 # ==================== APPLICATION ENTRY POINT ====================
 
 if "user" not in st.session_state:
     auth_page()
 else:
+    handle_kpi_card_action()
     main()
-        
