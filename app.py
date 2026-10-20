@@ -1862,7 +1862,7 @@ def main():
         "Employees",
         "Analysis",
         "Departments",
-        "SQL explorer",
+        
         "Upload and export",
     ]
 
@@ -1930,46 +1930,58 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    st.markdown(
-        f"""
+    # ============================================================
+# SIDEBAR USER PROFILE
+# ============================================================
+
+user = st.session_state.get("user")
+
+if user is None:
+    st.error("Your session has expired. Please sign in again.")
+    st.stop()
+
+display_name = user.get("full_name") or user.get("username", "User")
+display_role = user.get("role", "user").upper()
+
+st.markdown(
+    f"""
+    <div style="
+        padding: 12px;
+        margin-bottom: 16px;
+        background: #1d2c43;
+        border: 1px solid #3a4b63;
+        border-radius: 12px;
+    ">
         <div style="
-            padding: 12px;
-            margin-bottom: 16px;
-            background: #1d2c43;
-            border: 1px solid #3a4b63;
-            border-radius: 12px;
-        ">
-            <div style="
-                color: #99f6e4;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                font-weight: 700;
-                margin-bottom: 6px;
-            ">SIGNED IN AS</div>
+            color: #99f6e4;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        ">SIGNED IN AS</div>
 
-            <div style="
-                color: #ffffff;
-                font-size: 16px;
-                font-weight: 700;
-            ">{user['full_name'] or user['username']}</div>
+        <div style="
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+        ">{display_name}</div>
 
-            <div style="
-                display: inline-block;
-                margin-top: 7px;
-                padding: 4px 9px;
-                border-radius: 6px;
-                background: rgba(45,212,191,0.14);
-                color: #99f6e4;
-                font-size: 11px;
-                font-weight: 700;
-            ">{user['role'].upper()}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # --------------------------------------------------------
+        <div style="
+            display: inline-block;
+            margin-top: 7px;
+            padding: 4px 9px;
+            border-radius: 6px;
+            background: rgba(45,212,191,0.14);
+            color: #99f6e4;
+            font-size: 11px;
+            font-weight: 700;
+        ">{display_role}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)    
+# --------------------------------------------------------
     # THEME SELECTOR
     # --------------------------------------------------------
 
