@@ -152,225 +152,288 @@ else:
 # GLOBAL CSS — LIGHT AND DARK THEMES
 # ============================================================
 
+# ============================================================
+# GLOBAL STYLING — LIGHT & DARK THEMES
+# ============================================================
+
+APP_THEME = st.session_state.get("theme_choice", "☀️ Light")
+IS_DARK = APP_THEME == "🌙 Dark"
+
+if IS_DARK:
+    BG_COLOR = "#0E1117"
+    CARD_COLOR = "#1B2430"
+    TEXT_COLOR = "#F1F5F9"
+    MUTED_TEXT = "#CBD5E1"
+    HEADING_COLOR = "#FFFFFF"
+    BORDER_COLOR = "#374151"
+    INPUT_BG = "#1F2937"
+    SIDEBAR_BG = "#111827"
+    SIDEBAR_TEXT = "#F9FAFB"
+    ACCENT_COLOR = "#5EEAD4"
+    TABLE_HEADER_BG = "#263449"
+    HOVER_BG = "#263449"
+else:
+    BG_COLOR = "#FFFFFF"
+    CARD_COLOR = "#F8FAFC"
+    TEXT_COLOR = "#1E293B"
+    MUTED_TEXT = "#475569"
+    HEADING_COLOR = "#14213D"
+    BORDER_COLOR = "#D1D5DB"
+    INPUT_BG = "#FFFFFF"
+    SIDEBAR_BG = "#14213D"
+    SIDEBAR_TEXT = "#F8FAFC"
+    ACCENT_COLOR = "#0F766E"
+    TABLE_HEADER_BG = "#E2E8F0"
+    HOVER_BG = "#F1F5F9"
+
+
 st.markdown(
     f"""
     <style>
-    @import url(
-        'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap'
-    );
+    /* ==============================
+       MAIN PAGE
+    ============================== */
 
-    :root {{
-        color-scheme: {"dark" if APP_THEME == "Dark" else "light"};
-        --app-bg: {BG};
-        --card-bg: {CARD};
-        --sidebar-bg: {SIDEBAR_BG};
-        --text-color: {TEXT};
-        --muted-color: {MUTED};
-        --border-color: {BORDER};
-        --input-bg: {INPUT_BG};
-        --table-bg: {TABLE_BG};
-        --accent-color: {ACCENT};
-        --banner-bg: {BANNER_BG};
-        --kpi-bg: {KPI_BG};
+    .stApp {{
+        background-color: {BG_COLOR} !important;
+        color: {TEXT_COLOR} !important;
+    }}
+
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    section.main,
+    .block-container {{
+        background-color: {BG_COLOR} !important;
+        color: {TEXT_COLOR} !important;
     }}
 
     html, body, [class*="css"] {{
-        font-family: 'IBM Plex Sans', sans-serif;
+        color: {TEXT_COLOR};
     }}
 
-    .stApp {{
-        background: var(--app-bg);
-        color: var(--text-color);
+    p, span, label, li, small, div {{
+        color: inherit;
     }}
 
-    [data-testid="stAppViewContainer"] {{
-        background: var(--app-bg);
+    /* ==============================
+       HEADINGS
+    ============================== */
+
+    h1, h2, h3, h4, h5, h6 {{
+        color: {HEADING_COLOR} !important;
     }}
 
-    [data-testid="stHeader"] {{
-        background: var(--app-bg);
-    }}
-
-    .block-container {{
-        max-width: 1350px;
-        padding-top: 1.6rem;
-        padding-bottom: 3rem;
-    }}
-
-    /* Sidebar background and text */
-    [data-testid="stSidebar"] {{
-        background: var(--sidebar-bg) !important;
-        border-right: 1px solid var(--border-color);
-    }}
-
-    [data-testid="stSidebar"] * {{
-        color: var(--text-color);
-    }}
-
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {{
-        color: var(--text-color) !important;
-    }}
-
-    /* Dropdowns and selected values */
-    [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-    [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {{
-        background: var(--input-bg) !important;
-        border-color: var(--border-color) !important;
-        color: var(--text-color) !important;
-    }}
-
-    [data-testid="stSelectbox"] input,
-    [data-testid="stMultiSelect"] input {{
-        color: var(--text-color) !important;
-    }}
-
-    /* Dropdown popup options */
-    [data-baseweb="popover"] {{
-        background: var(--card-bg) !important;
-        border: 1px solid var(--border-color) !important;
-    }}
-
-    [data-baseweb="menu"] {{
-        background: var(--card-bg) !important;
-    }}
-
-    [role="option"] {{
-        background: var(--card-bg) !important;
-        color: var(--text-color) !important;
-    }}
-
-    [role="option"]:hover {{
-        background: var(--input-bg) !important;
-    }}
-
-    /* Text inputs */
-    [data-testid="stTextInput"] input,
-    [data-testid="stNumberInput"] input,
-    [data-testid="stTextArea"] textarea {{
-        background: var(--input-bg) !important;
-        color: var(--text-color) !important;
-        border-color: var(--border-color) !important;
-    }}
-
-    /* Main text */
-    h1, h2, h3, h4, p, label, li {{
-        color: var(--text-color);
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li {{
+        color: {TEXT_COLOR};
     }}
 
     [data-testid="stCaptionContainer"] {{
-        color: var(--muted-color) !important;
+        color: {MUTED_TEXT} !important;
     }}
 
-    /* Banner */
+    /* ==============================
+       SIDEBAR
+    ============================== */
+
+    [data-testid="stSidebar"] {{
+        background-color: {SIDEBAR_BG} !important;
+    }}
+
+    [data-testid="stSidebar"] * {{
+        color: {SIDEBAR_TEXT};
+    }}
+
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
+        color: {SIDEBAR_TEXT} !important;
+    }}
+
+    /* ==============================
+       INPUT FIELDS
+    ============================== */
+
+    input,
+    textarea,
+    [data-baseweb="input"] input,
+    [data-baseweb="textarea"] textarea {{
+        background-color: {INPUT_BG} !important;
+        color: {TEXT_COLOR} !important;
+        -webkit-text-fill-color: {TEXT_COLOR} !important;
+        border-color: {BORDER_COLOR} !important;
+    }}
+
+    [data-baseweb="select"] > div {{
+        background-color: {INPUT_BG} !important;
+        color: {TEXT_COLOR} !important;
+        border-color: {BORDER_COLOR} !important;
+    }}
+
+    [data-baseweb="select"] input,
+    [data-baseweb="select"] span {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    [data-baseweb="popover"],
+    [data-baseweb="menu"],
+    [role="listbox"],
+    [role="option"] {{
+        background-color: {CARD_COLOR} !important;
+        color: {TEXT_COLOR} !important;
+    }}
+
+    /* ==============================
+       BUTTONS
+    ============================== */
+
+    [data-testid="stButton"] button {{
+        color: {TEXT_COLOR} !important;
+        border-color: {BORDER_COLOR} !important;
+    }}
+
+    [data-testid="stButton"] button p {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    /* ==============================
+       METRICS
+    ============================== */
+
+    [data-testid="stMetric"] {{
+        background-color: {CARD_COLOR};
+        border: 1px solid {BORDER_COLOR};
+        border-radius: 12px;
+        padding: 14px;
+    }}
+
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricLabel"] p {{
+        color: {MUTED_TEXT} !important;
+    }}
+
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] div {{
+        color: {HEADING_COLOR} !important;
+    }}
+
+    /* ==============================
+       DATAFRAMES AND TABLES
+    ============================== */
+
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"] {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    [data-testid="stDataFrame"] *,
+    [data-testid="stTable"] * {{
+        color: {TEXT_COLOR};
+    }}
+
+    /* ==============================
+       TABS
+    ============================== */
+
+    [data-baseweb="tab-list"] {{
+        background-color: {BG_COLOR} !important;
+    }}
+
+    [data-baseweb="tab"] {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    [aria-selected="true"] {{
+        color: {ACCENT_COLOR} !important;
+    }}
+
+    /* ==============================
+       EXPANDERS
+    ============================== */
+
+    [data-testid="stExpander"] {{
+        background-color: {CARD_COLOR} !important;
+        border: 1px solid {BORDER_COLOR} !important;
+        border-radius: 10px;
+    }}
+
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] summary p {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    /* ==============================
+       ALERTS AND DIALOGS
+    ============================== */
+
+    [data-testid="stAlert"] {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    [data-testid="stDialog"] [role="dialog"] {{
+        background-color: {CARD_COLOR} !important;
+        color: {TEXT_COLOR} !important;
+    }}
+
+    [data-testid="stDialog"] h1,
+    [data-testid="stDialog"] h2,
+    [data-testid="stDialog"] h3,
+    [data-testid="stDialog"] p {{
+        color: {TEXT_COLOR} !important;
+    }}
+
+    /* ==============================
+       CUSTOM BANNER
+    ============================== */
+
     .banner {{
-        background: var(--banner-bg);
-        color: #ffffff;
-        padding: 24px 28px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+        background-color: {SIDEBAR_BG} !important;
+        color: {SIDEBAR_TEXT} !important;
+        padding: 22px 28px;
+        border-radius: 10px;
+        margin-bottom: 20px;
     }}
 
     .banner h1 {{
-        color: #ffffff !important;
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
+        color: {SIDEBAR_TEXT} !important;
     }}
 
     .banner p {{
-        color: #dbeafe !important;
-        margin: 8px 0 0;
+        color: {SIDEBAR_TEXT} !important;
+        opacity: 0.85;
     }}
 
-    /* General cards */
-    [data-testid="stMetric"] {{
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        padding: 18px;
-        border-radius: 14px;
+    /* ==============================
+       HOVER EFFECTS
+    ============================== */
+
+    [data-testid="stButton"] button:hover {{
+        border-color: {ACCENT_COLOR} !important;
+        transition: all 0.2s ease;
     }}
 
-    /* Dataframes and tables */
-    [data-testid="stDataFrame"],
-    [data-testid="stTable"] {{
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
+    /* ==============================
+       LOGIN PAGE
+    ============================== */
+
+    .login-heading {{
+        color: {HEADING_COLOR} !important;
     }}
 
-    /* Buttons */
-    [data-testid="stButton"] > button,
-    [data-testid="stDownloadButton"] > button {{
-        border-radius: 10px;
-        transition:
-            transform 180ms ease,
-            box-shadow 180ms ease;
+    .login-description {{
+        color: {MUTED_TEXT} !important;
     }}
 
-    [data-testid="stButton"] > button:hover,
-    [data-testid="stDownloadButton"] > button:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(15, 118, 110, 0.15);
-        border-color: var(--accent-color);
-    }}
+    /* ==============================
+       GENERAL BORDERS
+    ============================== */
 
-    /* KPI cards */
-    [class*="st-key-dashboard_kpi_"] [data-testid="stButton"] > button {{
-        width: 100%;
-        height: 125px;
-        white-space: pre-line;
-        text-align: left;
-        background: var(--kpi-bg) !important;
-        color: var(--text-color) !important;
-        border: 1px solid var(--border-color) !important;
-        border-left: 5px solid var(--accent-color) !important;
-        border-radius: 16px !important;
-        padding: 16px !important;
-        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
-    }}
-
-    [class*="st-key-dashboard_kpi_"] [data-testid="stButton"] > button p {{
-        color: var(--text-color) !important;
-    }}
-
-    /* Expanders and tabs */
-    [data-testid="stExpander"] {{
-        background: var(--card-bg);
-        border-color: var(--border-color);
-        border-radius: 12px;
-    }}
-
-    [data-testid="stTabs"] button {{
-        color: var(--text-color) !important;
-    }}
-
-    /* Dividers */
     hr {{
-        border-color: var(--border-color) !important;
+        border-color: {BORDER_COLOR} !important;
     }}
 
-    /* Theme selector */
-    .theme-note {{
-        color: var(--muted-color);
-        font-size: 0.8rem;
-    }}
-
-    @media (prefers-reduced-motion: reduce) {{
-        [data-testid="stButton"] > button {{
-            transition: none !important;
-        }}
-    }}
     </style>
     """,
     unsafe_allow_html=True,
 )
-
-
 # ============================================================
 # COMMON UI HELPERS
 # ============================================================
@@ -1500,6 +1563,23 @@ def main():
     # --------------------------------------------------------
     # SIDEBAR
     # --------------------------------------------------------
+    current_theme = st.session_state.get(
+    "theme_choice",
+    "☀️ Light"
+     )
+
+    with st.sidebar:
+        theme_choice = st.radio(
+            "Appearance",
+            ["☀️ Light", "🌙 Dark"],
+            index=(
+                1 if current_theme == "🌙 Dark" else 0
+            ),
+            key="theme_choice",
+    )
+
+    if theme_choice != APP_THEME:
+        st.rerun()
     with st.sidebar:
         st.markdown("## 📊 StaffMetrics")
         st.caption("Employee Salary & Performance")
