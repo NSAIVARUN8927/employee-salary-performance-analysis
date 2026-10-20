@@ -1583,11 +1583,11 @@ def main():
 
         # Theme switcher
         selected_theme = st.radio(
-    "Appearance",
-    ["☀️ Light", "🌙 Dark"],
-    index=0 if st.session_state.get("theme_choice", "☀️ Light") == "☀️ Light" else 1,
-    key="theme_choice",
-)
+            "Appearance",
+            ["☀️ Light", "🌙 Dark"],
+            index=0 if st.session_state.get("theme_choice", "☀️ Light") == "☀️ Light" else 1,
+            key="theme_choice",
+        )
 
         if selected_theme != st.session_state.get("theme_choice"):
             st.session_state["theme_choice"] = selected_theme
