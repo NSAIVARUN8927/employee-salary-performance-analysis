@@ -31,294 +31,854 @@ def kpis(items):
     for col, (label, value) in zip(st.columns(len(items)), items):
         col.markdown(f'<div class="kpi"><span>{label}</span><b>{value}</b></div>', unsafe_allow_html=True)
 def auth_page():
-    # Login page styling
+
+    import re
+    import streamlit as st
+
+    # =========================================================
+    # STAFFMETRICS — PROFESSIONAL AUTHENTICATION INTERFACE
+    # =========================================================
+
     st.markdown("""
     <style>
+
+    /* ---------------- GLOBAL LOGIN BACKGROUND ---------------- */
+
     .stApp {
         background:
             radial-gradient(
-                circle at top left,
-                rgba(59, 130, 246, 0.15),
-                transparent 35%
+                circle at 12% 15%,
+                rgba(37, 99, 235, 0.20),
+                transparent 32%
             ),
-            linear-gradient(135deg, #f8fafc, #eaf0fb);
+            radial-gradient(
+                circle at 88% 85%,
+                rgba(6, 182, 212, 0.13),
+                transparent 30%
+            ),
+            linear-gradient(
+                135deg,
+                #070b18 0%,
+                #0b1224 50%,
+                #101c35 100%
+            );
+
+        background-attachment: fixed;
+        color: #e5edf9;
     }
+
+    /* ---------------- HIDE SIDEBAR ---------------- */
 
     [data-testid="stSidebar"] {
         display: none;
     }
 
-    .block-container {
-        max-width: 1100px;
-        padding-top: 3rem;
-        padding-bottom: 3rem;
+    #MainMenu {
+        visibility: hidden;
     }
 
-    .login-brand {
-        background: linear-gradient(145deg, #14213d, #233e70);
-        color: white;
-        padding: 45px 32px;
-        border-radius: 22px 0 0 22px;
-        min-height: 450px;
+    footer {
+        visibility: hidden;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    /* ---------------- PAGE CONTAINER ---------------- */
+
+    .block-container {
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    /* ---------------- ANIMATED BACKGROUND ---------------- */
+
+    @keyframes backgroundGlow {
+        0% {
+            transform: translate(0, 0) scale(1);
+        }
+
+        50% {
+            transform: translate(20px, -25px) scale(1.08);
+        }
+
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes floatAnimation {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 0 18px rgba(59, 130, 246, 0.12);
+        }
+
+        50% {
+            box-shadow: 0 0 35px rgba(59, 130, 246, 0.28);
+        }
+    }
+
+    .login-shell {
+        animation: fadeIn 0.8s ease-out both;
+    }
+
+    .ambient-orb {
+        position: fixed;
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.12);
+        filter: blur(65px);
+        pointer-events: none;
+        z-index: 0;
+        animation: backgroundGlow 8s ease-in-out infinite;
+    }
+
+    .ambient-orb.one {
+        top: 8%;
+        left: 3%;
+    }
+
+    .ambient-orb.two {
+        bottom: 5%;
+        right: 3%;
+        background: rgba(6, 182, 212, 0.12);
+        animation-delay: -4s;
+    }
+
+    /* ---------------- BRAND PANEL ---------------- */
+
+    .brand-panel {
+        min-height: 580px;
+        height: 100%;
+        padding: 42px 35px;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(30, 58, 105, 0.90),
+                rgba(12, 24, 48, 0.96)
+            );
+
+        border: 1px solid rgba(148, 180, 255, 0.18);
+        border-radius: 24px 0 0 24px;
+
         display: flex;
         flex-direction: column;
+        justify-content: space-between;
+
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.24);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .brand-panel::before {
+        content: "";
+        position: absolute;
+        top: -110px;
+        right: -110px;
+
+        width: 300px;
+        height: 300px;
+
+        border-radius: 50%;
+
+        background: rgba(59, 130, 246, 0.14);
+        filter: blur(10px);
+
+        animation: floatAnimation 7s ease-in-out infinite;
+    }
+
+    .brand-panel::after {
+        content: "";
+        position: absolute;
+
+        width: 220px;
+        height: 220px;
+
+        bottom: -120px;
+        left: -70px;
+
+        border: 1px solid rgba(103, 232, 249, 0.18);
+        border-radius: 50%;
+        box-shadow:
+            0 0 0 25px rgba(103, 232, 249, 0.025),
+            0 0 0 50px rgba(103, 232, 249, 0.02);
+    }
+
+    .brand-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .brand-logo {
+        width: 56px;
+        height: 56px;
+
+        display: flex;
+        align-items: center;
         justify-content: center;
-        box-shadow: 0 15px 40px rgba(20, 33, 61, 0.15);
-    }
 
-    .login-brand h1 {
-        color: white !important;
-        font-size: 2.5rem;
-        font-weight: 800;
-        margin-bottom: 12px;
-    }
+        border-radius: 16px;
 
-    .login-brand p {
-        color: #dbeafe;
-        font-size: 1.05rem;
-        line-height: 1.8;
-    }
+        background: linear-gradient(
+            145deg,
+            #60a5fa,
+            #2563eb
+        );
 
-    .login-brand .brand-icon {
-        font-size: 3.5rem;
-        margin-bottom: 15px;
-    }
-
-    .login-card {
-        background: rgba(255, 255, 255, 0.92);
-        padding: 25px 28px;
-        border: 1px solid #e2e8f0;
-        border-radius: 0 22px 22px 0;
-        min-height: 450px;
-        box-shadow: 0 15px 40px rgba(20, 33, 61, 0.10);
-    }
-
-    .login-heading {
-        color: #14213d;
-        font-size: 1.8rem;
-        font-weight: 800;
-        margin-bottom: 5px;
-    }
-
-    .login-description {
-        color: #64748b;
-        margin-bottom: 20px;
-    }
-
-    .stButton > button {
-        width: 100%;
-        border-radius: 10px;
-        min-height: 45px;
-        font-weight: 600;
-        border: none;
-        background: linear-gradient(90deg, #2563eb, #0f766e);
         color: white;
-        transition: all 0.2s ease;
+        font-size: 28px;
+
+        box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35);
+        animation: pulseGlow 4s ease-in-out infinite;
     }
 
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 7px 18px rgba(37, 99, 235, 0.2);
-        color: white;
+    .brand-name {
+        color: #ffffff;
+        font-size: 29px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-top: 18px;
     }
 
-    [data-testid="stTextInput"] input {
-        border-radius: 9px;
-        border: 1px solid #cbd5e1;
+    .brand-name span {
+        color: #60a5fa;
     }
 
-    [data-testid="stTabs"] button {
-        font-weight: 600;
+    .brand-tagline {
+        color: #a9bad7;
+        font-size: 12px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-top: 4px;
     }
 
-    .security-note {
-        font-size: 0.8rem;
-        color: #64748b;
-        text-align: center;
-        margin-top: 20px;
+    .brand-headline {
+        color: #ffffff;
+        font-size: 35px;
+        line-height: 1.25;
+        letter-spacing: -1.2px;
+        font-weight: 750;
+        margin-top: 55px;
     }
 
-    @media (max-width: 700px) {
-        .block-container {
-            padding-top: 1rem;
+    .brand-headline span {
+        color: #60a5fa;
+    }
+
+    .brand-description {
+        color: #b5c4dc;
+        font-size: 14px;
+        line-height: 1.9;
+        margin-top: 18px;
+    }
+
+    /* ---------------- VISUAL ANALYTICS CARD ---------------- */
+
+    .visual-card {
+        margin-top: 30px;
+        padding: 18px;
+
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(148, 180, 255, 0.14);
+        border-radius: 17px;
+
+        backdrop-filter: blur(14px);
+    }
+
+    .visual-card-label {
+        color: #9eb1d0;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    .visual-card-title {
+        color: #ffffff;
+        font-size: 17px;
+        font-weight: 650;
+        margin-top: 7px;
+    }
+
+    .visual-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 9px;
+        height: 75px;
+        margin-top: 15px;
+    }
+
+    .visual-bar {
+        flex: 1;
+        border-radius: 5px 5px 2px 2px;
+        background: linear-gradient(
+            to top,
+            #2563eb,
+            #67e8f9
+        );
+        transform-origin: bottom;
+        animation: barRise 1s ease-out both;
+    }
+
+    @keyframes barRise {
+        from {
+            transform: scaleY(0.05);
+            opacity: 0.3;
         }
 
-        .login-brand {
-            border-radius: 18px 18px 0 0;
+        to {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+    }
+
+    .bar1 { height: 35%; animation-delay: 0.1s; }
+    .bar2 { height: 60%; animation-delay: 0.2s; }
+    .bar3 { height: 44%; animation-delay: 0.3s; }
+    .bar4 { height: 78%; animation-delay: 0.4s; }
+    .bar5 { height: 55%; animation-delay: 0.5s; }
+    .bar6 { height: 95%; animation-delay: 0.6s; }
+    .bar7 { height: 72%; animation-delay: 0.7s; }
+
+    .brand-footer {
+        color: #7f93b4;
+        font-size: 11px;
+        margin-top: 28px;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* ---------------- AUTHENTICATION PANEL ---------------- */
+
+    .auth-panel {
+        min-height: 580px;
+        padding: 35px 32px;
+
+        background: rgba(15, 23, 42, 0.91);
+
+        border: 1px solid rgba(148, 163, 184, 0.17);
+        border-left: none;
+
+        border-radius: 0 24px 24px 0;
+
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.22);
+        backdrop-filter: blur(20px);
+    }
+
+    .auth-eyebrow {
+        color: #60a5fa;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .auth-title {
+        color: #f8fafc;
+        font-size: 29px;
+        font-weight: 750;
+        letter-spacing: -0.8px;
+        margin-top: 12px;
+    }
+
+    .auth-subtitle {
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.7;
+        margin-top: 8px;
+        margin-bottom: 24px;
+    }
+
+    /* ---------------- FORM LABELS ---------------- */
+
+    [data-testid="stWidgetLabel"] p {
+        color: #d4deed !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+    }
+
+    /* ---------------- INPUT FIELDS ---------------- */
+
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextInput"] input:focus {
+        background: #111c30 !important;
+        color: #f1f5f9 !important;
+
+        border: 1px solid #293851 !important;
+        border-radius: 10px !important;
+
+        min-height: 44px;
+        transition: border-color 0.2s ease,
+                    box-shadow 0.2s ease;
+    }
+
+    [data-testid="stTextInput"] input:focus {
+        border-color: #60a5fa !important;
+
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    [data-testid="stTextInput"] input::placeholder {
+        color: #64748b !important;
+    }
+
+    /* ---------------- CHECKBOXES ---------------- */
+
+    [data-testid="stCheckbox"] label {
+        color: #b8c6db !important;
+        font-size: 12px !important;
+    }
+
+    /* ---------------- BUTTONS ---------------- */
+
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] > button {
+        width: 100%;
+        min-height: 46px;
+
+        background: linear-gradient(
+            100deg,
+            #2563eb,
+            #0ea5e9
+        ) !important;
+
+        color: white !important;
+        border: 1px solid rgba(147, 197, 253, 0.25) !important;
+        border-radius: 10px !important;
+
+        font-weight: 700 !important;
+        font-size: 13px !important;
+
+        transition: transform 0.2s ease,
+                    box-shadow 0.2s ease,
+                    filter 0.2s ease;
+    }
+
+    .stButton > button:hover,
+    [data-testid="stFormSubmitButton"] > button:hover {
+        transform: translateY(-2px);
+
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+
+        filter: brightness(1.12);
+    }
+
+    .stButton > button:focus-visible,
+    [data-testid="stFormSubmitButton"] > button:focus-visible {
+        outline: 2px solid #67e8f9 !important;
+        outline-offset: 3px;
+    }
+
+    /* ---------------- TABS ---------------- */
+
+    [data-testid="stTabs"] [role="tablist"] {
+        gap: 10px;
+        border-bottom: 1px solid #26334a;
+    }
+
+    [data-testid="stTabs"] button[role="tab"] {
+        color: #94a3b8 !important;
+        font-weight: 650;
+        font-size: 13px;
+    }
+
+    [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        color: #60a5fa !important;
+    }
+
+    [data-testid="stTabs"] [data-baseweb="tab-highlight"] {
+        background-color: #60a5fa !important;
+    }
+
+    /* ---------------- DIVIDERS AND CAPTIONS ---------------- */
+
+    hr {
+        border-color: #26334a !important;
+    }
+
+    [data-testid="stCaptionContainer"] {
+        color: #94a3b8;
+    }
+
+    /* ---------------- ALERTS ---------------- */
+
+    [data-testid="stAlert"] {
+        border-radius: 10px;
+    }
+
+    /* ---------------- RESPONSIVE DESIGN ---------------- */
+
+    @media (max-width: 800px) {
+        .block-container {
+            padding: 1rem;
+        }
+
+        .brand-panel {
             min-height: auto;
             padding: 25px;
+            border-radius: 20px 20px 0 0;
         }
 
-        .login-card {
-            border-radius: 0 0 18px 18px;
+        .brand-headline {
+            font-size: 27px;
+            margin-top: 25px;
+        }
+
+        .visual-card {
+            margin-top: 20px;
+        }
+
+        .brand-footer {
+            margin-top: 20px;
+        }
+
+        .auth-panel {
             min-height: auto;
-            padding: 20px;
+            padding: 25px 20px;
+            border-left: 1px solid rgba(148, 163, 184, 0.17);
+            border-radius: 0 0 20px 20px;
         }
     }
+
+    /* Respect reduced-motion accessibility settings. */
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+
     </style>
+
+    <div class="ambient-orb one"></div>
+    <div class="ambient-orb two"></div>
     """, unsafe_allow_html=True)
 
-    # Two-column layout
-    left, right = st.columns([1, 1.15], gap="small")
+    # =========================================================
+    # TWO-PANEL LOGIN LAYOUT
+    # =========================================================
+
+    left, right = st.columns(
+        [1.02, 1],
+        gap="small"
+    )
+
+    # =========================================================
+    # LEFT: BRANDING AND VISUALS
+    # =========================================================
 
     with left:
+
         st.markdown("""
-        <div class="login-brand">
-            <div class="brand-icon">📊</div>
-            <h1>StaffMetrics</h1>
-            <p>
-                Turn employee data into meaningful insights.
-                Analyze salaries, monitor performance, and
-                make better workforce decisions.
-            </p>
-            <p>
-                ✓ Employee analytics<br>
-                ✓ Salary insights<br>
-                ✓ Performance reports<br>
-                ✓ Workforce management
-            </p>
+        <div class="brand-panel">
+
+            <div class="brand-content">
+
+                <div class="brand-logo">✦</div>
+
+                <div class="brand-name">
+                    Staff<span>Metrics</span>
+                </div>
+
+                <div class="brand-tagline">
+                    Workforce intelligence
+                </div>
+
+                <div class="brand-headline">
+                    Understand your workforce.<br>
+                    <span>Unlock better decisions.</span>
+                </div>
+
+                <div class="brand-description">
+                    One intelligent workspace for employee analytics,
+                    compensation insights, and performance management.
+                    Transform workforce data into decisions that matter.
+                </div>
+
+                <div class="visual-card">
+
+                    <div class="visual-card-label">
+                        Your analytics workspace
+                    </div>
+
+                    <div class="visual-card-title">
+                        Workforce insights
+                    </div>
+
+                    <div class="visual-bars">
+                        <div class="visual-bar bar1"></div>
+                        <div class="visual-bar bar2"></div>
+                        <div class="visual-bar bar3"></div>
+                        <div class="visual-bar bar4"></div>
+                        <div class="visual-bar bar5"></div>
+                        <div class="visual-bar bar6"></div>
+                        <div class="visual-bar bar7"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="brand-footer">
+                STAFFMETRICS &nbsp;·&nbsp;
+                EMPLOYEE ANALYTICS PLATFORM
+            </div>
+
         </div>
         """, unsafe_allow_html=True)
+
+    # =========================================================
+    # RIGHT: LOGIN, REGISTRATION AND RECOVERY
+    # =========================================================
 
     with right:
+
         st.markdown("""
-        <div class="login-card">
-            <div class="login-heading">Welcome back!</div>
-            <div class="login-description">
-                Sign in to access your analytics dashboard.
+        <div class="auth-panel">
+
+            <div class="auth-eyebrow">
+                Secure workspace
             </div>
+
+            <div class="auth-title">
+                Welcome back
+            </div>
+
+            <div class="auth-subtitle">
+                Sign in to access your employee analytics dashboard.
+                Your workspace is waiting for you.
+            </div>
+
         </div>
         """, unsafe_allow_html=True)
 
-        login_tab, register_tab = st.tabs(
-            ["🔐 Sign in", "✨ Create account"]
-        )
+        login_tab, register_tab, recovery_tab = st.tabs([
+            "Sign in",
+            "Create account",
+            "Forgot password?"
+        ])
 
-        # ---------------- LOGIN ----------------
+        # =====================================================
+        # SIGN IN
+        # =====================================================
+
         with login_tab:
-            st.subheader("Sign in to your account")
 
-            login_id = st.text_input(
-                "Username or email",
-                key="login_username"
-            )
+            st.markdown("#### Sign in to StaffMetrics")
 
-            show_login_password = st.checkbox(
-                "Show password",
-                key="show_login_password"
-            )
+            with st.form(
+                "staffmetrics_login_form",
+                clear_on_submit=False
+            ):
 
-            login_password = st.text_input(
-                "Password",
-                type="default" if show_login_password else "password",
-                key="login_password"
-            )
+                login_id = st.text_input(
+                    "Username or email",
+                    placeholder="Enter your username or email",
+                    key="login_username"
+                )
 
-            remember_me = st.checkbox(
-                "Remember me on this session",
-                key="remember_me"
-            )
+                login_password = st.text_input(
+                    "Password",
+                    placeholder="Enter your password",
+                    type="password",
+                    key="login_password"
+                )
 
-            if st.button("Sign in", key="login_button"):
+                remember_me = st.checkbox(
+                    "Remember me for this session",
+                    key="remember_me"
+                )
+
+                submitted = st.form_submit_button(
+                    "Sign in  →",
+                    use_container_width=True
+                )
+
+            # Enter submits the form automatically.
+
+            if submitted:
+
                 if not login_id.strip() or not login_password:
-                    st.warning("Enter your username/email and password.")
+
+                    st.warning(
+                        "Please enter your username/email and password."
+                    )
+
                 else:
-                    user = auth.login(login_id, login_password)
 
-                    if user:
-                        st.session_state.user = user
+                    try:
 
-                        # This flag records the user's preference for
-                        # the current Streamlit session only.
-                        
-
-                        st.rerun()
-                    else:
-                        st.error(
-                            "The username/email or password is incorrect."
+                        user = auth.login(
+                            login_id.strip(),
+                            login_password
                         )
 
-            with st.expander("Forgot your password?"):
-                st.write(
-                    "Password recovery requires a configured email "
-                    "or authentication provider."
-                )
-                st.info(
-                    "The password-reset service must be configured "
-                    "before a recovery email can be sent."
-                )
+                        if user:
 
-        # ---------------- REGISTRATION ----------------
+                            st.session_state.user = user
+
+                            # This checkbox is only a session preference.
+                            # It does not create persistent authentication.
+
+                            st.session_state.remember_me = remember_me
+
+                            db.log_activity(
+                                user["id"],
+                                "signed in"
+                            )
+
+                            st.rerun()
+
+                        else:
+
+                            st.error(
+                                "Unable to sign in with those credentials. "
+                                "Check your details and try again."
+                            )
+
+                    except Exception:
+
+                        # Avoid displaying internal database or
+                        # authentication errors to the user.
+
+                        st.error(
+                            "Sign-in is temporarily unavailable. "
+                            "Please try again later."
+                        )
+
+            st.markdown("---")
+
+            st.markdown("""
+            <div style="
+                text-align:center;
+                color:#94a3b8;
+                font-size:11px;
+                line-height:1.8;
+            ">
+                🔒 Protected account access<br>
+                Use your registered credentials to continue.
+            </div>
+            """, unsafe_allow_html=True)
+
+        # =====================================================
+        # REGISTRATION
+        # =====================================================
+
         with register_tab:
-            st.subheader("Create your account")
 
-            full_name = st.text_input(
-                "Full name",
-                key="register_full_name"
-            )
+            st.markdown("#### Create your account")
 
-            email = st.text_input(
-                "Email address",
-                key="register_email"
-            )
+            with st.form(
+                "staffmetrics_register_form",
+                clear_on_submit=False
+            ):
 
-            username = st.text_input(
-                "Choose a username",
-                key="register_username"
-            )
+                full_name = st.text_input(
+                    "Full name",
+                    placeholder="Enter your full name",
+                    key="register_full_name"
+                )
 
-            show_register_password = st.checkbox(
-                "Show registration passwords",
-                key="show_register_password"
-            )
+                email = st.text_input(
+                    "Email address",
+                    placeholder="you@example.com",
+                    key="register_email"
+                )
 
-            password_type = (
-                "default" if show_register_password else "password"
-            )
+                username = st.text_input(
+                    "Username",
+                    placeholder="Choose a username",
+                    key="register_username"
+                )
 
-            password = st.text_input(
-                "Create password",
-                type=password_type,
-                key="register_password"
-            )
+                password = st.text_input(
+                    "Create password",
+                    type="password",
+                    placeholder="At least 12 characters recommended",
+                    key="register_password"
+                )
 
-            confirm_password = st.text_input(
-                "Confirm password",
-                type=password_type,
-                key="register_confirm_password"
-            )
+                confirm_password = st.text_input(
+                    "Confirm password",
+                    type="password",
+                    placeholder="Re-enter your password",
+                    key="register_confirm_password"
+                )
 
-            # Password-strength feedback
+                submitted_register = st.form_submit_button(
+                    "Create secure account  →",
+                    use_container_width=True
+                )
+
+            # Password feedback outside the form updates when
+            # Streamlit reruns after a widget interaction.
+
             if password:
-                import re
 
-                score = 0
+                score = sum([
+                    len(password) >= 12,
+                    bool(re.search(r"[A-Z]", password)),
+                    bool(re.search(r"[a-z]", password)),
+                    bool(re.search(r"[0-9]", password)),
+                    bool(re.search(r"[^A-Za-z0-9]", password))
+                ])
 
-                if len(password) >= 8:
-                    score += 1
-                if re.search(r"[A-Z]", password):
-                    score += 1
-                if re.search(r"[a-z]", password):
-                    score += 1
-                if re.search(r"[0-9]", password):
-                    score += 1
-                if re.search(r"[^A-Za-z0-9]", password):
-                    score += 1
+                if len(password) < 8:
 
-                if score <= 2:
-                    st.warning("Password strength: Weak")
+                    st.warning(
+                        "Password strength: Too short."
+                    )
+
+                elif score <= 2:
+
+                    st.warning(
+                        "Password strength: Weak. "
+                        "Consider using a longer passphrase."
+                    )
+
                 elif score <= 4:
-                    st.info("Password strength: Moderate")
+
+                    st.info(
+                        "Password strength: Moderate. "
+                        "Add more variety or length."
+                    )
+
                 else:
-                    st.success("Password strength: Strong")
 
-            st.caption(
-                "Use at least 8 characters. A combination of "
-                "uppercase letters, lowercase letters, numbers, "
-                "and symbols is recommended."
-            )
+                    st.success(
+                        "Password strength: Strong."
+                    )
 
-            if st.button("Create account", key="register_button"):
+            if submitted_register:
+
                 if not all([
                     full_name.strip(),
                     email.strip(),
@@ -326,39 +886,148 @@ def auth_page():
                     password,
                     confirm_password
                 ]):
-                    st.warning("Please complete all the fields.")
+
+                    st.warning(
+                        "Please complete every field."
+                    )
+
+                elif not re.fullmatch(
+                    r"[^@\s]+@[^@\s]+\.[^@\s]+",
+                    email.strip()
+                ):
+
+                    st.error(
+                        "Enter a valid email address."
+                    )
+
+                elif len(username.strip()) < 3:
+
+                    st.error(
+                        "Your username must contain at least "
+                        "3 characters."
+                    )
+
+                elif len(password) < 12:
+
+                    st.error(
+                        "Use a password with at least "
+                        "12 characters."
+                    )
 
                 elif password != confirm_password:
-                    st.error("The passwords do not match.")
 
-                elif len(password) < 8:
                     st.error(
-                        "Your password must contain at least 8 characters."
+                        "The passwords do not match."
                     )
 
                 else:
-                    success, message = auth.register(
-                        username,
-                        email,
-                        full_name,
-                        password
+
+                    try:
+
+                        success, message = auth.register(
+                            username.strip(),
+                            email.strip(),
+                            full_name.strip(),
+                            password
+                        )
+
+                        if success:
+
+                            st.success(
+                                "Account created successfully."
+                            )
+
+                            st.info(
+                                "You can now switch to Sign in "
+                                "to access your account."
+                            )
+
+                        else:
+
+                            st.error(message)
+
+                    except Exception:
+
+                        st.error(
+                            "Account registration is temporarily "
+                            "unavailable. Please try again later."
+                        )
+
+        # =====================================================
+        # FORGOT PASSWORD
+        # =====================================================
+
+        with recovery_tab:
+
+            st.markdown("#### Recover your account")
+
+            st.write(
+                "Forgot your password? Use your registered email "
+                "to begin the account recovery process."
+            )
+
+            st.info(
+                "Password recovery requires a backend service "
+                "that generates secure, single-use reset tokens "
+                "and sends them to the registered email address."
+            )
+
+            with st.form(
+                "staffmetrics_password_recovery_form"
+            ):
+
+                recovery_email = st.text_input(
+                    "Registered email address",
+                    placeholder="Enter your registered email",
+                    key="recovery_email"
+                )
+
+                recovery_submit = st.form_submit_button(
+                    "Request password reset  →",
+                    use_container_width=True
+                )
+
+            if recovery_submit:
+
+                if not recovery_email.strip():
+
+                    st.warning(
+                        "Enter your registered email address."
                     )
 
-                    if success:
-                        st.success(message)
-                        st.info(
-                            "Your account has been created. "
-                            "Switch to Sign in to continue."
-                        )
-                    else:
-                        st.error(message)
+                elif not re.fullmatch(
+                    r"[^@\s]+@[^@\s]+\.[^@\s]+",
+                    recovery_email.strip()
+                ):
 
-        st.markdown(
-            '<div class="security-note">'
-            'StaffMetrics · Employee Salary & Performance Analysis'
-            '</div>',
-            unsafe_allow_html=True
-        )
+                    st.warning(
+                        "Enter a valid email address."
+                    )
+
+                else:
+
+                    st.warning(
+                        "The password-reset service is not connected "
+                        "yet. No reset email has been sent. "
+                        "Connect a secure recovery backend to enable it."
+                    )
+
+        # =====================================================
+        # FOOTER
+        # =====================================================
+
+        st.markdown("""
+        <div style="
+            text-align:center;
+            color:#64748b;
+            font-size:10px;
+            margin-top:24px;
+            line-height:1.8;
+        ">
+            StaffMetrics · Employee Salary & Performance Analysis<br>
+            Secure access to your workforce analytics workspace
+        </div>
+        """, unsafe_allow_html=True)
 def show(fig):
     st.pyplot(fig)
     plt.close(fig)
