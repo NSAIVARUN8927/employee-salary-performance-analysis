@@ -1,3 +1,6 @@
+import os
+import time
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
@@ -9,18 +12,57 @@ db.init_db()
 CSV = "data/employee_salary_performance.csv"
 if not db.is_seeded():
     db.seed_database(an.prepare(an.load_data(CSV))[0])
-st.markdown("""<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-html, body, [class*="css"] {font-family: 'IBM Plex Sans', sans-serif;}
-[data-testid="stSidebar"] {background: #14213d;}
-[data-testid="stSidebar"] * {color: #e6ebf5;}
+
+# Session expiry: a signed-in user is forced back to the login page after
+# this many seconds of being open, regardless of activity. Streamlit has no
+# native session timeout, so this is enforced on every rerun below.
+SESSION_TIMEOUT_SECONDS = 60 * 60  # 1 hour
+
+# Base URL used to build password-reset links. Set APP_BASE_URL in your
+# deployment environment (e.g. https://your-app.streamlit.app); falls back
+# to localhost for local development.
+APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://localhost:8501")
+
+LIGHT_THEME = """
+.stApp {background: #f5f7fb;}
 .block-container {padding-top: 1.6rem; max-width: 1250px;}
 h1, h2, h3 {color: #14213d; font-weight: 600;}
+[data-testid="stSidebar"] {background: #14213d;}
+[data-testid="stSidebar"] * {color: #e6ebf5;}
 .banner {background: #14213d; color: #fff; padding: 22px 28px; border-radius: 6px; margin-bottom: 20px;}
 .banner h1 {color: #fff; margin: 0; font-size: 1.7rem;} .banner p {margin: 4px 0 0; color: #b9c4dc;}
 .kpi {background: #fff; border: 1px solid #dde3ee; border-top: 3px solid #0f766e; border-radius: 6px; padding: 14px 16px;}
 .kpi span {color: #5b6b82; font-size: 0.85rem;} .kpi b {display: block; font-size: 1.55rem; color: #14213d; font-weight: 600;}
-</style>""", unsafe_allow_html=True)
+[data-testid="stDataFrame"] {background: #fff;}
+"""
+
+DARK_THEME = """
+.stApp {background: #0b1224; color: #e5edf9;}
+.block-container {padding-top: 1.6rem; max-width: 1250px;}
+h1, h2, h3 {color: #e5edf9; font-weight: 600;}
+p, label, span, div {color: #cbd5e1;}
+[data-testid="stSidebar"] {background: #070b18;}
+[data-testid="stSidebar"] * {color: #e6ebf5;}
+.banner {background: linear-gradient(100deg, #1e3a69, #0c1830); color: #fff; padding: 22px 28px; border-radius: 6px; margin-bottom: 20px;}
+.banner h1 {color: #fff; margin: 0; font-size: 1.7rem;} .banner p {margin: 4px 0 0; color: #b9c4dc;}
+.kpi {background: #111c30; border: 1px solid #293851; border-top: 3px solid #2dd4bf; border-radius: 6px; padding: 14px 16px;}
+.kpi span {color: #94a3b8; font-size: 0.85rem;} .kpi b {display: block; font-size: 1.55rem; color: #f1f5f9; font-weight: 600;}
+[data-testid="stDataFrame"] {background: #111c30;}
+[data-testid="stMetricValue"] {color: #f1f5f9;}
+"""
+
+
+def apply_theme():
+    theme = st.session_state.get("theme", "Light")
+    base = """<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+html, body, [class*="css"] {font-family: 'IBM Plex Sans', sans-serif;}
+</style>"""
+    st.markdown(base, unsafe_allow_html=True)
+    st.markdown(f"<style>{DARK_THEME if theme == 'Dark' else LIGHT_THEME}</style>", unsafe_allow_html=True)
+
+
+apply_theme()
 
 
 def banner(title, subtitle=""):
@@ -30,6 +72,41 @@ def banner(title, subtitle=""):
 def kpis(items):
     for col, (label, value) in zip(st.columns(len(items)), items):
         col.markdown(f'<div class="kpi"><span>{label}</span><b>{value}</b></div>', unsafe_allow_html=True)
+
+
+def session_expired():
+    started = st.session_state.get("login_time")
+    return started is not None and (time.time() - started) > SESSION_TIMEOUT_SECONDS
+
+
+def reset_password_view(token):
+    """Standalone page shown when the app is opened with ?reset_token=... in
+    the URL (the link sent by request_password_reset)."""
+    banner("Reset your password", "Choose a new password for your StaffMetrics account")
+    user = auth.validate_reset_token(token)
+    if not user:
+        st.error("This reset link is invalid or has expired. Request a new one from the sign-in page.")
+        if st.button("Back to sign in"):
+            st.query_params.clear()
+            st.rerun()
+        return
+    st.info(f"Resetting the password for **{user['username']}** ({user['email']}).")
+    with st.form("reset_password_form"):
+        p1 = st.text_input("New password", type="password")
+        p2 = st.text_input("Confirm new password", type="password")
+        submitted = st.form_submit_button("Update password")
+    if submitted:
+        if p1 != p2:
+            st.error("The passwords do not match.")
+        else:
+            ok, message = auth.reset_password(token, p1)
+            if ok:
+                st.success(message)
+                if st.button("Continue to sign in"):
+                    st.query_params.clear()
+                    st.rerun()
+            else:
+                st.error(message)
 def auth_page():
 
     import re
@@ -586,6 +663,17 @@ def auth_page():
     # TWO-PANEL LOGIN LAYOUT
     # =========================================================
 
+    theme_col = st.columns([6, 1])[1]
+    with theme_col:
+        choice = st.selectbox(
+            "Theme", ["Light", "Dark"],
+            index=["Light", "Dark"].index(st.session_state.get("theme", "Light")),
+            key="theme_select_login", label_visibility="collapsed"
+        )
+        if choice != st.session_state.get("theme", "Light"):
+            st.session_state.theme = choice
+            st.rerun()
+
     left, right = st.columns(
         [1.02, 1],
         gap="small"
@@ -744,16 +832,12 @@ def auth_page():
                         if user:
 
                             st.session_state.user = user
+                            st.session_state.login_time = time.time()
 
                             # This checkbox is only a session preference.
                             # It does not create persistent authentication.
 
                             st.session_state.remember_me = remember_me
-
-                            db.log_activity(
-                                user["id"],
-                                "signed in"
-                            )
 
                             st.rerun()
 
@@ -763,6 +847,10 @@ def auth_page():
                                 "Unable to sign in with those credentials. "
                                 "Check your details and try again."
                             )
+
+                    except PermissionError as locked:
+
+                        st.error(str(locked))
 
                     except Exception:
 
@@ -966,11 +1054,13 @@ def auth_page():
                 "to begin the account recovery process."
             )
 
-            st.info(
-                "Password recovery requires a backend service "
-                "that generates secure, single-use reset tokens "
-                "and sends them to the registered email address."
-            )
+            if not auth.email_configured():
+                st.info(
+                    "Email delivery is not configured on this server, so "
+                    "reset links cannot be sent yet. Set the SMTP_HOST, "
+                    "SMTP_PORT, SMTP_USER, SMTP_PASSWORD and SMTP_FROM "
+                    "environment variables to enable this."
+                )
 
             with st.form(
                 "staffmetrics_password_recovery_form"
@@ -1006,11 +1096,16 @@ def auth_page():
 
                 else:
 
-                    st.warning(
-                        "The password-reset service is not connected "
-                        "yet. No reset email has been sent. "
-                        "Connect a secure recovery backend to enable it."
+                    sent, user_message, admin_message = auth.request_password_reset(
+                        recovery_email.strip(), APP_BASE_URL
                     )
+
+                    if sent:
+                        st.success(user_message)
+                    else:
+                        st.warning(user_message)
+                        if admin_message:
+                            st.caption(admin_message)
 
         # =====================================================
         # FOOTER
@@ -1195,6 +1290,7 @@ def page_dashboard(df):
         
 def manage_employees(df):
     uid = st.session_state.user["id"]
+
     with st.expander("Add an employee"), st.form("add_emp"):
         c = st.columns(3)
         e = {"Employee_ID": c[0].text_input("Employee ID"), "Name": c[1].text_input("Name"), "Age": c[2].number_input("Age", 18, 70, 30),
@@ -1203,17 +1299,50 @@ def manage_employees(df):
              "Joining_Year": c[1].number_input("Joining year", 1990, 2030, 2024), "Basic_Salary": c[2].number_input("Basic salary", 1.0, 1e7, 50000.0),
              "Bonus": c[0].number_input("Bonus", 0.0, 1e6, 0.0), "Performance_Score": c[1].number_input("Performance score (0-5)", 0.0, 5.0, 3.0, 0.5)}
         if st.form_submit_button("Add employee"):
-            try:
-                db.add_employee(e)
-                db.log_activity(uid, f"added employee {e['Employee_ID']}")
-                st.success("Employee added. It appears in the table the next time the page refreshes.")
-            except Exception as ex:
-                st.error(f"The employee could not be added: {ex}")
+            if not e["Employee_ID"].strip() or not e["Name"].strip():
+                st.error("Employee ID and name are required.")
+            else:
+                try:
+                    db.add_employee(e)
+                    db.log_activity(uid, f"added employee {e['Employee_ID']}")
+                    st.success("Employee added. It appears in the table the next time the page refreshes.")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"The employee could not be added: {ex}")
+
+    with st.expander("Edit an employee"):
+        edit_id = st.selectbox("Employee to edit", df["Employee_ID"], key="edit_emp_select")
+        current = df[df["Employee_ID"] == edit_id].iloc[0]
+        with st.form("edit_emp"):
+            c = st.columns(3)
+            e = {
+                "Name": c[0].text_input("Name", value=str(current["Name"])),
+                "Age": c[1].number_input("Age", 18, 70, int(current["Age"]) if pd.notna(current["Age"]) else 30),
+                "Gender": c[2].selectbox("Gender", ["Female", "Male"], index=["Female", "Male"].index(current["Gender"]) if current["Gender"] in ["Female", "Male"] else 0),
+                "Department": c[0].selectbox("Department", sorted(df["Department"].unique()), index=sorted(df["Department"].unique()).index(current["Department"])),
+                "Designation": c[1].text_input("Designation", value=str(current["Designation"])),
+                "Experience_Years": c[2].number_input("Experience (years)", 0, 45, int(current["Experience_Years"])),
+                "Joining_Year": c[0].number_input("Joining year", 1990, 2030, int(current["Joining_Year"]) if pd.notna(current["Joining_Year"]) else 2024),
+                "Basic_Salary": c[1].number_input("Basic salary", 1.0, 1e7, float(current["Basic_Salary"])),
+                "Bonus": c[2].number_input("Bonus", 0.0, 1e6, float(current["Bonus"])),
+                "Performance_Score": c[0].number_input("Performance score (0-5)", 0.0, 5.0, float(current["Performance_Score"]), 0.5),
+            }
+            if st.form_submit_button("Save changes"):
+                try:
+                    db.update_employee(edit_id, e)
+                    db.log_activity(uid, f"edited employee {edit_id}")
+                    st.success("Employee updated.")
+                    st.rerun()
+                except Exception as ex:
+                    st.error(f"The employee could not be updated: {ex}")
+
     with st.expander("Delete an employee"):
-        who = st.selectbox("Employee", df["Employee_ID"])
-        if st.button("Delete employee"):
+        who = st.selectbox("Employee", df["Employee_ID"], key="delete_emp_select")
+        confirm = st.checkbox(f"I confirm I want to permanently delete employee {who}.")
+        if st.button("Delete employee", disabled=not confirm):
             db.delete_employee(who)
             db.log_activity(uid, f"deleted employee {who}")
+            st.success(f"Employee {who} deleted.")
             st.rerun()
 
 
@@ -1233,26 +1362,50 @@ def page_employees(df, is_db):
     if q:
         f = f[f["Employee_ID"].astype(str).str.contains(q, case=False) | f["Name"].astype(str).str.contains(q, case=False)]
     st.caption(f"{len(f)} employees")
-    st.dataframe(f, hide_index=True)
+
+    page_size = st.selectbox("Rows per page", [10, 25, 50, 100], index=1, key="emp_page_size")
+    total_pages = max(1, -(-len(f) // page_size))
+    page_num = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1, key="emp_page_num")
+    start = (page_num - 1) * page_size
+    st.caption(f"Page {page_num} of {total_pages}")
+    st.dataframe(f.iloc[start:start + page_size], hide_index=True)
+
     st.download_button("Download filtered records (CSV)", f.to_csv(index=False), "employees_filtered.csv")
     if is_db and st.session_state.user["role"] == "admin":
         manage_employees(df)
 def page_analysis(df):
     banner("Salary and performance analysis", "Statistics, experience trends and correlations")
-    t1, t2, t3 = st.tabs(["Salary", "Performance", "Correlation"])
+    t1, t2, t3, t4 = st.tabs(["Salary", "Performance", "Correlation", "Percentiles & outliers"])
     with t1:
         st.dataframe(an.salary_summary(df).round(2).to_frame("Value"))
         show(an.fig_salary_dist(df))
+        show(an.fig_salary_box_by_dept(df))
         st.subheader("By experience")
         st.dataframe(an.by_experience(df), hide_index=True)
         show(an.fig_experience(df))
+        st.subheader("By designation")
+        st.dataframe(an.by_designation(df), hide_index=True)
     with t2:
         st.dataframe(an.performance_summary(df).round(2).to_frame("Value"))
         show(an.fig_perf_dist(df))
         show(an.fig_dept_perf(df))
+        st.subheader("Top performers")
+        st.dataframe(an.top_performers(df), hide_index=True)
     with t3:
         st.dataframe(an.correlation(df).round(2))
         show(an.fig_corr(df))
+        st.caption("A correlation shows association, not causation — it does not prove that one factor causes the other.")
+    with t4:
+        st.subheader("Salary percentiles")
+        st.dataframe(an.salary_percentiles(df).to_frame("Salary"))
+        st.subheader("Salary bands")
+        st.dataframe(an.salary_bands(df), hide_index=True)
+        st.subheader("Salary outliers (1.5\u00d7 IQR rule)")
+        outliers = an.salary_outliers(df)
+        if outliers.empty:
+            st.info("No salary outliers were found in the current selection.")
+        else:
+            st.dataframe(outliers, hide_index=True)
 
 
 def page_departments(df):
@@ -1288,6 +1441,14 @@ def page_admin():
     st.dataframe(pd.DataFrame(db.list_users()), hide_index=True)
     st.dataframe(pd.DataFrame(db.recent_activity()), hide_index=True)
 def main():
+    if session_expired():
+        db.log_activity(st.session_state.user["id"], "session expired")
+        del st.session_state["user"]
+        st.session_state.pop("login_time", None)
+        st.warning("Your session expired after a period of inactivity. Please sign in again.")
+        st.rerun()
+        return
+
     user = st.session_state.user
     pages = ["Dashboard", "Employees", "Analysis", "Departments", "Upload and export"]
     if user["role"] == "admin":
@@ -1302,9 +1463,18 @@ def main():
         )
         up = st.session_state.get("upload")
         src = st.selectbox("Data source", ["Employee database"] + (["Uploaded file"] if up is not None else []))
+        theme = st.selectbox(
+            "Theme", ["Light", "Dark"],
+            index=["Light", "Dark"].index(st.session_state.get("theme", "Light")),
+            key="theme_select_main"
+        )
+        if theme != st.session_state.get("theme", "Light"):
+            st.session_state.theme = theme
+            st.rerun()
         if st.button("Sign out"):
             db.log_activity(user["id"], "signed out")
             del st.session_state["user"]
+            st.session_state.pop("login_time", None)
             st.rerun()
     is_db = src == "Employee database"
     df = db.employee_frame() if is_db else up
@@ -1316,7 +1486,10 @@ def main():
     else: page_admin()
 
 
-if "user" not in st.session_state:
+_reset_token = st.query_params.get("reset_token")
+if _reset_token and "user" not in st.session_state:
+    reset_password_view(_reset_token)
+elif "user" not in st.session_state:
     auth_page()
 else:
     main()
