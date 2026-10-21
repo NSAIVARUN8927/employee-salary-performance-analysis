@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
-from backend import analytics as an, auth, database as db, sql_queries as Q
+from backend import analytics as an, auth, database as db
 
 st.set_page_config(page_title="Employee Salary & Performance Analysis", page_icon="📊", layout="wide")
 db.init_db()
@@ -1265,21 +1265,6 @@ def page_departments(df):
         show(an.fig_dept_salary(df))
 
 
-def page_sql():
-    banner("SQL explorer", "Run the prepared queries or write your own SELECT")
-    titles = [f"Q{i}. {t}" for i, (t, _) in enumerate(Q.QUERIES, 1)]
-    pick = st.selectbox("Prepared query", titles)
-    sql = st.text_area("SQL (read-only)", Q.QUERIES[titles.index(pick)][1], height=130)
-    if st.button("Run query"):
-        if not sql.strip().lower().startswith("select"):
-            st.error("Only SELECT statements can be run here.")
-        else:
-            try:
-                st.dataframe(db.run_query(sql), hide_index=True)
-            except Exception as ex:
-                st.error(f"The query failed: {ex}")
-
-
 def page_data(df):
     banner("Upload and export", "Analyse your own CSV and download results")
     up = st.file_uploader("Upload a CSV with the same columns as the sample dataset", type="csv")
@@ -1304,7 +1289,7 @@ def page_admin():
     st.dataframe(pd.DataFrame(db.recent_activity()), hide_index=True)
 def main():
     user = st.session_state.user
-    pages = ["Dashboard", "Employees", "Analysis", "Departments", "SQL explorer", "Upload and export"]
+    pages = ["Dashboard", "Employees", "Analysis", "Departments", "Upload and export"]
     if user["role"] == "admin":
         pages.append("Administration")
     with st.sidebar:
@@ -1327,7 +1312,6 @@ def main():
     elif page == "Employees": page_employees(df, is_db)
     elif page == "Analysis": page_analysis(df)
     elif page == "Departments": page_departments(df)
-    elif page == "SQL explorer": page_sql()
     elif page == "Upload and export": page_data(df)
     else: page_admin()
 
