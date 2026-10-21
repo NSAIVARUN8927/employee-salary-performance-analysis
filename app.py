@@ -108,755 +108,715 @@ def reset_password_view(token):
             else:
                 st.error(message)
 def auth_page():
-
     import re
     import streamlit as st
+    import time
 
     # =========================================================
-    # STAFFMETRICS — PROFESSIONAL AUTHENTICATION INTERFACE
+    # EAGLES - CINEMATIC AUTHENTICATION PAGE
     # =========================================================
 
-    st.markdown("""
-    <style>
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* ---------------- GLOBAL LOGIN BACKGROUND ---------------- */
+        /* GLOBAL BACKGROUND */
 
-    .stApp {
-        background:
-            radial-gradient(
-                circle at 12% 15%,
-                rgba(37, 99, 235, 0.20),
-                transparent 32%
-            ),
-            radial-gradient(
-                circle at 88% 85%,
-                rgba(6, 182, 212, 0.13),
-                transparent 30%
-            ),
-            linear-gradient(
-                135deg,
-                #070b18 0%,
-                #0b1224 50%,
-                #101c35 100%
-            );
+        .stApp {
+            background:
+                radial-gradient(
+                    circle at 15% 20%,
+                    rgba(0, 180, 255, 0.15),
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at 85% 75%,
+                    rgba(0, 255, 220, 0.10),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #020711 0%,
+                    #07172b 48%,
+                    #03101e 100%
+                );
 
-        background-attachment: fixed;
-        color: #e5edf9;
-    }
-
-    /* ---------------- HIDE SIDEBAR ---------------- */
-
-    [data-testid="stSidebar"] {
-        display: none;
-    }
-
-    #MainMenu {
-        visibility: hidden;
-    }
-
-    footer {
-        visibility: hidden;
-    }
-
-    header[data-testid="stHeader"] {
-        background: transparent;
-    }
-
-    /* ---------------- PAGE CONTAINER ---------------- */
-
-    .block-container {
-        max-width: 1180px;
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-    /* ---------------- ANIMATED BACKGROUND ---------------- */
-
-    @keyframes backgroundGlow {
-        0% {
-            transform: translate(0, 0) scale(1);
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+            color: #eaf6ff;
         }
 
-        50% {
-            transform: translate(20px, -25px) scale(1.08);
+        /* HIDE STREAMLIT CHROME */
+
+        [data-testid="stSidebar"] {
+            display: none;
         }
 
-        100% {
-            transform: translate(0, 0) scale(1);
-        }
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(18px);
+        #MainMenu,
+        footer {
+            visibility: hidden;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes floatAnimation {
-        0%, 100% {
-            transform: translateY(0);
+        header[data-testid="stHeader"] {
+            background: transparent;
         }
 
-        50% {
-            transform: translateY(-12px);
-        }
-    }
-
-    @keyframes pulseGlow {
-        0%, 100% {
-            box-shadow: 0 0 18px rgba(59, 130, 246, 0.12);
-        }
-
-        50% {
-            box-shadow: 0 0 35px rgba(59, 130, 246, 0.28);
-        }
-    }
-
-    .login-shell {
-        animation: fadeIn 0.8s ease-out both;
-    }
-
-    .ambient-orb {
-        position: fixed;
-        width: 230px;
-        height: 230px;
-        border-radius: 50%;
-        background: rgba(37, 99, 235, 0.12);
-        filter: blur(65px);
-        pointer-events: none;
-        z-index: 0;
-        animation: backgroundGlow 8s ease-in-out infinite;
-    }
-
-    .ambient-orb.one {
-        top: 8%;
-        left: 3%;
-    }
-
-    .ambient-orb.two {
-        bottom: 5%;
-        right: 3%;
-        background: rgba(6, 182, 212, 0.12);
-        animation-delay: -4s;
-    }
-
-    /* ---------------- BRAND PANEL ---------------- */
-
-    .brand-panel {
-        min-height: 580px;
-        height: 100%;
-        padding: 42px 35px;
-
-        background:
-            linear-gradient(
-                145deg,
-                rgba(30, 58, 105, 0.90),
-                rgba(12, 24, 48, 0.96)
-            );
-
-        border: 1px solid rgba(148, 180, 255, 0.18);
-        border-radius: 24px 0 0 24px;
-
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.24);
-        overflow: hidden;
-        position: relative;
-    }
-
-    .brand-panel::before {
-        content: "";
-        position: absolute;
-        top: -110px;
-        right: -110px;
-
-        width: 300px;
-        height: 300px;
-
-        border-radius: 50%;
-
-        background: rgba(59, 130, 246, 0.14);
-        filter: blur(10px);
-
-        animation: floatAnimation 7s ease-in-out infinite;
-    }
-
-    .brand-panel::after {
-        content: "";
-        position: absolute;
-
-        width: 220px;
-        height: 220px;
-
-        bottom: -120px;
-        left: -70px;
-
-        border: 1px solid rgba(103, 232, 249, 0.18);
-        border-radius: 50%;
-        box-shadow:
-            0 0 0 25px rgba(103, 232, 249, 0.025),
-            0 0 0 50px rgba(103, 232, 249, 0.02);
-    }
-
-    .brand-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .brand-logo {
-        width: 56px;
-        height: 56px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 16px;
-
-        background: linear-gradient(
-            145deg,
-            #60a5fa,
-            #2563eb
-        );
-
-        color: white;
-        font-size: 28px;
-
-        box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35);
-        animation: pulseGlow 4s ease-in-out infinite;
-    }
-
-    .brand-name {
-        color: #ffffff;
-        font-size: 29px;
-        font-weight: 800;
-        letter-spacing: -1px;
-        margin-top: 18px;
-    }
-
-    .brand-name span {
-        color: #60a5fa;
-    }
-
-    .brand-tagline {
-        color: #a9bad7;
-        font-size: 12px;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        margin-top: 4px;
-    }
-
-    .brand-headline {
-        color: #ffffff;
-        font-size: 35px;
-        line-height: 1.25;
-        letter-spacing: -1.2px;
-        font-weight: 750;
-        margin-top: 55px;
-    }
-
-    .brand-headline span {
-        color: #60a5fa;
-    }
-
-    .brand-description {
-        color: #b5c4dc;
-        font-size: 14px;
-        line-height: 1.9;
-        margin-top: 18px;
-    }
-
-    /* ---------------- VISUAL ANALYTICS CARD ---------------- */
-
-    .visual-card {
-        margin-top: 30px;
-        padding: 18px;
-
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(148, 180, 255, 0.14);
-        border-radius: 17px;
-
-        backdrop-filter: blur(14px);
-    }
-
-    .visual-card-label {
-        color: #9eb1d0;
-        font-size: 11px;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-    }
-
-    .visual-card-title {
-        color: #ffffff;
-        font-size: 17px;
-        font-weight: 650;
-        margin-top: 7px;
-    }
-
-    .visual-bars {
-        display: flex;
-        align-items: flex-end;
-        gap: 9px;
-        height: 75px;
-        margin-top: 15px;
-    }
-
-    .visual-bar {
-        flex: 1;
-        border-radius: 5px 5px 2px 2px;
-        background: linear-gradient(
-            to top,
-            #2563eb,
-            #67e8f9
-        );
-        transform-origin: bottom;
-        animation: barRise 1s ease-out both;
-    }
-
-    @keyframes barRise {
-        from {
-            transform: scaleY(0.05);
-            opacity: 0.3;
-        }
-
-        to {
-            transform: scaleY(1);
-            opacity: 1;
-        }
-    }
-
-    .bar1 { height: 35%; animation-delay: 0.1s; }
-    .bar2 { height: 60%; animation-delay: 0.2s; }
-    .bar3 { height: 44%; animation-delay: 0.3s; }
-    .bar4 { height: 78%; animation-delay: 0.4s; }
-    .bar5 { height: 55%; animation-delay: 0.5s; }
-    .bar6 { height: 95%; animation-delay: 0.6s; }
-    .bar7 { height: 72%; animation-delay: 0.7s; }
-
-    .brand-footer {
-        color: #7f93b4;
-        font-size: 11px;
-        margin-top: 28px;
-        position: relative;
-        z-index: 2;
-    }
-
-    /* ---------------- AUTHENTICATION PANEL ---------------- */
-
-    .auth-panel {
-        min-height: 580px;
-        padding: 35px 32px;
-
-        background: rgba(15, 23, 42, 0.91);
-
-        border: 1px solid rgba(148, 163, 184, 0.17);
-        border-left: none;
-
-        border-radius: 0 24px 24px 0;
-
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.22);
-        backdrop-filter: blur(20px);
-    }
-
-    .auth-eyebrow {
-        color: #60a5fa;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-    }
-
-    .auth-title {
-        color: #f8fafc;
-        font-size: 29px;
-        font-weight: 750;
-        letter-spacing: -0.8px;
-        margin-top: 12px;
-    }
-
-    .auth-subtitle {
-        color: #94a3b8;
-        font-size: 13px;
-        line-height: 1.7;
-        margin-top: 8px;
-        margin-bottom: 24px;
-    }
-
-    /* ---------------- FORM LABELS ---------------- */
-
-    [data-testid="stWidgetLabel"] p {
-        color: #d4deed !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-    }
-
-    /* ---------------- INPUT FIELDS ---------------- */
-
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextInput"] input:focus {
-        background: #111c30 !important;
-        color: #f1f5f9 !important;
-
-        border: 1px solid #293851 !important;
-        border-radius: 10px !important;
-
-        min-height: 44px;
-        transition: border-color 0.2s ease,
-                    box-shadow 0.2s ease;
-    }
-
-    [data-testid="stTextInput"] input:focus {
-        border-color: #60a5fa !important;
-
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
-    }
-
-    [data-testid="stTextInput"] input::placeholder {
-        color: #64748b !important;
-    }
-
-    /* ---------------- CHECKBOXES ---------------- */
-
-    [data-testid="stCheckbox"] label {
-        color: #b8c6db !important;
-        font-size: 12px !important;
-    }
-
-    /* ---------------- BUTTONS ---------------- */
-
-    .stButton > button,
-    [data-testid="stFormSubmitButton"] > button {
-        width: 100%;
-        min-height: 46px;
-
-        background: linear-gradient(
-            100deg,
-            #2563eb,
-            #0ea5e9
-        ) !important;
-
-        color: white !important;
-        border: 1px solid rgba(147, 197, 253, 0.25) !important;
-        border-radius: 10px !important;
-
-        font-weight: 700 !important;
-        font-size: 13px !important;
-
-        transition: transform 0.2s ease,
-                    box-shadow 0.2s ease,
-                    filter 0.2s ease;
-    }
-
-    .stButton > button:hover,
-    [data-testid="stFormSubmitButton"] > button:hover {
-        transform: translateY(-2px);
-
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
-
-        filter: brightness(1.12);
-    }
-
-    .stButton > button:focus-visible,
-    [data-testid="stFormSubmitButton"] > button:focus-visible {
-        outline: 2px solid #67e8f9 !important;
-        outline-offset: 3px;
-    }
-
-    /* ---------------- TABS ---------------- */
-
-    [data-testid="stTabs"] [role="tablist"] {
-        gap: 10px;
-        border-bottom: 1px solid #26334a;
-    }
-
-    [data-testid="stTabs"] button[role="tab"] {
-        color: #94a3b8 !important;
-        font-weight: 650;
-        font-size: 13px;
-    }
-
-    [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-        color: #60a5fa !important;
-    }
-
-    [data-testid="stTabs"] [data-baseweb="tab-highlight"] {
-        background-color: #60a5fa !important;
-    }
-
-    /* ---------------- DIVIDERS AND CAPTIONS ---------------- */
-
-    hr {
-        border-color: #26334a !important;
-    }
-
-    [data-testid="stCaptionContainer"] {
-        color: #94a3b8;
-    }
-
-    /* ---------------- ALERTS ---------------- */
-
-    [data-testid="stAlert"] {
-        border-radius: 10px;
-    }
-
-    /* ---------------- RESPONSIVE DESIGN ---------------- */
-
-    @media (max-width: 800px) {
         .block-container {
-            padding: 1rem;
+            max-width: 1200px;
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
         }
 
-        .brand-panel {
-            min-height: auto;
-            padding: 25px;
-            border-radius: 20px 20px 0 0;
+        /* ANIMATIONS */
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .brand-headline {
-            font-size: 27px;
-            margin-top: 25px;
+        @keyframes eagleGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 8px rgba(0, 190, 255, .25));
+                transform: translateY(0);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 25px rgba(0, 220, 255, .65));
+                transform: translateY(-5px);
+            }
         }
 
-        .visual-card {
+        @keyframes ambientMove {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(25px, -20px);
+            }
+        }
+
+        @keyframes barAnimation {
+            from {
+                transform: scaleY(.1);
+                opacity: .25;
+            }
+
+            to {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes borderGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(0, 174, 255, .04);
+            }
+
+            50% {
+                box-shadow: 0 0 35px rgba(0, 174, 255, .13);
+            }
+        }
+
+        /* BACKGROUND LIGHTS */
+
+        .eagles-orb {
+            position: fixed;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: rgba(0, 153, 255, .10);
+            filter: blur(70px);
+            pointer-events: none;
+            z-index: 0;
+            animation: ambientMove 9s ease-in-out infinite;
+        }
+
+        .eagles-orb-one {
+            top: 8%;
+            left: -80px;
+        }
+
+        .eagles-orb-two {
+            bottom: 5%;
+            right: -70px;
+            background: rgba(0, 255, 210, .09);
+            animation-delay: -4s;
+        }
+
+        /* MAIN TWO-PANEL LAYOUT */
+
+        .eagles-brand-panel {
+            position: relative;
+            overflow: hidden;
+            min-height: 650px;
+            height: 100%;
+
+            padding: 35px 32px;
+
+            border: 1px solid rgba(76, 200, 255, .24);
+            border-radius: 24px 0 0 24px;
+
+            background:
+                radial-gradient(
+                    circle at 80% 25%,
+                    rgba(0, 174, 255, .22),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    150deg,
+                    rgba(7, 36, 65, .98),
+                    rgba(2, 11, 25, .98)
+                );
+
+            box-shadow: 0 25px 80px rgba(0, 0, 0, .4);
+
+            animation: fadeUp .8s ease-out both;
+        }
+
+        .eagles-brand-panel::before {
+            content: "";
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            top: 100px;
+            right: -180px;
+
+            border: 1px solid rgba(0, 200, 255, .22);
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 0 30px rgba(0, 200, 255, .025),
+                0 0 0 60px rgba(0, 200, 255, .02);
+        }
+
+        .eagles-brand-panel::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            bottom: -130px;
+            left: -70px;
+
+            border: 1px solid rgba(0, 255, 220, .2);
+            border-radius: 50%;
+        }
+
+        .eagles-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* EAGLE LOGO */
+
+        .eagles-logo {
+            width: 76px;
+            height: 76px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            font-size: 43px;
+
+            border: 1px solid rgba(0, 220, 255, .45);
+            border-radius: 22px;
+
+            background: linear-gradient(
+                145deg,
+                rgba(0, 190, 255, .22),
+                rgba(0, 255, 220, .06)
+            );
+
+            animation: eagleGlow 4s ease-in-out infinite;
+        }
+
+        .eagles-brand-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 31px;
+            font-weight: 800;
+            letter-spacing: 5px;
+            color: #ffffff;
             margin-top: 20px;
         }
 
-        .brand-footer {
+        .eagles-brand-name span {
+            color: #24dfff;
+        }
+
+        .eagles-tagline {
+            font-size: 10px;
+            letter-spacing: 4px;
+            color: #75cde9;
+            margin-top: 8px;
+        }
+
+        .eagles-headline {
+            font-size: 34px;
+            line-height: 1.3;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #f4fbff;
+            margin-top: 45px;
+        }
+
+        .eagles-headline span {
+            color: #2bdcff;
+            text-shadow: 0 0 20px rgba(43, 220, 255, .2);
+        }
+
+        .eagles-description {
+            color: #a7c2d9;
+            font-size: 13px;
+            line-height: 1.9;
             margin-top: 20px;
         }
 
-        .auth-panel {
-            min-height: auto;
-            padding: 25px 20px;
-            border-left: 1px solid rgba(148, 163, 184, 0.17);
-            border-radius: 0 0 20px 20px;
+        /* ANALYTICS VISUAL */
+
+        .eagles-analytics {
+            margin-top: 35px;
+            padding: 20px;
+
+            border: 1px solid rgba(74, 198, 255, .22);
+            border-radius: 18px;
+
+            background: rgba(4, 22, 41, .72);
+            backdrop-filter: blur(15px);
+
+            animation: borderGlow 5s ease-in-out infinite;
         }
-    }
 
-    /* Respect reduced-motion accessibility settings. */
-
-    @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
+        .analytics-label {
+            color: #82b6d4;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
-    }
 
-    </style>
+        .analytics-heading {
+            color: #f0fbff;
+            font-size: 17px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
 
-    <div class="ambient-orb one"></div>
-    <div class="ambient-orb two"></div>
-    """, unsafe_allow_html=True)
+        .eagles-chart {
+            height: 90px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
 
-    # =========================================================
-    # TWO-PANEL LOGIN LAYOUT
-    # =========================================================
+        .eagles-bar {
+            flex: 1;
+            min-width: 5px;
 
-    theme_col = st.columns([6, 1])[1]
-    with theme_col:
-        choice = st.selectbox(
-            "Theme", ["Light", "Dark"],
-            index=["Light", "Dark"].index(st.session_state.get("theme", "Light")),
-            key="theme_select_login", label_visibility="collapsed"
-        )
-        if choice != st.session_state.get("theme", "Light"):
-            st.session_state.theme = choice
-            st.rerun()
+            border-radius: 5px 5px 1px 1px;
 
-    left, right = st.columns(
-        [1.02, 1],
-        gap="small"
+            background: linear-gradient(
+                to top,
+                #0077ff,
+                #00e5ff
+            );
+
+            transform-origin: bottom;
+            animation: barAnimation 1.1s ease-out both;
+        }
+
+        .eb1 { height: 35%; animation-delay: .1s; }
+        .eb2 { height: 60%; animation-delay: .2s; }
+        .eb3 { height: 45%; animation-delay: .3s; }
+        .eb4 { height: 80%; animation-delay: .4s; }
+        .eb5 { height: 58%; animation-delay: .5s; }
+        .eb6 { height: 95%; animation-delay: .6s; }
+        .eb7 { height: 72%; animation-delay: .7s; }
+        .eb8 { height: 87%; animation-delay: .8s; }
+
+        .eagles-brand-footer {
+            position: relative;
+            z-index: 2;
+
+            margin-top: 35px;
+
+            color: #668ba9;
+            font-size: 9px;
+            letter-spacing: 2px;
+        }
+
+        /* AUTH PANEL */
+
+        .eagles-auth-panel {
+            min-height: 650px;
+            padding: 35px 30px;
+
+            background: rgba(5, 16, 32, .94);
+
+            border: 1px solid rgba(76, 200, 255, .24);
+            border-left: none;
+            border-radius: 0 24px 24px 0;
+
+            box-shadow: 0 25px 80px rgba(0, 0, 0, .35);
+            backdrop-filter: blur(22px);
+
+            animation: fadeUp .9s ease-out both;
+        }
+
+        .secure-label {
+            color: #2bdcff;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .auth-heading {
+            color: #f3f9ff;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-top: 15px;
+        }
+
+        .auth-description {
+            color: #8da9c4;
+            font-size: 12px;
+            line-height: 1.8;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+
+        /* INPUTS */
+
+        [data-testid="stWidgetLabel"] p {
+            color: #c7dced !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+        }
+
+        [data-testid="stTextInput"] input {
+            background: #09182b !important;
+            color: #f1faff !important;
+
+            border: 1px solid #23435d !important;
+            border-radius: 10px !important;
+
+            min-height: 44px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        [data-testid="stTextInput"] input:focus {
+            border-color: #18cfff !important;
+            box-shadow: 0 0 0 3px rgba(24, 207, 255, .12) !important;
+        }
+
+        [data-testid="stTextInput"] input::placeholder {
+            color: #617e98 !important;
+        }
+
+        [data-testid="stCheckbox"] label {
+            color: #a7c1d7 !important;
+            font-size: 12px !important;
+        }
+
+        /* BUTTONS */
+
+        .stButton > button,
+        [data-testid="stFormSubmitButton"] > button {
+            width: 100%;
+            min-height: 46px;
+
+            color: #ffffff !important;
+
+            background: linear-gradient(
+                100deg,
+                #0077ff,
+                #00bcd4
+            ) !important;
+
+            border: 1px solid rgba(70, 220, 255, .3) !important;
+            border-radius: 10px !important;
+
+            font-weight: 700 !important;
+            transition: all .2s ease;
+        }
+
+        .stButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 180, 255, .2);
+            filter: brightness(1.1);
+        }
+
+        /* TABS */
+
+        [data-testid="stTabs"] [role="tablist"] {
+            gap: 7px;
+            border-bottom: 1px solid #19344b;
+        }
+
+        [data-testid="stTabs"] button[role="tab"] {
+            color: #91abc1 !important;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+            color: #27dfff !important;
+        }
+
+        /* MESSAGES */
+
+        [data-testid="stAlert"] {
+            border-radius: 10px;
+        }
+
+        hr {
+            border-color: #1d354a !important;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 800px) {
+            .block-container {
+                padding: 1rem;
+            }
+
+            .eagles-brand-panel {
+                min-height: auto;
+                padding: 25px;
+                border-radius: 20px 20px 0 0;
+            }
+
+            .eagles-headline {
+                font-size: 27px;
+                margin-top: 25px;
+            }
+
+            .eagles-auth-panel {
+                min-height: auto;
+                padding: 25px 20px;
+                border-left: 1px solid rgba(76, 200, 255, .24);
+                border-radius: 0 0 20px 20px;
+            }
+
+            .eagles-brand-name {
+                font-size: 27px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+        </style>
+
+        <div class="eagles-orb eagles-orb-one"></div>
+        <div class="eagles-orb eagles-orb-two"></div>
+        """,
+        unsafe_allow_html=True
     )
 
     # =========================================================
-    # LEFT: BRANDING AND VISUALS
+    # THEME CONTROL
+    # =========================================================
+
+    theme_col = st.columns([6, 1])[1]
+
+    with theme_col:
+        theme = st.selectbox(
+            "Theme",
+            ["Dark", "Light"],
+            index=0,
+            key="eagles_login_theme",
+            label_visibility="collapsed"
+        )
+
+    # This authentication page is intentionally designed in dark mode.
+    # The theme selector is retained for compatibility with your app.
+    # Your existing dashboard theme setting remains separate.
+
+    # =========================================================
+    # TWO-PANEL LAYOUT
+    # =========================================================
+
+    left, right = st.columns([1.03, 1], gap="small")
+
+    # =========================================================
+    # LEFT PANEL - EAGLES BRANDING
     # =========================================================
 
     with left:
+        st.markdown(
+            """
+            <div class="eagles-brand-panel">
 
-        st.markdown("""
-        <div class="brand-panel">
+                <div class="eagles-content">
 
-            <div class="brand-content">
+                    <div class="eagles-logo">🦅</div>
 
-                <div class="brand-logo">✦</div>
-
-                <div class="brand-name">
-                    Staff<span>Metrics</span>
-                </div>
-
-                <div class="brand-tagline">
-                    Workforce intelligence
-                </div>
-
-                <div class="brand-headline">
-                    Understand your workforce.<br>
-                    <span>Unlock better decisions.</span>
-                </div>
-
-                <div class="brand-description">
-                    One intelligent workspace for employee analytics,
-                    compensation insights, and performance management.
-                    Transform workforce data into decisions that matter.
-                </div>
-
-                <div class="visual-card">
-
-                    <div class="visual-card-label">
-                        Your analytics workspace
+                    <div class="eagles-brand-name">
+                        EAG<span>LES</span>
                     </div>
 
-                    <div class="visual-card-title">
-                        Workforce insights
+                    <div class="eagles-tagline">
+                        INTELLIGENCE · PRECISION · PERFORMANCE
                     </div>
 
-                    <div class="visual-bars">
-                        <div class="visual-bar bar1"></div>
-                        <div class="visual-bar bar2"></div>
-                        <div class="visual-bar bar3"></div>
-                        <div class="visual-bar bar4"></div>
-                        <div class="visual-bar bar5"></div>
-                        <div class="visual-bar bar6"></div>
-                        <div class="visual-bar bar7"></div>
+                    <div class="eagles-headline">
+                        See beyond the numbers.<br>
+                        <span>Lead with intelligence.</span>
                     </div>
 
+                    <div class="eagles-description">
+                        Discover a smarter way to understand your workforce.
+                        Explore employee compensation, performance trends,
+                        and department insights through one intelligent
+                        analytics workspace.
+                    </div>
+
+                    <div class="eagles-analytics">
+
+                        <div class="analytics-label">
+                            EAGLES ANALYTICS PLATFORM
+                        </div>
+
+                        <div class="analytics-heading">
+                            Workforce intelligence
+                        </div>
+
+                        <div class="eagles-chart">
+                            <div class="eagles-bar eb1"></div>
+                            <div class="eagles-bar eb2"></div>
+                            <div class="eagles-bar eb3"></div>
+                            <div class="eagles-bar eb4"></div>
+                            <div class="eagles-bar eb5"></div>
+                            <div class="eagles-bar eb6"></div>
+                            <div class="eagles-bar eb7"></div>
+                            <div class="eagles-bar eb8"></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="eagles-brand-footer">
+                    EAGLES · EMPLOYEE SALARY & PERFORMANCE ANALYSIS
                 </div>
 
             </div>
-
-            <div class="brand-footer">
-                STAFFMETRICS &nbsp;·&nbsp;
-                EMPLOYEE ANALYTICS PLATFORM
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
 
     # =========================================================
-    # RIGHT: LOGIN, REGISTRATION AND RECOVERY
+    # RIGHT PANEL - AUTHENTICATION
     # =========================================================
 
     with right:
+        st.markdown(
+            """
+            <div class="eagles-auth-panel">
 
-        st.markdown("""
-        <div class="auth-panel">
+                <div class="secure-label">
+                    ● SECURE WORKSPACE
+                </div>
 
-            <div class="auth-eyebrow">
-                Secure workspace
+                <div class="auth-heading">
+                    Welcome back
+                </div>
+
+                <div class="auth-description">
+                    Sign in to your EAGLES workspace and continue
+                    exploring your employee analytics dashboard.
+                </div>
+
             </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-            <div class="auth-title">
-                Welcome back
-            </div>
-
-            <div class="auth-subtitle">
-                Sign in to access your employee analytics dashboard.
-                Your workspace is waiting for you.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-        login_tab, register_tab, recovery_tab = st.tabs([
-            "Sign in",
-            "Create account",
-            "Forgot password?"
-        ])
+        login_tab, register_tab, recovery_tab = st.tabs(
+            ["Sign in", "Create account", "Forgot password?"]
+        )
 
         # =====================================================
         # SIGN IN
         # =====================================================
 
         with login_tab:
+            st.markdown("#### Sign in to EAGLES")
 
-            st.markdown("#### Sign in to StaffMetrics")
-
-            with st.form(
-                "staffmetrics_login_form",
-                clear_on_submit=False
-            ):
-
+            with st.form("eagles_login_form"):
                 login_id = st.text_input(
                     "Username or email",
                     placeholder="Enter your username or email",
-                    key="login_username"
+                    key="eagles_login_id"
                 )
 
                 login_password = st.text_input(
                     "Password",
                     placeholder="Enter your password",
                     type="password",
-                    key="login_password"
+                    key="eagles_login_password"
                 )
 
                 remember_me = st.checkbox(
                     "Remember me for this session",
-                    key="remember_me"
+                    key="eagles_remember_me"
                 )
 
-                submitted = st.form_submit_button(
-                    "Sign in  →",
+                login_submit = st.form_submit_button(
+                    "SIGN IN  →",
                     use_container_width=True
                 )
 
-            # Enter submits the form automatically.
+            # Pressing Enter in a form field submits the form.
 
-            if submitted:
-
+            if login_submit:
                 if not login_id.strip() or not login_password:
-
-                    st.warning(
-                        "Please enter your username/email and password."
-                    )
-
+                    st.warning("Enter your username/email and password.")
                 else:
-
                     try:
-
                         user = auth.login(
                             login_id.strip(),
                             login_password
                         )
 
                         if user:
-
                             st.session_state.user = user
                             st.session_state.login_time = time.time()
-
-                            # This checkbox is only a session preference.
-                            # It does not create persistent authentication.
-
                             st.session_state.remember_me = remember_me
 
-                            st.rerun()
-
-                        else:
-
-                            st.error(
-                                "Unable to sign in with those credentials. "
-                                "Check your details and try again."
+                            db.log_activity(
+                                user["id"],
+                                "signed in"
                             )
 
-                    except PermissionError as locked:
+                            st.rerun()
+                        else:
+                            st.error(
+                                "Invalid username/email or password."
+                            )
 
-                        st.error(str(locked))
+                    except PermissionError as exc:
+                        st.error(str(exc))
 
                     except Exception:
-
-                        # Avoid displaying internal database or
-                        # authentication errors to the user.
-
                         st.error(
                             "Sign-in is temporarily unavailable. "
                             "Please try again later."
@@ -864,109 +824,82 @@ def auth_page():
 
             st.markdown("---")
 
-            st.markdown("""
-            <div style="
-                text-align:center;
-                color:#94a3b8;
-                font-size:11px;
-                line-height:1.8;
-            ">
-                🔒 Protected account access<br>
-                Use your registered credentials to continue.
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(
+                """
+                <div style="
+                    text-align:center;
+                    color:#7f9bb5;
+                    font-size:11px;
+                    line-height:1.9;
+                ">
+                    🔒 Secure account access<br>
+                    Your workforce analytics workspace awaits.
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
         # =====================================================
         # REGISTRATION
         # =====================================================
 
         with register_tab:
+            st.markdown("#### Create your EAGLES account")
 
-            st.markdown("#### Create your account")
-
-            with st.form(
-                "staffmetrics_register_form",
-                clear_on_submit=False
-            ):
-
+            with st.form("eagles_register_form"):
                 full_name = st.text_input(
                     "Full name",
-                    placeholder="Enter your full name",
-                    key="register_full_name"
+                    placeholder="Your full name"
                 )
 
                 email = st.text_input(
                     "Email address",
-                    placeholder="you@example.com",
-                    key="register_email"
+                    placeholder="you@example.com"
                 )
 
                 username = st.text_input(
                     "Username",
-                    placeholder="Choose a username",
-                    key="register_username"
+                    placeholder="Choose a username"
                 )
 
                 password = st.text_input(
                     "Create password",
                     type="password",
-                    placeholder="At least 12 characters recommended",
-                    key="register_password"
+                    placeholder="Use at least 12 characters"
                 )
 
                 confirm_password = st.text_input(
                     "Confirm password",
                     type="password",
-                    placeholder="Re-enter your password",
-                    key="register_confirm_password"
+                    placeholder="Re-enter your password"
                 )
 
-                submitted_register = st.form_submit_button(
-                    "Create secure account  →",
+                register_submit = st.form_submit_button(
+                    "CREATE ACCOUNT  →",
                     use_container_width=True
                 )
 
-            # Password feedback outside the form updates when
-            # Streamlit reruns after a widget interaction.
-
             if password:
-
                 score = sum([
                     len(password) >= 12,
                     bool(re.search(r"[A-Z]", password)),
                     bool(re.search(r"[a-z]", password)),
-                    bool(re.search(r"[0-9]", password)),
+                    bool(re.search(r"\d", password)),
                     bool(re.search(r"[^A-Za-z0-9]", password))
                 ])
 
-                if len(password) < 8:
-
-                    st.warning(
-                        "Password strength: Too short."
-                    )
-
-                elif score <= 2:
-
-                    st.warning(
-                        "Password strength: Weak. "
-                        "Consider using a longer passphrase."
-                    )
-
-                elif score <= 4:
-
+                if len(password) < 12:
                     st.info(
-                        "Password strength: Moderate. "
-                        "Add more variety or length."
+                        "Password tip: use at least 12 characters."
                     )
-
+                elif score <= 3:
+                    st.warning(
+                        "Consider using a longer, less predictable password."
+                    )
                 else:
+                    st.success("Password length and variety look good.")
 
-                    st.success(
-                        "Password strength: Strong."
-                    )
-
-            if submitted_register:
-
+            if register_submit:
                 if not all([
                     full_name.strip(),
                     email.strip(),
@@ -974,44 +907,20 @@ def auth_page():
                     password,
                     confirm_password
                 ]):
-
-                    st.warning(
-                        "Please complete every field."
-                    )
-
+                    st.warning("Complete all fields.")
                 elif not re.fullmatch(
                     r"[^@\s]+@[^@\s]+\.[^@\s]+",
                     email.strip()
                 ):
-
-                    st.error(
-                        "Enter a valid email address."
-                    )
-
+                    st.error("Enter a valid email address.")
                 elif len(username.strip()) < 3:
-
-                    st.error(
-                        "Your username must contain at least "
-                        "3 characters."
-                    )
-
+                    st.error("Username must contain at least 3 characters.")
                 elif len(password) < 12:
-
-                    st.error(
-                        "Use a password with at least "
-                        "12 characters."
-                    )
-
+                    st.error("Use a password with at least 12 characters.")
                 elif password != confirm_password:
-
-                    st.error(
-                        "The passwords do not match."
-                    )
-
+                    st.error("The passwords do not match.")
                 else:
-
                     try:
-
                         success, message = auth.register(
                             username.strip(),
                             email.strip(),
@@ -1020,109 +929,100 @@ def auth_page():
                         )
 
                         if success:
-
-                            st.success(
-                                "Account created successfully."
-                            )
-
+                            st.success("Your account has been created.")
                             st.info(
-                                "You can now switch to Sign in "
-                                "to access your account."
+                                "Open the Sign in tab to access EAGLES."
                             )
-
                         else:
-
                             st.error(message)
 
                     except Exception:
-
                         st.error(
-                            "Account registration is temporarily "
-                            "unavailable. Please try again later."
+                            "Registration is temporarily unavailable. "
+                            "Please try again later."
                         )
 
         # =====================================================
-        # FORGOT PASSWORD
+        # PASSWORD RECOVERY
         # =====================================================
 
         with recovery_tab:
-
             st.markdown("#### Recover your account")
 
             st.write(
-                "Forgot your password? Use your registered email "
-                "to begin the account recovery process."
+                "Enter your registered email address to request "
+                "a password reset."
             )
 
-            if not auth.email_configured():
+            try:
+                email_configured = auth.email_configured()
+            except Exception:
+                email_configured = False
+
+            if not email_configured:
                 st.info(
-                    "Email delivery is not configured on this server, so "
-                    "reset links cannot be sent yet. Set the SMTP_HOST, "
-                    "SMTP_PORT, SMTP_USER, SMTP_PASSWORD and SMTP_FROM "
-                    "environment variables to enable this."
+                    "Email delivery is not configured. Password-reset "
+                    "emails require the SMTP settings supported by "
+                    "your backend."
                 )
 
-            with st.form(
-                "staffmetrics_password_recovery_form"
-            ):
-
+            with st.form("eagles_recovery_form"):
                 recovery_email = st.text_input(
-                    "Registered email address",
-                    placeholder="Enter your registered email",
-                    key="recovery_email"
+                    "Registered email",
+                    placeholder="Enter your registered email"
                 )
 
                 recovery_submit = st.form_submit_button(
-                    "Request password reset  →",
+                    "REQUEST RESET LINK  →",
                     use_container_width=True
                 )
 
             if recovery_submit:
-
                 if not recovery_email.strip():
-
-                    st.warning(
-                        "Enter your registered email address."
-                    )
-
+                    st.warning("Enter your registered email.")
                 elif not re.fullmatch(
                     r"[^@\s]+@[^@\s]+\.[^@\s]+",
                     recovery_email.strip()
                 ):
-
-                    st.warning(
-                        "Enter a valid email address."
-                    )
-
+                    st.warning("Enter a valid email address.")
                 else:
+                    try:
+                        sent, user_message, admin_message = (
+                            auth.request_password_reset(
+                                recovery_email.strip(),
+                                APP_BASE_URL
+                            )
+                        )
 
-                    sent, user_message, admin_message = auth.request_password_reset(
-                        recovery_email.strip(), APP_BASE_URL
-                    )
+                        if sent:
+                            st.success(user_message)
+                        else:
+                            st.warning(user_message)
 
-                    if sent:
-                        st.success(user_message)
-                    else:
-                        st.warning(user_message)
-                        if admin_message:
-                            st.caption(admin_message)
+                            if admin_message:
+                                st.caption(admin_message)
 
-        # =====================================================
-        # FOOTER
-        # =====================================================
+                    except Exception:
+                        st.error(
+                            "We couldn't process the request. "
+                            "Please try again later."
+                        )
 
-        st.markdown("""
-        <div style="
-            text-align:center;
-            color:#64748b;
-            font-size:10px;
-            margin-top:24px;
-            line-height:1.8;
-        ">
-            StaffMetrics · Employee Salary & Performance Analysis<br>
-            Secure access to your workforce analytics workspace
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div style="
+                text-align:center;
+                color:#66849f;
+                font-size:10px;
+                line-height:1.8;
+                margin-top:24px;
+            ">
+                EAGLES · Employee Salary & Performance Analysis<br>
+                Intelligence for better workforce decisions
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 def show(fig):
     st.pyplot(fig)
     plt.close(fig)
