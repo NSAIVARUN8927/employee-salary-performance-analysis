@@ -135,7 +135,11 @@ st.markdown(
     /* Sidebar */
 
     [data-testid="stSidebar"] {{
-        background: {"linear-gradient(180deg, #111A31, #172640)" if IS_DARK else "linear-gradient(180deg, #FFFFFF, #EDF3FB)"} !important;
+        background: {
+            "linear-gradient(180deg, #111A31, #172640)"
+            if IS_DARK
+            else "linear-gradient(180deg, #FFFFFF, #EDF3FB)"
+        } !important;
         border-right: 1px solid var(--border);
     }}
 
@@ -151,7 +155,11 @@ st.markdown(
         margin-bottom: 22px;
         box-shadow: 0 9px 28px rgba(15, 23, 42, 0.10);
         border: 1px solid transparent;
-        background: {"linear-gradient(120deg, #172554, #164E63)" if IS_DARK else "linear-gradient(120deg, #14213D, #155E75)"};
+        background: {
+            "linear-gradient(120deg, #172554, #164E63)"
+            if IS_DARK
+            else "linear-gradient(120deg, #14213D, #155E75)"
+        };
     }}
 
     .banner h1 {{
@@ -173,8 +181,14 @@ st.markdown(
         border-radius: 15px;
         padding: 19px;
         border: 1px solid var(--border);
-        border-top: 4px solid {"#2DD4BF" if IS_DARK else "#0F766E"};
-        background: {"linear-gradient(145deg, #17243B, #1C2C46)" if IS_DARK else "linear-gradient(145deg, #FFFFFF, #F1F7FC)"};
+        border-top: 4px solid {
+            "#2DD4BF" if IS_DARK else "#0F766E"
+        };
+        background: {
+            "linear-gradient(145deg, #17243B, #1C2C46)"
+            if IS_DARK
+            else "linear-gradient(145deg, #FFFFFF, #F1F7FC)"
+        };
         box-shadow: 0 5px 18px rgba(15, 23, 42, 0.06);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }}
@@ -186,7 +200,9 @@ st.markdown(
 
     .kpi span {{
         display: block;
-        color: {"#BDCCE4" if IS_DARK else "#53647D"} !important;
+        color: {
+            "#BDCCE4" if IS_DARK else "#53647D"
+        } !important;
         font-size: 0.86rem;
         font-weight: 600;
         margin-bottom: 8px;
@@ -194,7 +210,9 @@ st.markdown(
 
     .kpi b {{
         display: block;
-        color: {"#F8FAFC" if IS_DARK else "#14213D"} !important;
+        color: {
+            "#F8FAFC" if IS_DARK else "#14213D"
+        } !important;
         font-family: 'Manrope', sans-serif;
         font-size: 1.6rem;
         font-weight: 800;
@@ -277,7 +295,9 @@ st.markdown(
     }}
 
     [role="option"]:hover {{
-        background: {"#263B5A" if IS_DARK else "#E6F4F8"} !important;
+        background: {
+            "#263B5A" if IS_DARK else "#E6F4F8"
+        } !important;
     }}
 
     /* Checkboxes and radio buttons */
@@ -350,81 +370,252 @@ st.markdown(
         }}
     }}
 
-    /* Login page */
+    /* ==========================================
+       PROFESSIONAL LOGIN AND REGISTRATION DESIGN
+       ========================================== */
 
     .login-brand {{
-        background: linear-gradient(145deg, #14213D, #155E75);
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        background: linear-gradient(
+            145deg,
+            #101B35 0%,
+            #123B55 55%,
+            #164E63 100%
+        );
         color: #FFFFFF;
-        padding: 42px 30px;
+        padding: 42px 34px;
         border-radius: 20px 0 0 20px;
-        min-height: 450px;
+        min-height: 590px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        box-shadow: 0 12px 35px rgba(20, 33, 61, 0.14);
+        box-shadow: 0 20px 55px rgba(15, 23, 42, 0.15);
+        box-sizing: border-box;
+    }}
+
+    .login-brand::before {{
+        content: "";
+        position: absolute;
+        z-index: -1;
+        width: 300px;
+        height: 300px;
+        right: -120px;
+        top: -120px;
+        border-radius: 50%;
+        background: rgba(94, 234, 212, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+    }}
+
+    .login-brand::after {{
+        content: "";
+        position: absolute;
+        z-index: -1;
+        width: 240px;
+        height: 240px;
+        left: -120px;
+        bottom: -120px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }}
+
+    .brand-icon {{
+        width: 68px;
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        font-size: 2rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        margin-bottom: 25px;
     }}
 
     .login-brand h1 {{
         color: #FFFFFF !important;
-        font-size: 2.5rem !important;
-        margin-top: 8px;
+        font-family: 'Manrope', sans-serif !important;
+        font-size: 2.55rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -1.5px;
+        line-height: 1.2;
+        margin: 0 0 16px;
     }}
 
     .login-brand p {{
-        color: #DBEAFE !important;
-        font-size: 1rem;
-        line-height: 1.8;
+        color: #D9E7F5 !important;
+        font-size: 0.94rem;
+        line-height: 1.9;
+        margin-bottom: 18px;
     }}
 
-    .brand-icon {{
-        width: 84px;
-        height: 84px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 24px;
-        font-size: 2.8rem;
-        background: rgba(255, 255, 255, 0.14);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    .brand-eyebrow {{
+        display: inline-block;
+        width: fit-content;
+        color: #99F6E4 !important;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
         margin-bottom: 14px;
     }}
 
+    .brand-divider {{
+        height: 1px;
+        width: 60px;
+        background: rgba(153, 246, 228, 0.8);
+        margin: 8px 0 20px;
+    }}
+
     .login-card {{
-        padding: 25px 28px;
+        padding: 28px 30px;
         border: 1px solid var(--border);
         border-radius: 0 20px 20px 0;
-        min-height: 150px;
+        min-height: 180px;
         background: var(--surface);
-        box-shadow: 0 12px 35px rgba(20, 33, 61, 0.08);
+        box-shadow: 0 20px 55px rgba(15, 23, 42, 0.07);
+        box-sizing: border-box;
     }}
 
     .login-heading {{
         color: var(--text) !important;
-        font-family: 'Manrope', sans-serif;
+        font-family: 'Manrope', sans-serif !important;
         font-size: 1.8rem;
         font-weight: 800;
-        margin-bottom: 5px;
+        letter-spacing: -0.8px;
+        line-height: 1.3;
+        margin-bottom: 8px;
     }}
 
     .login-description {{
         color: var(--muted) !important;
-        margin-bottom: 20px;
+        font-size: 0.90rem;
+        line-height: 1.7;
+        margin-bottom: 4px;
+    }}
+
+    .login-section-label {{
+        color: var(--muted) !important;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-top: 18px;
+        margin-bottom: 5px;
     }}
 
     .security-note {{
         color: var(--muted) !important;
-        font-size: 0.8rem;
+        font-size: 0.76rem;
         text-align: center;
+        line-height: 1.7;
         margin-top: 20px;
+        padding: 12px 5px;
+        border-top: 1px solid var(--border);
     }}
 
-    a {{
-        color: {"#67E8F9" if IS_DARK else "#075985"} !important;
+    /* Login tabs */
+
+    [data-testid="stTabs"] [role="tablist"] {{
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
     }}
 
-    hr {{
-        border-color: var(--border) !important;
+    [data-testid="stTabs"] button[role="tab"] {{
+        padding: 12px 10px;
+        border-radius: 8px 8px 0 0;
+        font-size: 0.88rem;
+    }}
+
+    /* Login form labels */
+
+    [data-testid="stTextInput"] label {{
+        font-size: 0.86rem;
+        font-weight: 600;
+    }}
+
+    /* Login input fields */
+
+    [data-testid="stTextInput"] input {{
+        min-height: 44px;
+        box-sizing: border-box;
+    }}
+
+    /* Primary buttons */
+
+    [data-testid="stButton"] > button[kind="primary"] {{
+        background: #0F766E !important;
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        border: 1px solid #0F766E !important;
+        border-radius: 10px;
+        min-height: 46px;
+        font-weight: 700;
+        box-shadow: 0 5px 14px rgba(15, 118, 110, 0.14);
+    }}
+
+    [data-testid="stButton"] > button[kind="primary"] *,
+    [data-testid="stButton"] > button[kind="primary"]:hover * {{
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }}
+
+    [data-testid="stButton"] > button[kind="primary"]:hover {{
+        background: #115E59 !important;
+        border-color: #115E59 !important;
+        box-shadow: 0 8px 18px rgba(15, 118, 110, 0.20);
+    }}
+
+    /* Login checkboxes */
+
+    [data-testid="stCheckbox"] label {{
+        font-size: 0.84rem;
+    }}
+
+    /* Responsive login page */
+
+    @media (max-width: 900px) {{
+        .login-brand {{
+            min-height: 320px;
+            padding: 30px;
+            border-radius: 18px 18px 0 0;
+        }}
+
+        .login-brand h1 {{
+            font-size: 2.15rem !important;
+        }}
+
+        .login-card {{
+            border-radius: 0 0 18px 18px;
+            padding: 25px;
+        }}
+    }}
+
+    @media (max-width: 600px) {{
+        .block-container {{
+            padding-top: 1rem;
+        }}
+
+        .login-brand {{
+            padding: 24px;
+            min-height: 260px;
+        }}
+
+        .login-brand h1 {{
+            font-size: 1.9rem !important;
+        }}
+
+        .login-card {{
+            padding: 20px;
+        }}
+
+        .login-heading {{
+            font-size: 1.55rem;
+        }}
+
+        h1 {{
+            font-size: 1.8rem !important;
+        }}
     }}
 
     @media (prefers-reduced-motion: reduce) {{
@@ -436,26 +627,14 @@ st.markdown(
         }}
     }}
 
-    @media (max-width: 700px) {{
-        .block-container {{
-            padding-top: 1rem;
-        }}
+    a {{
+        color: {
+            "#67E8F9" if IS_DARK else "#075985"
+        } !important;
+    }}
 
-        .login-brand {{
-            border-radius: 18px 18px 0 0;
-            min-height: auto;
-            padding: 25px;
-        }}
-
-        .login-card {{
-            border-radius: 0 0 18px 18px;
-            min-height: auto;
-            padding: 20px;
-        }}
-
-        h1 {{
-            font-size: 1.8rem !important;
-        }}
+    hr {{
+        border-color: var(--border) !important;
     }}
     </style>
     """,
@@ -634,26 +813,25 @@ def metric_information_dialog():
 # ==================== LOGIN AND REGISTRATION ====================
 
 def auth_page():
-    # The theme selector works before login as well.
+
+    # Theme selector
+
     st.selectbox(
         "🎨 Appearance",
         ["Light", "Dark"],
         key="theme_choice"
     )
 
-    # Streamlit reruns the app after changing the theme.
-    # The global CSS then applies the newly selected colors.
-
     is_dark = st.session_state.get("theme_choice", "Light") == "Dark"
 
     login_background = (
         "radial-gradient(circle at top left, "
-        "rgba(45, 212, 191, 0.12), transparent 35%), "
+        "rgba(45, 212, 191, 0.10), transparent 35%), "
         "linear-gradient(135deg, #080E1B, #101D32)"
         if is_dark
         else
         "radial-gradient(circle at top left, "
-        "rgba(59, 130, 246, 0.15), transparent 35%), "
+        "rgba(59, 130, 246, 0.10), transparent 35%), "
         "linear-gradient(135deg, #F8FAFC, #EAF0FB)"
     )
 
@@ -669,56 +847,99 @@ def auth_page():
             display: none;
         }}
 
+        [data-testid="stHeader"] {{
+            background: transparent !important;
+        }}
+
         .block-container {{
-            max-width: 1100px;
-            padding-top: 2rem;
-            padding-bottom: 3rem;
+            max-width: 1120px;
+            padding-top: 1.5rem;
+            padding-bottom: 2.5rem;
+        }}
+
+        /* Keep the login layout clean */
+
+        [data-testid="stVerticalBlock"] {{
+            gap: 0.85rem;
+        }}
+
+        /* Theme selector */
+
+        [data-testid="stSelectbox"] {{
+            max-width: 220px;
+        }}
+
+        /* Login form content */
+
+        .login-card + div {{
+            padding-top: 0.5rem;
         }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    left, right = st.columns([1, 1.15], gap="small")
+    st.write("")
 
-    # ==================== BRAND PANEL ====================
+    left, right = st.columns(
+        [0.95, 1.05],
+        gap="small",
+        vertical_alignment="center"
+    )
+
+    # ==================== PROFESSIONAL BRAND PANEL ====================
 
     with left:
         st.markdown(
             """
             <div class="login-brand">
+
+                <div class="brand-eyebrow">
+                    WORKFORCE INTELLIGENCE
+                </div>
+
                 <div class="brand-icon">📊</div>
 
                 <h1>StaffMetrics</h1>
 
+                <div class="brand-divider"></div>
+
                 <p>
-                    Turn employee data into meaningful insights.
-                    Analyze salaries, monitor performance, and
-                    make better workforce decisions.
+                    Smarter workforce decisions start with better
+                    insights. Analyze employee salaries, understand
+                    performance, and transform workforce data into
+                    meaningful business intelligence.
                 </p>
 
                 <p>
-                    ✓ Employee analytics<br>
-                    ✓ Salary insights<br>
-                    ✓ Performance reports<br>
-                    ✓ Workforce management
+                    ✓ Workforce intelligence<br>
+                    ✓ Salary benchmarking<br>
+                    ✓ Performance analytics<br>
+                    ✓ Data-driven decisions
                 </p>
+
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    # ==================== LOGIN AND REGISTRATION ====================
+    # ==================== LOGIN AND REGISTRATION PANEL ====================
 
     with right:
+
         st.markdown(
             """
             <div class="login-card">
-                <div class="login-heading">Welcome back!</div>
+
+                <div class="login-heading">
+                    Welcome back
+                </div>
 
                 <div class="login-description">
-                    Sign in to access your analytics dashboard.
+                    Sign in to your account to access your
+                    employee analytics dashboard.
                 </div>
+
             </div>
             """,
             unsafe_allow_html=True
@@ -731,10 +952,12 @@ def auth_page():
         # ==================== LOGIN ====================
 
         with login_tab:
+
             st.subheader("Sign in to your account")
 
             login_id = st.text_input(
                 "Username or email",
+                placeholder="Enter your username or email",
                 key="login_username"
             )
 
@@ -745,7 +968,12 @@ def auth_page():
 
             login_password = st.text_input(
                 "Password",
-                type="default" if show_login_password else "password",
+                placeholder="Enter your password",
+                type=(
+                    "default"
+                    if show_login_password
+                    else "password"
+                ),
                 key="login_password"
             )
 
@@ -754,27 +982,44 @@ def auth_page():
                 key="remember_me"
             )
 
-            if st.button("Sign in", key="login_button"):
+            if st.button(
+                "Sign in →",
+                key="login_button",
+                type="primary",
+                use_container_width=True
+            ):
+
                 if not login_id.strip() or not login_password:
+
                     st.warning(
                         "Enter your username/email and password."
                     )
+
                 else:
-                    user = auth.login(login_id, login_password)
+
+                    user = auth.login(
+                        login_id.strip(),
+                        login_password
+                    )
 
                     if user:
                         st.session_state.user = user
                         st.rerun()
+
                     else:
                         st.error(
                             "The username/email or password is incorrect."
                         )
 
+            # ==================== PASSWORD RECOVERY ====================
+
             with st.expander("Forgot your password?"):
+
                 st.write(
                     "Password recovery requires a configured "
                     "email or authentication provider."
                 )
+
                 st.info(
                     "The password-reset service must be configured "
                     "before a recovery email can be sent."
@@ -783,20 +1028,28 @@ def auth_page():
         # ==================== REGISTRATION ====================
 
         with register_tab:
+
             st.subheader("Create your account")
+
+            st.caption(
+                "Enter your details to get started with StaffMetrics."
+            )
 
             full_name = st.text_input(
                 "Full name",
+                placeholder="Enter your full name",
                 key="register_full_name"
             )
 
             email = st.text_input(
                 "Email address",
+                placeholder="name@example.com",
                 key="register_email"
             )
 
             username = st.text_input(
                 "Choose a username",
+                placeholder="Create a username",
                 key="register_username"
             )
 
@@ -813,19 +1066,22 @@ def auth_page():
 
             password = st.text_input(
                 "Create password",
+                placeholder="Create a strong password",
                 type=password_type,
                 key="register_password"
             )
 
             confirm_password = st.text_input(
                 "Confirm password",
+                placeholder="Re-enter your password",
                 type=password_type,
                 key="register_confirm_password"
             )
 
-            # Password strength
+            # ==================== PASSWORD STRENGTH ====================
 
             if password:
+
                 score = 0
 
                 if len(password) >= 8:
@@ -844,10 +1100,15 @@ def auth_page():
                     score += 1
 
                 if score <= 2:
+
                     st.warning("Password strength: Weak")
+
                 elif score <= 4:
+
                     st.info("Password strength: Moderate")
+
                 else:
+
                     st.success("Password strength: Strong")
 
             st.caption(
@@ -856,7 +1117,15 @@ def auth_page():
                 "is recommended."
             )
 
-            if st.button("Create account", key="register_button"):
+            # ==================== CREATE ACCOUNT ====================
+
+            if st.button(
+                "Create account →",
+                key="register_button",
+                type="primary",
+                use_container_width=True
+            ):
+
                 if not all([
                     full_name.strip(),
                     email.strip(),
@@ -864,37 +1133,62 @@ def auth_page():
                     password,
                     confirm_password
                 ]):
-                    st.warning("Please complete all the fields.")
+
+                    st.warning(
+                        "Please complete all the fields."
+                    )
+
+                elif not re.fullmatch(
+                    r"[^@\s]+@[^@\s]+\.[^@\s]+",
+                    email.strip()
+                ):
+
+                    st.error(
+                        "Enter a valid email address."
+                    )
 
                 elif password != confirm_password:
-                    st.error("The passwords do not match.")
+
+                    st.error(
+                        "The passwords do not match."
+                    )
 
                 elif len(password) < 8:
+
                     st.error(
                         "Your password must contain at least 8 characters."
                     )
 
                 else:
+
                     success, message = auth.register(
-                        username,
-                        email,
-                        full_name,
+                        username.strip(),
+                        email.strip(),
+                        full_name.strip(),
                         password
                     )
 
                     if success:
+
                         st.success(message)
+
                         st.info(
                             "Your account has been created. "
                             "Switch to Sign in to continue."
                         )
+
                     else:
+
                         st.error(message)
+
+        # ==================== FOOTER ====================
 
         st.markdown(
             """
             <div class="security-note">
-                StaffMetrics · Employee Salary & Performance Analysis
+                <strong>StaffMetrics</strong><br>
+                Employee Salary & Performance Analysis<br>
+                Workforce insights for better business decisions.
             </div>
             """,
             unsafe_allow_html=True
@@ -904,6 +1198,7 @@ def auth_page():
 # ==================== EXECUTIVE DASHBOARD ====================
 
 def page_dashboard(df):
+
     banner(
         "Executive Dashboard",
         f"Welcome, "
@@ -968,9 +1263,13 @@ def page_dashboard(df):
     salary_max = float(salary_values.max())
 
     if salary_min == salary_max:
+
         selected_salary = (salary_min, salary_max)
+
         st.caption(f"Available salary: {salary_min:,.0f}")
+
     else:
+
         selected_salary = st.slider(
             "Basic salary range",
             min_value=salary_min,
@@ -979,7 +1278,7 @@ def page_dashboard(df):
             key="dashboard_salary"
         )
 
-    # Dynamic experience range
+    # Experience range
 
     exp_values = pd.to_numeric(
         df["Experience_Years"],
@@ -996,6 +1295,7 @@ def page_dashboard(df):
     exp_max = float(exp_values.max())
 
     st.markdown("#### Experience Range")
+
     st.caption(
         f"Available experience: {exp_min:g}–{exp_max:g} years"
     )
@@ -1023,15 +1323,19 @@ def page_dashboard(df):
         )
 
     if selected_exp_min > selected_exp_max:
+
         st.warning(
             "Minimum experience exceeds maximum experience. "
             "The values will be swapped for filtering."
         )
+
         selected_experience = (
             selected_exp_max,
             selected_exp_min
         )
+
     else:
+
         selected_experience = (
             selected_exp_min,
             selected_exp_max
@@ -1054,11 +1358,15 @@ def page_dashboard(df):
     perf_max = float(perf_values.max())
 
     if perf_min == perf_max:
+
         selected_performance = (perf_min, perf_max)
+
         st.caption(
             f"Available performance score: {perf_min:g}"
         )
+
     else:
+
         selected_performance = st.slider(
             "Performance score range",
             min_value=perf_min,
@@ -1072,12 +1380,14 @@ def page_dashboard(df):
     filtered_df = df.copy()
 
     if selected_department != "All departments":
+
         filtered_df = filtered_df[
             filtered_df["Department"].astype(str)
             == selected_department
         ]
 
     if selected_designation != "All designations":
+
         filtered_df = filtered_df[
             filtered_df["Designation"].astype(str)
             == selected_designation
@@ -1101,10 +1411,12 @@ def page_dashboard(df):
     ]
 
     if filtered_df.empty:
+
         st.warning(
             "No employees match your selected filters. "
             "Try changing one or more filters."
         )
+
         return
 
     st.caption(
@@ -1158,6 +1470,7 @@ def page_dashboard(df):
     }
 
     if chart_choice == "All charts":
+
         a, b = st.columns(2)
 
         with a:
@@ -1167,12 +1480,15 @@ def page_dashboard(df):
         with b:
             show(an.fig_dept_perf(filtered_df))
             show(an.fig_salary_vs_perf(filtered_df))
+
     else:
+
         show(chart_functions[chart_choice](filtered_df))
 
     # Filtered employee records
 
     with st.expander("View filtered employee records"):
+
         st.dataframe(
             filtered_df,
             hide_index=True,
@@ -1190,40 +1506,71 @@ def page_dashboard(df):
 # ==================== EMPLOYEE MANAGEMENT ====================
 
 def manage_employees(df):
+
     uid = st.session_state.user["id"]
 
     with st.expander("Add an employee"), st.form("add_emp"):
+
         c = st.columns(3)
 
         e = {
             "Employee_ID": c[0].text_input("Employee ID"),
             "Name": c[1].text_input("Name"),
             "Age": c[2].number_input("Age", 18, 70, 30),
-            "Gender": c[0].selectbox("Gender", ["Female", "Male"]),
+
+            "Gender": c[0].selectbox(
+                "Gender",
+                ["Female", "Male"]
+            ),
+
             "Department": c[1].selectbox(
                 "Department",
                 sorted(df["Department"].unique())
             ),
+
             "Designation": c[2].text_input("Designation"),
+
             "Experience_Years": c[0].number_input(
-                "Experience (years)", 0, 45, 3
+                "Experience (years)",
+                0,
+                45,
+                3
             ),
+
             "Joining_Year": c[1].number_input(
-                "Joining year", 1990, 2030, 2024
+                "Joining year",
+                1990,
+                2030,
+                2024
             ),
+
             "Basic_Salary": c[2].number_input(
-                "Basic salary", 1.0, 1e7, 50000.0
+                "Basic salary",
+                1.0,
+                1e7,
+                50000.0
             ),
+
             "Bonus": c[0].number_input(
-                "Bonus", 0.0, 1e6, 0.0
+                "Bonus",
+                0.0,
+                1e6,
+                0.0
             ),
+
             "Performance_Score": c[1].number_input(
-                "Performance score (0-5)", 0.0, 5.0, 3.0, 0.5
+                "Performance score (0-5)",
+                0.0,
+                5.0,
+                3.0,
+                0.5
             )
         }
 
         if st.form_submit_button("Add employee"):
+
             try:
+
                 db.add_employee(e)
 
                 db.log_activity(
@@ -1235,13 +1582,22 @@ def manage_employees(df):
                     "Employee added successfully. "
                     "Refresh the page to see the updated table."
                 )
+
             except Exception as ex:
-                st.error(f"The employee could not be added: {ex}")
+
+                st.error(
+                    f"The employee could not be added: {ex}"
+                )
 
     with st.expander("Delete an employee"):
-        who = st.selectbox("Employee", df["Employee_ID"])
+
+        who = st.selectbox(
+            "Employee",
+            df["Employee_ID"]
+        )
 
         if st.button("Delete employee"):
+
             db.delete_employee(who)
 
             db.log_activity(
@@ -1255,6 +1611,7 @@ def manage_employees(df):
 # ==================== EMPLOYEES PAGE ====================
 
 def page_employees(df, is_db):
+
     banner(
         "Employees",
         "Search, filter and manage employee records"
@@ -1289,9 +1646,13 @@ def page_employees(df, is_db):
     hi = int(experience_values.max())
 
     if lo == hi:
+
         exp = (lo, hi)
+
         c3.caption(f"Experience: {lo} years")
+
     else:
+
         exp = c3.slider(
             "Experience (years)",
             lo,
@@ -1316,13 +1677,18 @@ def page_employees(df, is_db):
         f = f[f["Designation"].astype(str).isin(role)]
 
     if q:
+
         f = f[
             f["Employee_ID"].astype(str).str.contains(
-                q, case=False, na=False
+                q,
+                case=False,
+                na=False
             )
             |
             f["Name"].astype(str).str.contains(
-                q, case=False, na=False
+                q,
+                case=False,
+                na=False
             )
         ]
 
@@ -1347,6 +1713,7 @@ def page_employees(df, is_db):
 # ==================== ANALYSIS PAGE ====================
 
 def page_analysis(df):
+
     banner(
         "Salary and performance analysis",
         "Statistics, experience trends and correlations"
@@ -1361,19 +1728,23 @@ def page_analysis(df):
     )
 
     def summary_value(summary, word, fallback_index):
+
         for label, value in summary.items():
+
             if word in str(label).lower():
                 return value
 
         return summary.iloc[fallback_index]
 
     with t1:
+
         st.subheader("Salary Summary")
 
         salary_summary = an.salary_summary(df).round(2)
 
         salary_table = pd.DataFrame({
             "Metric": ["Average", "Minimum", "Maximum"],
+
             "Salary": [
                 summary_value(salary_summary, "average", 0),
                 summary_value(salary_summary, "minimum", 1),
@@ -1400,12 +1771,14 @@ def page_analysis(df):
         show(an.fig_experience(df))
 
     with t2:
+
         st.subheader("Performance Summary")
 
         performance_summary = an.performance_summary(df).round(2)
 
         performance_table = pd.DataFrame({
             "Metric": ["Average", "Minimum", "Maximum"],
+
             "Performance": [
                 summary_value(performance_summary, "average", 0),
                 summary_value(performance_summary, "minimum", 1),
@@ -1423,6 +1796,7 @@ def page_analysis(df):
         show(an.fig_dept_perf(df))
 
     with t3:
+
         st.dataframe(
             an.correlation(df).round(2),
             use_container_width=True
@@ -1434,6 +1808,7 @@ def page_analysis(df):
 # ==================== DEPARTMENTS PAGE ====================
 
 def page_departments(df):
+
     banner(
         "Departments",
         "Employee count, salary and performance by department"
@@ -1461,6 +1836,7 @@ def page_departments(df):
 # ==================== UPLOAD AND EXPORT ====================
 
 def page_data(df):
+
     banner(
         "Upload and export",
         "Analyse your own CSV and download results"
@@ -1472,7 +1848,9 @@ def page_data(df):
     )
 
     if up and st.button("Analyse this file"):
+
         try:
+
             st.session_state.upload, log = an.prepare(
                 an.load_data(up)
             )
@@ -1485,6 +1863,7 @@ def page_data(df):
             st.rerun()
 
         except Exception as ex:
+
             st.error(str(ex))
 
     st.subheader("Export")
@@ -1523,6 +1902,7 @@ def page_data(df):
 # ==================== ADMINISTRATION ====================
 
 def page_admin():
+
     banner(
         "Administration",
         "Registered users and recent activity"
@@ -1548,6 +1928,7 @@ def page_admin():
 # ==================== MAIN APPLICATION ====================
 
 def main():
+
     user = st.session_state.user
 
     pages = [
@@ -1570,6 +1951,7 @@ def main():
         st.session_state["page_navigation"] = pending_page
 
     with st.sidebar:
+
         st.selectbox(
             "Appearance",
             ["Light", "Dark"],
@@ -1601,12 +1983,14 @@ def main():
         )
 
         if st.button("Sign out"):
+
             db.log_activity(
                 user["id"],
                 "signed out"
             )
 
             del st.session_state["user"]
+
             st.rerun()
 
     is_db = src == "Employee database"
@@ -1617,24 +2001,33 @@ def main():
         df = up
 
     if page == "Dashboard":
+
         page_dashboard(df)
 
     elif page == "Employees":
+
         page_employees(df, is_db)
 
     elif page == "Analysis":
+
         page_analysis(df)
 
     elif page == "Departments":
+
         page_departments(df)
 
     elif page == "Upload and export":
+
         page_data(df)
 
     elif page == "Administration":
+
         if user["role"] == "admin":
+
             page_admin()
+
         else:
+
             st.error(
                 "You do not have permission to access this page."
             )
@@ -1643,6 +2036,9 @@ def main():
 # ==================== APPLICATION ENTRY POINT ====================
 
 if "user" not in st.session_state:
+
     auth_page()
+
 else:
+
     main()
