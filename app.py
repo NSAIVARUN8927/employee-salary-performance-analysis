@@ -34,14 +34,15 @@ if not db.is_seeded():
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
     :root {
-        --primary: #2563eb;
-        --primary-dark: #1d4ed8;
+        --primary: #4f46e5;
+        --primary-dark: #3730a3;
         --sidebar: #111827;
-        --sidebar-hover: #263449;
-        --background: #f4f7fb;
+        --sidebar-card: #202c43;
+        --background: #f4f6fc;
+        --surface: #ffffff;
         --text: #172033;
         --muted: #64748b;
         --border: #e2e8f0;
@@ -57,10 +58,12 @@ st.markdown(
     }
 
     .block-container {
-        max-width: 1450px;
-        padding-top: 1.5rem;
+        max-width: 1500px;
+        padding-top: 1.6rem;
         padding-bottom: 3rem;
     }
+
+    /* Main headings */
 
     h1, h2 {
         font-family: 'Manrope', sans-serif !important;
@@ -70,18 +73,29 @@ st.markdown(
     }
 
     h3, h4 {
-        font-family: 'DM Sans', sans-serif !important;
+        font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 700 !important;
         color: #263449;
     }
 
-    p, label, .stMarkdown {
-        font-family: 'DM Sans', sans-serif;
+    p, label, input, textarea {
+        font-family: 'DM Sans', sans-serif !important;
     }
 
+    /* Sidebar */
+
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #111827 0%, #172554 100%);
-        border-right: 1px solid #25334a;
+        background: linear-gradient(
+            180deg,
+            #111827 0%,
+            #172554 55%,
+            #312e81 100%
+        );
+        border-right: 1px solid #283753;
+    }
+
+    [data-testid="stSidebar"] > div:first-child {
+        background: transparent;
     }
 
     [data-testid="stSidebar"] * {
@@ -90,8 +104,10 @@ st.markdown(
 
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4 {
         color: #ffffff !important;
+        font-family: 'Manrope', sans-serif !important;
     }
 
     [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
@@ -99,31 +115,81 @@ st.markdown(
         font-weight: 600;
     }
 
+    /* Sidebar dropdown box */
+
     [data-testid="stSidebar"] [data-baseweb="select"] > div {
-        background: #243247;
-        border-color: #3c4d66;
-        border-radius: 9px;
+        background: #293957 !important;
+        border: 1px solid #52658a !important;
+        border-radius: 11px !important;
+        min-height: 43px;
+        transition: all 0.2s ease;
     }
 
+    [data-testid="stSidebar"] [data-baseweb="select"] > div:hover {
+        background: #364b70 !important;
+        border-color: #818cf8 !important;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="select"] input {
+        color: white !important;
+    }
+
+    [data-testid="stSidebar"] [data-baseweb="select"] span {
+        color: #f8fafc !important;
+    }
+
+    /* Dropdown popup */
+
+    [data-baseweb="popover"] {
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    [role="listbox"] {
+        background: #1e293b !important;
+        border: 1px solid #475569 !important;
+    }
+
+    [role="option"] {
+        color: #f8fafc !important;
+        background: #1e293b !important;
+        font-family: 'DM Sans', sans-serif !important;
+    }
+
+    [role="option"]:hover {
+        background: #3730a3 !important;
+    }
+
+    [role="option"][aria-selected="true"] {
+        background: #4338ca !important;
+    }
+
+    /* Sidebar buttons */
+
     [data-testid="stSidebar"] [data-testid="stButton"] button {
-        background: #263449;
-        border: 1px solid #42516a;
-        color: white;
-        border-radius: 9px;
-        font-weight: 600;
+        background: #293957 !important;
+        color: #ffffff !important;
+        border: 1px solid #52658a !important;
+        border-radius: 10px !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-weight: 700 !important;
+        min-height: 42px;
     }
 
     [data-testid="stSidebar"] [data-testid="stButton"] button:hover {
-        background: #344766;
-        border-color: #647da3;
+        background: #4338ca !important;
+        border-color: #818cf8 !important;
     }
 
+    /* Brand */
+
     .brand-box {
-        padding: 17px 15px;
-        border-radius: 14px;
+        padding: 19px 16px;
+        border-radius: 16px;
         margin-bottom: 22px;
-        background: linear-gradient(135deg, #2563eb, #4338ca);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border: 1px solid rgba(255,255,255,0.15);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.22);
     }
 
     .brand-title {
@@ -131,116 +197,225 @@ st.markdown(
         font-size: 1.5rem;
         font-weight: 800;
         color: white;
+        letter-spacing: -0.5px;
     }
 
     .brand-subtitle {
-        font-size: 0.78rem;
-        color: #dbeafe;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.76rem;
+        color: #e0e7ff;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .sidebar-section {
+        color: #a5b4fc;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 1.5px;
+        margin: 12px 0 8px;
+    }
+
+    .sidebar-user {
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.10);
+        padding: 13px;
+        border-radius: 12px;
+        margin: 12px 0 18px;
+    }
+
+    .sidebar-user-name {
+        font-family: 'Manrope', sans-serif;
+        font-size: 0.96rem;
+        font-weight: 800;
+        color: white;
+        overflow-wrap: anywhere;
+    }
+
+    .sidebar-user-role {
+        color: #c7d2fe;
+        font-size: 0.76rem;
         margin-top: 4px;
     }
 
+    /* Page banner */
+
     .page-banner {
-        background: linear-gradient(120deg, #111827, #243b63);
-        padding: 27px 30px;
-        border-radius: 17px;
+        background: linear-gradient(120deg, #111827, #263b67, #3730a3);
+        padding: 29px 31px;
+        border-radius: 18px;
         margin-bottom: 24px;
-        box-shadow: 0 8px 25px rgba(17, 24, 39, 0.09);
+        box-shadow: 0 10px 30px rgba(30,41,59,0.12);
+        border: 1px solid rgba(255,255,255,0.12);
     }
 
     .page-banner h1 {
         color: white !important;
-        font-size: 1.9rem;
+        font-size: 1.95rem;
         margin: 0;
+        line-height: 1.3;
     }
 
     .page-banner p {
-        color: #cbd5e1;
-        margin: 7px 0 0 0;
+        color: #dbeafe;
+        margin: 8px 0 0;
         font-size: 0.95rem;
+        line-height: 1.6;
     }
 
     .section-label {
-        font-family: 'Manrope', sans-serif;
-        font-weight: 800;
-        font-size: 1.15rem;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 1.18rem;
         color: #172033;
-        margin: 20px 0 12px 0;
+        margin: 20px 0 12px;
+        letter-spacing: -0.3px;
     }
 
-    .kpi-card {
-        min-height: 128px;
-        padding: 19px 17px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        border-top: 4px solid #2563eb;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.035);
-        margin-bottom: 8px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
+    /* KPI cards are actual Streamlit buttons.
+       Clicking anywhere on the card triggers its action. */
 
-    .kpi-label {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #64748b;
-        margin-bottom: 12px;
-    }
-
-    .kpi-value {
-        font-family: 'Manrope', sans-serif;
-        font-size: 1.65rem;
-        line-height: 1.3;
-        font-weight: 800;
-        color: #172033;
+    [class*="st-key-kpi_"] [data-testid="stButton"] button {
+        width: 100%;
+        min-height: 145px;
+        height: 145px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        text-align: left;
+        white-space: pre-wrap;
         overflow-wrap: anywhere;
+        padding: 17px 18px;
+        border-radius: 16px;
+        border: 1px solid #e0e7ff;
+        border-top: 4px solid #6366f1;
+        background: linear-gradient(145deg, #ffffff, #f8faff);
+        color: #172033 !important;
+        box-shadow: 0 5px 16px rgba(30,41,59,0.055);
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 0.91rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
     }
 
-    .kpi-hint {
-        font-size: 0.74rem;
-        color: #2563eb;
-        margin-top: 7px;
-        font-weight: 600;
+    [class*="st-key-kpi_"] [data-testid="stButton"] button p {
+        white-space: pre-wrap !important;
+        text-align: left !important;
+        line-height: 1.65 !important;
+        color: #172033 !important;
+    }
+
+    [class*="st-key-kpi_"] [data-testid="stButton"] button:hover {
+        background: linear-gradient(145deg, #eef2ff, #e0e7ff);
+        border-color: #818cf8;
+        border-top-color: #4338ca;
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(79,70,229,0.14);
+    }
+
+    [class*="st-key-kpi_"] [data-testid="stButton"] button:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.18) !important;
     }
 
     .info-card {
-        background: #ffffff;
+        background: white;
         border: 1px solid #e2e8f0;
         padding: 18px;
-        border-radius: 13px;
+        border-radius: 14px;
         margin-bottom: 12px;
     }
 
-    .stButton > button {
-        border-radius: 9px;
-        font-weight: 600;
-        transition: all 0.15s ease;
+    /* General buttons */
+
+    .stButton > button,
+    .stDownloadButton > button,
+    .stFormSubmitButton > button {
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif !important;
+        font-weight: 700;
+        transition: all 0.18s ease;
     }
 
-    [data-testid="stDataFrame"] {
-        border: 1px solid #e2e8f0;
-        border-radius: 11px;
-        overflow: hidden;
+    .stButton > button:hover,
+    .stDownloadButton > button:hover {
+        border-color: #818cf8;
     }
+
+    /* Form controls */
 
     [data-baseweb="select"] > div {
-        border-radius: 9px;
+        border-radius: 10px;
     }
 
     [data-testid="stTextInput"] input,
     [data-testid="stNumberInput"] input {
-        border-radius: 9px;
+        border-radius: 10px;
+    }
+
+    [data-testid="stDataFrame"] {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
     }
 
     [data-testid="stTabs"] button {
+        font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 700;
+    }
+
+    [data-testid="stExpander"] {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.65);
     }
 
     .footer-text {
         text-align: center;
+        font-family: 'DM Sans', sans-serif;
         font-size: 0.78rem;
         color: #94a3b8;
         padding-top: 25px;
+    }
+
+    /* Login screen */
+
+    .login-brand {
+        background: linear-gradient(145deg, #111827, #3730a3);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 18px;
+        min-height: 400px;
+    }
+
+    .login-brand h1 {
+        color: white !important;
+        font-size: 2.2rem;
+    }
+
+    .login-brand p {
+        color: #dbeafe;
+        line-height: 1.8;
+    }
+
+    .login-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        padding: 25px;
+        border-radius: 18px;
+    }
+
+    .login-heading {
+        font-family: 'Manrope', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #172033;
+    }
+
+    .login-description {
+        color: #64748b;
+        margin-bottom: 20px;
     }
 
     @media (max-width: 800px) {
@@ -250,15 +425,17 @@ st.markdown(
         }
 
         .page-banner {
-            padding: 20px;
+            padding: 21px;
         }
 
         .page-banner h1 {
-            font-size: 1.5rem;
+            font-size: 1.55rem;
         }
 
-        .kpi-value {
-            font-size: 1.3rem;
+        [class*="st-key-kpi_"] [data-testid="stButton"] button {
+            min-height: 125px;
+            height: 125px;
+            padding: 12px;
         }
     }
     </style>
@@ -272,14 +449,11 @@ st.markdown(
 # ============================================================
 
 def banner(title, subtitle=""):
-    safe_title = html.escape(str(title))
-    safe_subtitle = html.escape(str(subtitle))
-
     st.markdown(
         f"""
         <div class="page-banner">
-            <h1>{safe_title}</h1>
-            <p>{safe_subtitle}</p>
+            <h1>{html.escape(str(title))}</h1>
+            <p>{html.escape(str(subtitle))}</p>
         </div>
         """,
         unsafe_allow_html=True
@@ -304,44 +478,6 @@ def navigate_to(page):
     st.rerun()
 
 
-def show_kpi(label, value, key, hint="View details"):
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-label">{html.escape(str(label))}</div>
-            <div class="kpi-value">{html.escape(str(value))}</div>
-            <div class="kpi-hint">↗ {html.escape(str(hint))}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    if st.button(
-        f"Open {label}",
-        key=f"kpi_button_{key}",
-        use_container_width=True
-    ):
-        st.session_state["selected_kpi"] = key
-
-        if key in ("employees",):
-            navigate_to("Employees")
-
-        elif key in (
-            "average_salary",
-            "median_salary",
-            "minimum_salary"
-        ):
-            navigate_to("Analysis")
-
-        elif key == "average_performance":
-            st.session_state["analysis_tab"] = "Performance"
-            navigate_to("Analysis")
-
-        elif key in ("maximum_salary", "maximum_performance"):
-            st.session_state["kpi_dialog"] = key
-            st.rerun()
-
-
 def get_number(df, column, default=0):
     if column not in df.columns or df.empty:
         return default
@@ -354,71 +490,191 @@ def get_number(df, column, default=0):
     return values
 
 
+def show_kpi(label, value, key, hint="Click to view details"):
+    """
+    A single clickable KPI card.
+
+    Unlike a static HTML card followed by a separate button,
+    the entire visible card is the Streamlit button.
+    """
+
+    with st.container(key=f"kpi_{key}"):
+        clicked = st.button(
+            f"{label}\n\n{value}\n\n↗ {hint}",
+            key=f"kpi_button_{key}",
+            use_container_width=True
+        )
+
+    if clicked:
+        if key == "employees":
+            navigate_to("Employees")
+
+        elif key in (
+            "average_salary",
+            "median_salary",
+            "minimum_salary"
+        ):
+            st.session_state["analysis_view"] = "Salary"
+            navigate_to("Analysis")
+
+        elif key == "average_performance":
+            st.session_state["analysis_view"] = "Performance"
+            navigate_to("Analysis")
+
+        elif key in (
+            "maximum_salary",
+            "maximum_performance"
+        ):
+            st.session_state["kpi_dialog"] = key
+            st.rerun()
+
+
 # ============================================================
 # KPI EXPLANATION DIALOGS
 # ============================================================
 
-def show_kpi_dialog():
+def get_kpi_details(df, key):
+    if key == "maximum_salary":
+        column = "Basic_Salary"
+        title = "Maximum Salary"
+        description = (
+            "The maximum salary is the highest basic salary among "
+            "employees matching your current dashboard filters."
+        )
+        fmt = lambda value: f"₹{value:,.2f}"
+
+    elif key == "maximum_performance":
+        column = "Performance_Score"
+        title = "Maximum Performance"
+        description = (
+            "The maximum performance is the highest recorded "
+            "performance score among the employees matching "
+            "your current dashboard filters."
+        )
+        fmt = lambda value: f"{value:.2f}"
+
+    else:
+        return None
+
+    if column not in df.columns or df.empty:
+        return {
+            "title": title,
+            "description": description,
+            "value": "Not available",
+            "employees": pd.DataFrame()
+        }
+
+    values = pd.to_numeric(df[column], errors="coerce")
+    valid = values.dropna()
+
+    if valid.empty:
+        return {
+            "title": title,
+            "description": description,
+            "value": "Not available",
+            "employees": pd.DataFrame()
+        }
+
+    maximum = valid.max()
+    matching = df.loc[values == maximum].copy()
+
+    return {
+        "title": title,
+        "description": description,
+        "value": fmt(maximum),
+        "employees": matching
+    }
+
+
+def show_kpi_dialog(df):
     key = st.session_state.get("kpi_dialog")
 
     if not key:
         return
 
-    if key == "maximum_salary":
-        title = "Maximum Salary Explained"
+    details = get_kpi_details(df, key)
 
-        description = (
-            "Maximum salary is the highest Basic_Salary value among "
-            "employees currently matching the dashboard filters. "
-            "Changing the department, designation, experience, or "
-            "salary filters may change this value."
-        )
-
-        column = "Basic_Salary"
-        module = "Analysis"
-
-    elif key == "maximum_performance":
-        title = "Maximum Performance Explained"
-
-        description = (
-            "Maximum performance is the highest Performance_Score "
-            "among employees matching the current dashboard filters. "
-            "It helps identify the highest recorded performance score "
-            "in the selected employee group."
-        )
-
-        column = "Performance_Score"
-        module = "Analysis"
-
-    else:
+    if details is None:
+        st.session_state.pop("kpi_dialog", None)
         return
 
-    # Streamlit versions supporting dialogs will show a proper modal.
     if hasattr(st, "dialog"):
 
-        @st.dialog(title)
+        @st.dialog(details["title"], width="large")
         def explanation_dialog():
-            st.write(description)
+            st.write(details["description"])
 
-            st.caption(
-                "The value updates when the dashboard filters change."
+            st.metric(
+                label=details["title"],
+                value=details["value"]
             )
 
-            if st.button("Go to Analysis", use_container_width=True):
-                st.session_state.pop("kpi_dialog", None)
-                navigate_to(module)
+            matching = details["employees"]
 
-            if st.button("Close", use_container_width=True):
-                st.session_state.pop("kpi_dialog", None)
-                st.rerun()
+            if not matching.empty:
+                section_title("Matching Employee Records")
+
+                preferred_columns = [
+                    "Employee_ID",
+                    "Name",
+                    "Department",
+                    "Designation",
+                    "Basic_Salary",
+                    "Performance_Score"
+                ]
+
+                available_columns = [
+                    col for col in preferred_columns
+                    if col in matching.columns
+                ]
+
+                st.dataframe(
+                    matching[available_columns],
+                    hide_index=True,
+                    use_container_width=True
+                )
+
+            st.caption(
+                "This value is calculated using the current "
+                "dashboard filters."
+            )
+
+            left, right = st.columns(2)
+
+            with left:
+                if st.button(
+                    "Open Analysis",
+                    key="dialog_analysis",
+                    use_container_width=True
+                ):
+                    st.session_state.pop("kpi_dialog", None)
+
+                    st.session_state["analysis_view"] = (
+                        "Salary"
+                        if key == "maximum_salary"
+                        else "Performance"
+                    )
+
+                    navigate_to("Analysis")
+
+            with right:
+                if st.button(
+                    "Close",
+                    key="dialog_close",
+                    use_container_width=True
+                ):
+                    st.session_state.pop("kpi_dialog", None)
+                    st.rerun()
 
         explanation_dialog()
 
     else:
-        with st.expander(title, expanded=True):
-            st.write(description)
+        # Compatibility fallback for older Streamlit versions.
+        with st.expander(details["title"], expanded=True):
+            st.write(details["description"])
+            st.metric(details["title"], details["value"])
 
-            if st.button("Close explanation"):
+            if st.button("Close explanation", key="close_old_dialog"):
                 st.session_state.pop("kpi_dialog", None)
                 st.rerun()
 
@@ -440,47 +696,10 @@ def auth_page():
             background:
                 radial-gradient(
                     circle at top left,
-                    rgba(59, 130, 246, 0.12),
+                    rgba(99,102,241,0.13),
                     transparent 35%
                 ),
-                linear-gradient(135deg, #f8fafc, #eaf0fb);
-        }
-
-        .login-brand {
-            background: linear-gradient(145deg, #111827, #1e40af);
-            color: white;
-            padding: 40px 30px;
-            border-radius: 18px;
-            min-height: 400px;
-        }
-
-        .login-brand h1 {
-            color: white !important;
-            font-size: 2.2rem;
-        }
-
-        .login-brand p {
-            color: #dbeafe;
-            line-height: 1.8;
-        }
-
-        .login-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            padding: 25px;
-            border-radius: 18px;
-        }
-
-        .login-heading {
-            font-family: 'Manrope', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #172033;
-        }
-
-        .login-description {
-            color: #64748b;
-            margin-bottom: 20px;
+                linear-gradient(135deg,#f8fafc,#eaf0fb);
         }
         </style>
         """,
@@ -603,7 +822,9 @@ def auth_page():
             )
 
             password_type = (
-                "default" if show_register_password else "password"
+                "default"
+                if show_register_password
+                else "password"
             )
 
             password = st.text_input(
@@ -716,6 +937,26 @@ def page_dashboard(df):
         st.warning("No employee records are available.")
         return
 
+    required_columns = [
+        "Department",
+        "Designation",
+        "Basic_Salary",
+        "Experience_Years",
+        "Performance_Score"
+    ]
+
+    missing_columns = [
+        column for column in required_columns
+        if column not in df.columns
+    ]
+
+    if missing_columns:
+        st.error(
+            "The dataset is missing required columns: "
+            + ", ".join(missing_columns)
+        )
+        return
+
     section_title("Dashboard Filters")
 
     departments = sorted(
@@ -726,7 +967,7 @@ def page_dashboard(df):
         df["Designation"].dropna().astype(str).unique().tolist()
     )
 
-    with st.expander("Configure dashboard filters", expanded=True):
+    with st.expander("⚙️ Configure dashboard filters", expanded=True):
 
         c1, c2, c3 = st.columns(3)
 
@@ -766,7 +1007,7 @@ def page_dashboard(df):
 
         if salary_min == salary_max:
             selected_salary = (salary_min, salary_max)
-            st.caption(f"Salary: {salary_min:,.0f}")
+            st.caption(f"Salary: ₹{salary_min:,.0f}")
 
         else:
             selected_salary = st.slider(
@@ -823,7 +1064,7 @@ def page_dashboard(df):
         & df["Basic_Salary"].between(*selected_salary)
         & df["Experience_Years"].between(*selected_experience)
         & df["Performance_Score"].between(*selected_performance)
-    ]
+    ].copy()
 
     if filtered_df.empty:
         st.warning("No employees match your selected filters.")
@@ -835,75 +1076,78 @@ def page_dashboard(df):
 
     k = an.kpis(filtered_df)
 
+    # Show any previously requested KPI explanation.
+    show_kpi_dialog(filtered_df)
+
     section_title("Workforce Overview")
 
-    # First row: employee and salary KPIs.
+    # Row 1
     c1, c2, c3 = st.columns(3)
 
     with c1:
         show_kpi(
-            "Employees",
+            "👥 Employees",
             f"{k['total_employees']:,}",
             "employees",
-            "Open employee records"
+            "Click to open employee records"
         )
 
     with c2:
         show_kpi(
-            "Average Salary",
-            f"{k['average_salary']:,.2f}",
+            "💰 Average Salary",
+            f"₹{k['average_salary']:,.2f}",
             "average_salary",
-            "View salary analysis"
+            "Click to open salary analysis"
         )
 
     with c3:
         show_kpi(
-            "Median Salary",
-            f"{k['median_salary']:,.2f}",
+            "📊 Median Salary",
+            f"₹{k['median_salary']:,.2f}",
             "median_salary",
-            "View salary analysis"
+            "Click to open salary analysis"
         )
 
-    # Second row: remaining KPIs.
+    # Row 2
     c1, c2, c3 = st.columns(3)
 
     with c1:
         show_kpi(
-            "Minimum Salary",
-            f"{k['minimum_salary']:,.2f}",
+            "📉 Minimum Salary",
+            f"₹{k['minimum_salary']:,.2f}",
             "minimum_salary",
-            "View salary analysis"
+            "Click to open salary analysis"
         )
 
     with c2:
         show_kpi(
-            "Maximum Salary",
-            f"{k['maximum_salary']:,.2f}",
+            "🏆 Maximum Salary",
+            f"₹{k['maximum_salary']:,.2f}",
             "maximum_salary",
-            "Open explanation"
+            "Click for employee details"
         )
 
     with c3:
         show_kpi(
-            "Average Performance",
+            "⭐ Average Performance",
             f"{k['average_performance']:.2f}",
             "average_performance",
-            "View performance analysis"
+            "Click to open performance analysis"
         )
 
-    # Third row: maximum performance.
+    # Row 3
     c1, c2, c3 = st.columns(3)
 
     with c1:
         show_kpi(
-            "Maximum Performance",
+            "🚀 Maximum Performance",
             f"{k['maximum_performance']:.2f}",
             "maximum_performance",
-            "Open explanation"
+            "Click for employee details"
         )
 
-    # Display the explanation dialog if a relevant KPI was clicked.
-    show_kpi_dialog()
+    # Display any dialog triggered by a card click.
+    show_kpi_dialog(filtered_df)
 
     section_title("Automated Insights")
 
@@ -946,6 +1190,9 @@ def manage_employees(df):
         df["Department"].dropna().astype(str).unique().tolist()
     )
 
+    if not departments:
+        departments = ["General"]
+
     with st.expander("➕ Add an employee"):
 
         with st.form("add_emp"):
@@ -954,6 +1201,7 @@ def manage_employees(df):
 
             employee_id = c1.text_input("Employee ID")
             name = c2.text_input("Name")
+
             age = c3.number_input(
                 "Age",
                 min_value=18,
@@ -1023,7 +1271,6 @@ def manage_employees(df):
                     st.error("Designation is required.")
 
                 else:
-
                     employee = {
                         "Employee_ID": employee_id.strip(),
                         "Name": name.strip(),
@@ -1106,7 +1353,7 @@ def page_employees(df, is_db):
 
     section_title("Search and Filter")
 
-    with st.expander("Employee filters", expanded=True):
+    with st.expander("🔎 Employee filters", expanded=True):
 
         c1, c2, c3 = st.columns(3)
 
@@ -1158,7 +1405,7 @@ def page_employees(df, is_db):
 
     filtered = df[
         df["Experience_Years"].between(*exp)
-    ]
+    ].copy()
 
     if dept:
         filtered = filtered[
@@ -1171,7 +1418,6 @@ def page_employees(df, is_db):
         ]
 
     if search.strip():
-
         query = search.strip()
 
         mask = (
@@ -1224,22 +1470,29 @@ def page_analysis(df):
         st.warning("No data is available for analysis.")
         return
 
-    tabs = ["Salary", "Performance", "Correlation"]
+    analysis_options = [
+        "Salary",
+        "Performance",
+        "Correlation"
+    ]
 
-    requested_tab = st.session_state.pop(
-        "analysis_tab",
+    requested_view = st.session_state.get(
+        "analysis_view",
         "Salary"
     )
 
-    tab_index = (
-        tabs.index(requested_tab)
-        if requested_tab in tabs
-        else 0
+    if requested_view not in analysis_options:
+        requested_view = "Salary"
+
+    view = st.radio(
+        "Choose analysis module",
+        analysis_options,
+        index=analysis_options.index(requested_view),
+        horizontal=True,
+        key="analysis_view"
     )
 
-    t1, t2, t3 = st.tabs(tabs)
-
-    with t1:
+    if view == "Salary":
 
         section_title("Salary Summary")
 
@@ -1260,7 +1513,7 @@ def page_analysis(df):
 
         show(an.fig_experience(df))
 
-    with t2:
+    elif view == "Performance":
 
         section_title("Performance Summary")
 
@@ -1272,7 +1525,7 @@ def page_analysis(df):
         show(an.fig_perf_dist(df))
         show(an.fig_dept_perf(df))
 
-    with t3:
+    elif view == "Correlation":
 
         section_title("Correlation Matrix")
 
@@ -1376,7 +1629,9 @@ def page_data(df):
 
                 st.session_state.upload = uploaded_df
 
-                st.success("File validated and analysed successfully.")
+                st.success(
+                    "File validated and analysed successfully."
+                )
 
                 st.dataframe(
                     uploaded_df.head(10),
@@ -1470,13 +1725,16 @@ def page_admin():
             st.info("No registered users found.")
 
         else:
-            # Do not display password-related fields.
             sensitive_columns = [
                 column
                 for column in users.columns
                 if any(
                     word in column.lower()
-                    for word in ["password", "password_hash", "secret"]
+                    for word in [
+                        "password",
+                        "password_hash",
+                        "secret"
+                    ]
                 )
             ]
 
@@ -1528,7 +1786,6 @@ def main():
     if user.get("role") == "admin":
         pages.append("Administration")
 
-    # Ensure stale page selections cannot break navigation.
     if st.session_state.get("page_navigation") not in pages:
         st.session_state["page_navigation"] = "Dashboard"
 
@@ -1551,17 +1808,27 @@ def main():
             or user.get("username", "User")
         )
 
-        st.markdown(f"### 👤 {html.escape(display_name)}")
-
-        st.caption(
-            f"{str(user.get('role', 'user')).title()} account"
+        st.markdown(
+            f"""
+            <div class="sidebar-user">
+                <div class="sidebar-user-name">
+                    👤 {html.escape(str(display_name))}
+                </div>
+                <div class="sidebar-user-role">
+                    {html.escape(str(user.get('role', 'user')).title())}
+                    account
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-        st.divider()
+        st.markdown(
+            '<div class="sidebar-section">APPLICATION MENU</div>',
+            unsafe_allow_html=True
+        )
 
-        st.markdown("#### APPLICATION MENU")
-
-        page = st.selectbox(
+        st.selectbox(
             "Navigate to module",
             pages,
             key="page_navigation",
@@ -1570,7 +1837,10 @@ def main():
 
         st.divider()
 
-        st.markdown("#### DATA SOURCE")
+        st.markdown(
+            '<div class="sidebar-section">DATA SOURCE</div>',
+            unsafe_allow_html=True
+        )
 
         uploaded_data = st.session_state.get("upload")
 
@@ -1604,12 +1874,17 @@ def main():
 
             del st.session_state["user"]
 
-            # Clear authentication-related page state.
             for key in [
                 "page_navigation",
                 "kpi_dialog",
-                "selected_kpi",
-                "analysis_tab"
+                "analysis_view",
+                "dashboard_departments",
+                "dashboard_designations",
+                "dashboard_salary",
+                "dashboard_experience",
+                "dashboard_performance",
+                "employee_department_filter",
+                "employee_designation_filter"
             ]:
                 st.session_state.pop(key, None)
 
@@ -1618,10 +1893,12 @@ def main():
         st.markdown(
             """
             <div style="
-                margin-top: 25px;
-                font-size: 0.72rem;
-                color: #94a3b8;
-                text-align: center;
+                margin-top:25px;
+                font-family:'DM Sans',sans-serif;
+                font-size:0.72rem;
+                color:#c7d2fe;
+                text-align:center;
+                line-height:1.8;
             ">
                 StaffMetrics v2.0<br>
                 Employee Analytics
@@ -1638,7 +1915,10 @@ def main():
     else:
         df = st.session_state.upload.copy()
 
-    # Normalize the required numeric columns for filtering.
+    if df is None:
+        df = pd.DataFrame()
+
+    # Normalize numeric columns for filtering and analytics.
     for column in [
         "Basic_Salary",
         "Experience_Years",
@@ -1650,7 +1930,8 @@ def main():
                 errors="coerce"
             ).fillna(0)
 
-    # Render the selected module.
+    page = st.session_state["page_navigation"]
+
     if page == "Dashboard":
         page_dashboard(df)
 
