@@ -364,26 +364,14 @@ def show(fig):
     plt.close(fig)
 
 
+
 @st.dialog("KPI Details")
-def show_metric_popup(title, value, description, calculation):
-    st.subheader(title)
-
-    st.metric(
-        label="Current Value",
-        value=value
-    )
-
+def show_metric_popup(title, value, description):
+    st.metric(title, value)
     st.write(description)
-
-    st.markdown("#### How is it calculated?")
-    st.write(calculation)
 
     if st.button("Close", use_container_width=True):
         st.rerun()
-
-
-
-
 
 def page_dashboard(df):
     banner(
