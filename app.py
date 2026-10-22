@@ -49,7 +49,7 @@ def auth_page():
     }
 
     .block-container {
-        max-width: 1000px;
+        max-width: 1100px;
         padding-top: 3rem;
         padding-bottom: 3rem;
     }
@@ -80,7 +80,7 @@ def auth_page():
     }
 
     .login-brand .brand-icon {
-        font-size: 3.7rem;
+        font-size: 3.5rem;
         margin-bottom: 15px;
     }
 
@@ -181,174 +181,184 @@ def auth_page():
         """, unsafe_allow_html=True)
 
     with right:
-            st.markdown("""
-            <div class="login-card">
-                <div class="login-heading">Welcome back!</div>
-                <div class="login-description">
-                    Sign in to access your analytics dashboard.
-                </div>
-            """, unsafe_allow_html=True)
-    
-            login_tab, register_tab = st.tabs(
-                ["🔐 Sign in", "✨ Create account"]
+        st.markdown("""
+        <div class="login-card">
+            <div class="login-heading">Welcome back!</div>
+            <div class="login-description">
+                Sign in to access your analytics dashboard.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        login_tab, register_tab = st.tabs(
+            ["🔐 Sign in", "✨ Create account"]
+        )
+
+        # ---------------- LOGIN ----------------
+        with login_tab:
+            st.subheader("Sign in to your account")
+
+            login_id = st.text_input(
+                "Username or email",
+                key="login_username"
             )
-    
-            # ---------------- LOGIN ----------------
-            with login_tab:
-                st.subheader("Sign in to your account")
-    
-                login_id = st.text_input(
-                    "Username or email",
-                    key="login_username"
-                )
-    
-                show_login_password = st.checkbox(
-                    "Show password",
-                    key="show_login_password"
-                )
-    
-                login_password = st.text_input(
-                    "Password",
-                    type="default" if show_login_password else "password",
-                    key="login_password"
-                )
-    
-                remember_me = st.checkbox(
-                    "Remember me on this session",
-                    key="remember_me"
-                )
-    
-                if st.button("Sign in", key="login_button"):
-                    if not login_id.strip() or not login_password:
-                        st.warning("Enter your username/email and password.")
+
+            show_login_password = st.checkbox(
+                "Show password",
+                key="show_login_password"
+            )
+
+            login_password = st.text_input(
+                "Password",
+                type="default" if show_login_password else "password",
+                key="login_password"
+            )
+
+            remember_me = st.checkbox(
+                "Remember me on this session",
+                key="remember_me"
+            )
+
+            if st.button("Sign in", key="login_button"):
+                if not login_id.strip() or not login_password:
+                    st.warning("Enter your username/email and password.")
+                else:
+                    user = auth.login(login_id, login_password)
+
+                    if user:
+                        st.session_state.user = user
+
+                        # This flag records the user's preference for
+                        # the current Streamlit session only.
+                        
+
+                        st.rerun()
                     else:
-                        user = auth.login(login_id, login_password)
-    
-                        if user:
-                            st.session_state.user = user
-                            st.rerun()
-                        else:
-                            st.error(
-                                "The username/email or password is incorrect."
-                            )
-    
-                with st.expander("Forgot your password?"):
-                    st.write(
-                        "Password recovery requires a configured email "
-                        "or authentication provider."
-                    )
-                    st.info(
-                        "The password-reset service must be configured "
-                        "before a recovery email can be sent."
-                    )
-    
-            # ---------------- REGISTRATION ----------------
-            with register_tab:
-                st.subheader("Create your account")
-    
-                full_name = st.text_input(
-                    "Full name",
-                    key="register_full_name"
-                )
-    
-                email = st.text_input(
-                    "Email address",
-                    key="register_email"
-                )
-    
-                username = st.text_input(
-                    "Choose a username",
-                    key="register_username"
-                )
-    
-                show_register_password = st.checkbox(
-                    "Show registration passwords",
-                    key="show_register_password"
-                )
-    
-                password_type = (
-                    "default" if show_register_password else "password"
-                )
-    
-                password = st.text_input(
-                    "Create password",
-                    type=password_type,
-                    key="register_password"
-                )
-    
-                confirm_password = st.text_input(
-                    "Confirm password",
-                    type=password_type,
-                    key="register_confirm_password"
-                )
-    
-                # Password-strength feedback
-                if password:
-                    import re
-    
-                    score = 0
-    
-                    if len(password) >= 8:
-                        score += 1
-                    if re.search(r"[A-Z]", password):
-                        score += 1
-                    if re.search(r"[a-z]", password):
-                        score += 1
-                    if re.search(r"[0-9]", password):
-                        score += 1
-                    if re.search(r"[^A-Za-z0-9]", password):
-                        score += 1
-    
-                    if score <= 2:
-                        st.warning("Password strength: Weak")
-                    elif score <= 4:
-                        st.info("Password strength: Moderate")
-                    else:
-                        st.success("Password strength: Strong")
-    
-                st.caption(
-                    "Use at least 8 characters. A combination of "
-                    "uppercase letters, lowercase letters, numbers, "
-                    "and symbols is recommended."
-                )
-    
-                if st.button("Create account", key="register_button"):
-                    if not all([
-                        full_name.strip(),
-                        email.strip(),
-                        username.strip(),
-                        password,
-                        confirm_password
-                    ]):
-                        st.warning("Please complete all the fields.")
-    
-                    elif password != confirm_password:
-                        st.error("The passwords do not match.")
-    
-                    elif len(password) < 8:
                         st.error(
-                            "Your password must contain at least 8 characters."
+                            "The username/email or password is incorrect."
                         )
-    
+
+            with st.expander("Forgot your password?"):
+                st.write(
+                    "Password recovery requires a configured email "
+                    "or authentication provider."
+                )
+                st.info(
+                    "The password-reset service must be configured "
+                    "before a recovery email can be sent."
+                )
+
+        # ---------------- REGISTRATION ----------------
+        with register_tab:
+            st.subheader("Create your account")
+
+            full_name = st.text_input(
+                "Full name",
+                key="register_full_name"
+            )
+
+            email = st.text_input(
+                "Email address",
+                key="register_email"
+            )
+
+            username = st.text_input(
+                "Choose a username",
+                key="register_username"
+            )
+
+            show_register_password = st.checkbox(
+                "Show registration passwords",
+                key="show_register_password"
+            )
+
+            password_type = (
+                "default" if show_register_password else "password"
+            )
+
+            password = st.text_input(
+                "Create password",
+                type=password_type,
+                key="register_password"
+            )
+
+            confirm_password = st.text_input(
+                "Confirm password",
+                type=password_type,
+                key="register_confirm_password"
+            )
+
+            # Password-strength feedback
+            if password:
+                import re
+
+                score = 0
+
+                if len(password) >= 8:
+                    score += 1
+                if re.search(r"[A-Z]", password):
+                    score += 1
+                if re.search(r"[a-z]", password):
+                    score += 1
+                if re.search(r"[0-9]", password):
+                    score += 1
+                if re.search(r"[^A-Za-z0-9]", password):
+                    score += 1
+
+                if score <= 2:
+                    st.warning("Password strength: Weak")
+                elif score <= 4:
+                    st.info("Password strength: Moderate")
+                else:
+                    st.success("Password strength: Strong")
+
+            st.caption(
+                "Use at least 8 characters. A combination of "
+                "uppercase letters, lowercase letters, numbers, "
+                "and symbols is recommended."
+            )
+
+            if st.button("Create account", key="register_button"):
+                if not all([
+                    full_name.strip(),
+                    email.strip(),
+                    username.strip(),
+                    password,
+                    confirm_password
+                ]):
+                    st.warning("Please complete all the fields.")
+
+                elif password != confirm_password:
+                    st.error("The passwords do not match.")
+
+                elif len(password) < 8:
+                    st.error(
+                        "Your password must contain at least 8 characters."
+                    )
+
+                else:
+                    success, message = auth.register(
+                        username,
+                        email,
+                        full_name,
+                        password
+                    )
+
+                    if success:
+                        st.success(message)
+                        st.info(
+                            "Your account has been created. "
+                            "Switch to Sign in to continue."
+                        )
                     else:
-                        success, message = auth.register(
-                            username,
-                            email,
-                            full_name,
-                            password
-                        )
-    
-                        if success:
-                            st.success(message)
-                            st.info(
-                                "Your account has been created. "
-                                "Switch to Sign in to continue."
-                            )
-                        else:
-                            st.error(message)
-    
-            # Close the .login-card div wrapper
-            st.markdown('</div>', unsafe_allow_html=True)
+                        st.error(message)
+
+        st.markdown(
+            '<div class="security-note">'
+            'StaffMetrics · Employee Salary & Performance Analysis'
+            '</div>',
+            unsafe_allow_html=True
+        )
 def show(fig):
     st.pyplot(fig)
     plt.close(fig)
@@ -586,6 +596,20 @@ def page_departments(df):
         show(an.fig_dept_salary(df))
 
 
+def page_sql():
+    banner("SQL explorer", "Run the prepared queries or write your own SELECT")
+    titles = [f"Q{i}. {t}" for i, (t, _) in enumerate(Q.QUERIES, 1)]
+    pick = st.selectbox("Prepared query", titles)
+    sql = st.text_area("SQL (read-only)", Q.QUERIES[titles.index(pick)][1], height=130)
+    if st.button("Run query"):
+        if not sql.strip().lower().startswith("select"):
+            st.error("Only SELECT statements can be run here.")
+        else:
+            try:
+                st.dataframe(db.run_query(sql), hide_index=True)
+            except Exception as ex:
+                st.error(f"The query failed: {ex}")
+
 
 def page_data(df):
     banner("Upload and export", "Analyse your own CSV and download results")
@@ -598,54 +622,11 @@ def page_data(df):
         except Exception as ex:
             st.error(str(ex))
     st.subheader("Export")
-    
-    export_option = st.selectbox(
-        "Choose what to export",
-        [
-            "Cleaned data (CSV)",
-            "KPI summary (CSV)",
-            "Correlation matrix (CSV)",
-            "Printable report (HTML)"
-        ],
-        index=None,
-        placeholder="Select an export option..."
-    )
-    
-    if export_option == "Cleaned data (CSV)":
-        st.download_button(
-            "⬇️ Download",
-            data=df.to_csv(index=False),
-            file_name="Employee_Salary_Performance_Cleaned.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-    
-    elif export_option == "KPI summary (CSV)":
-        st.download_button(
-            "⬇️ Download",
-            data=pd.Series(an.kpis(df)).rename("value").to_csv(),
-            file_name="kpi_summary.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-    
-    elif export_option == "Correlation matrix (CSV)":
-        st.download_button(
-            "⬇️ Download",
-            data=an.correlation(df).round(3).to_csv(),
-            file_name="correlation_matrix.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-    
-    elif export_option == "Printable report (HTML)":
-        st.download_button(
-            "⬇️ Download",
-            data=an.report_html(df, st.session_state.user["username"]),
-            file_name="report.html",
-            mime="text/html",
-            use_container_width=True
-        )
+    c = st.columns(4)
+    c[0].download_button("Cleaned data (CSV)", df.to_csv(index=False), "Employee_Salary_Performance_Cleaned.csv")
+    c[1].download_button("KPI summary (CSV)", pd.Series(an.kpis(df)).rename("value").to_csv(), "kpi_summary.csv")
+    c[2].download_button("Correlation matrix (CSV)", an.correlation(df).round(3).to_csv(), "correlation_matrix.csv")
+    c[3].download_button("Printable report (HTML)", an.report_html(df, st.session_state.user["username"]), "report.html", mime="text/html")
 
 
 def page_admin():
@@ -677,6 +658,7 @@ def main():
     elif page == "Employees": page_employees(df, is_db)
     elif page == "Analysis": page_analysis(df)
     elif page == "Departments": page_departments(df)
+    elif page == "SQL explorer": page_sql()
     elif page == "Upload and export": page_data(df)
     else: page_admin()
 
