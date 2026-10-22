@@ -364,6 +364,25 @@ def show(fig):
     plt.close(fig)
 
 
+@st.dialog("KPI Details")
+def show_metric_popup(title, value, description, calculation):
+    st.subheader(title)
+
+    st.metric(
+        label="Current Value",
+        value=value
+    )
+
+    st.write(description)
+
+    st.markdown("#### How is it calculated?")
+    st.write(calculation)
+
+    if st.button("Close", use_container_width=True):
+        st.rerun()
+
+
+
 
 
 def page_dashboard(df):
@@ -374,7 +393,7 @@ def page_dashboard(df):
 
     st.subheader("Dashboard Filters")
 
-    # ==================== DEPARTMENT & DESIGNATION DROPDOWNS ====================
+    # ==================== DEPARTMENT & DESIGNATION ====================
 
     c1, c2, c3 = st.columns(3)
 
@@ -410,7 +429,7 @@ def page_dashboard(df):
             key="dashboard_chart"
         )
 
-    # ==================== BASIC SALARY RANGE ====================
+    # ==================== SALARY RANGE ====================
 
     salary_values = pd.to_numeric(
         df["Basic_Salary"], errors="coerce"
@@ -517,7 +536,7 @@ def page_dashboard(df):
             key="dashboard_performance_max"
         )
 
-    # ==================== VALIDATE RANGES ====================
+    # ==================== VALIDATE FILTERS ====================
 
     if selected_salary_min > selected_salary_max:
         st.error("Minimum salary cannot exceed maximum salary.")
@@ -549,13 +568,16 @@ def page_dashboard(df):
 
     filtered_df = filtered_df[
         filtered_df["Basic_Salary"].between(
-            selected_salary_min, selected_salary_max
+            selected_salary_min,
+            selected_salary_max
         )
         & filtered_df["Experience_Years"].between(
-            selected_experience_min, selected_experience_max
+            selected_experience_min,
+            selected_experience_max
         )
         & filtered_df["Performance_Score"].between(
-            selected_performance_min, selected_performance_max
+            selected_performance_min,
+            selected_performance_max
         )
     ]
 
@@ -580,24 +602,162 @@ def page_dashboard(df):
         f"Showing {len(filtered_df):,} of {len(df):,} employee records."
     )
 
-    # ==================== KPI CARDS ====================
+    # ==================== KPI VALUES ====================
 
     k = an.kpis(filtered_df)
 
-    kpis([
-        ("Employees", f"{k['total_employees']:,}"),
-        ("Average salary", f"{k['average_salary']:,.0f}"),
-        ("Median salary", f"{k['median_salary']:,.0f}"),
-        ("Minimum salary", f"{k['minimum_salary']:,.0f}")
-    ])
+    st.subheader("Key Performance Indicators")
 
-    st.write("")
+    st.caption(
+        "Select a metric's Details button to learn more. "
+        "Use View Employees to open the employee records."
+    )
 
-    kpis([
-        ("Maximum salary", f"{k['maximum_salary']:,.0f}"),
-        ("Average performance", f"{k['average_performance']:.2f}"),
-        ("Maximum performance", f"{k['maximum_performance']:.2f}")
-    ])
+    # ==================== KPI ROW 1 ====================
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        st.metric(
+            "👥 Employees",
+            f"{k['total_employees']:,}"
+        )
+
+        if st.button(
+            "View Employees →",
+            key="kpi_employees",
+            use_container_width=True
+        ):
+            st.session_state["page_navigation"] = "Employees"
+            st.rerun()
+
+    with c2:
+        st.metric(
+            "💰 Average Salary",
+            f"₹{k['average_salary']:,.0f}"
+        )
+
+        if st.button(
+            "Details",
+            key="kpi_average_salary",
+            use_container_width=True
+        ):
+            show_metric_popup(
+                "Average Salary",
+                f"₹{k['average_salary']:,.2f}",
+                "The average basic salary of employees matching your "
+                "current dashboard filters.",
+                "The sum of valid basic salaries divided by the number "
+                "of employees with valid salary data."
+            )
+
+    with c3:
+        st.metric(
+            "📊 Median Salary",
+            f"₹{k['median_salary']:,.0f}"
+        )
+
+        if st.button(
+            "Details",
+            key="kpi_median_salary",
+            use_container_width=True
+        ):
+            show_metric_popup(
+                "Median Salary",
+                f"₹{k['median_salary']:,.2f}",
+                "The middle salary after arranging included employee "
+                "salaries in ascending order. It is less affected by "
+                "extremely high or low salaries than the mean.",
+                "For an odd number of values, take the middle value. "
+                "For an even number, average the two middle values."
+            )
+
+    with c4:
+        st.metric(
+            "📉 Minimum Salary",
+            f"₹{k['minimum_salary']:,.0f}"
+        )
+
+        if st.button(
+            "Details",
+            key="kpi_minimum_salary",
+            use_container_width=True
+        ):
+            show_metric_popup(
+                "Minimum Salary",
+                f"₹{k['minimum_salary']:,.2f}",
+                "The lowest basic salary among employees matching "
+                "your current dashboard filters.",
+                "The smallest valid value in the Basic_Salary column "
+                "of the filtered dataset."
+            )
+
+    # ==================== KPI ROW 2 ====================
+
+    c5, c6, c7 = st.columns(3)
+
+    with c5:
+        st.metric(
+            "💎 Maximum Salary",
+            f"₹{k['maximum_salary']:,.0f}"
+        )
+
+        if st.button(
+            "Details",
+            key="kpi_maximum_salary",
+            use_container_width=True
+        ):
+            show_metric_popup(
+                "Maximum Salary",
+                f"₹{k['maximum_salary']:,.2f}",
+                "The highest basic salary among employees matching "
+                "your current dashboard filters.",
+                "The largest valid value in the Basic_Salary column "
+                "of the filtered dataset."
+            )
+
+    with c6:
+        st.metric(
+            "⭐ Average Performance",
+            f"{k['average_performance']:.2f}"
+        )
+
+        if st.button(
+            "Details",
+            key="kpi_average_performance",
+            use_container_width=True
+        ):
+            show_metric_popup(
+                "Average Performance",
+                f"{k['average_performance']:.2f}",
+                "The average performance score of employees included "
+                "in the filtered dataset.",
+                "The mean of valid Performance_Score values. "
+                "Interpret the result using your organization's "
+                "performance-rating scale."
+            )
+
+    with c7:
+        st.metric(
+            "🏆 Maximum Performance",
+            f"{k['maximum_performance']:.2f}"
+        )
+
+        if st.button(
+            "Details",
+            key="kpi_maximum_performance",
+            use_container_width=True
+        ):
+            show_metric_popup(
+                "Maximum Performance",
+                f"{k['maximum_performance']:.2f}",
+                "The highest performance score among employees "
+                "matching your current dashboard filters.",
+                "The largest valid value in the Performance_Score "
+                "column of the filtered dataset."
+            )
+
+    st.divider()
 
     # ==================== AUTOMATED INSIGHTS ====================
 
@@ -630,6 +790,7 @@ def page_dashboard(df):
 
     else:
         show(chart_functions[chart_choice](filtered_df))
+
 
         
 def manage_employees(df):
