@@ -365,6 +365,7 @@ def show(fig):
 
 
 
+
 def page_dashboard(df):
     banner(
         "Executive Dashboard",
@@ -373,26 +374,27 @@ def page_dashboard(df):
 
     st.subheader("Dashboard Filters")
 
-    # Department and designation filters
+    # ==================== DEPARTMENT & DESIGNATION DROPDOWNS ====================
+
     c1, c2, c3 = st.columns(3)
 
     departments = sorted(df["Department"].dropna().unique().tolist())
-    designations = sorted(df["Designation"].dropna().astype(str).unique().tolist())
+    designations = sorted(
+        df["Designation"].dropna().astype(str).unique().tolist()
+    )
 
     with c1:
-        selected_departments = st.multiselect(
+        selected_department = st.selectbox(
             "Department",
-            departments,
-            default=departments,
-            key="dashboard_departments"
+            ["All Departments"] + departments,
+            key="dashboard_department"
         )
 
     with c2:
-        selected_designations = st.multiselect(
+        selected_designation = st.selectbox(
             "Designation",
-            designations,
-            default=designations,
-            key="dashboard_designations"
+            ["All Designations"] + designations,
+            key="dashboard_designation"
         )
 
     with c3:
@@ -408,65 +410,167 @@ def page_dashboard(df):
             key="dashboard_chart"
         )
 
-    # Salary filter
-    salary_min = float(df["Basic_Salary"].min())
-    salary_max = float(df["Basic_Salary"].max())
+    # ==================== BASIC SALARY RANGE ====================
 
-    if salary_min == salary_max:
-        selected_salary = (salary_min, salary_max)
-        st.caption(f"Salary filter: {salary_min:,.0f}")
-    else:
-        selected_salary = st.slider(
-            "Basic salary range",
+    salary_values = pd.to_numeric(
+        df["Basic_Salary"], errors="coerce"
+    ).dropna()
+
+    if salary_values.empty:
+        st.warning("Salary data is unavailable.")
+        return
+
+    salary_min = float(salary_values.min())
+    salary_max = float(salary_values.max())
+
+    st.markdown("**Basic Salary Range**")
+
+    s1, s2 = st.columns(2)
+
+    with s1:
+        selected_salary_min = st.number_input(
+            "Minimum Salary",
             min_value=salary_min,
             max_value=salary_max,
-            value=(salary_min, salary_max),
-            key="dashboard_salary"
+            value=salary_min,
+            key="dashboard_salary_min"
         )
 
-    # Experience and performance filters
-    c4, c5 = st.columns(2)
+    with s2:
+        selected_salary_max = st.number_input(
+            "Maximum Salary",
+            min_value=salary_min,
+            max_value=salary_max,
+            value=salary_max,
+            key="dashboard_salary_max"
+        )
 
-    exp_min = int(df["Experience_Years"].min())
-    exp_max = int(df["Experience_Years"].max())
+    # ==================== EXPERIENCE RANGE ====================
 
-    with c4:
-        if exp_min == exp_max:
-            selected_experience = (exp_min, exp_max)
-            st.caption(f"Experience: {exp_min} years")
-        else:
-            selected_experience = st.slider(
-                "Experience (years)",
-                min_value=exp_min,
-                max_value=exp_max,
-                value=(exp_min, exp_max),
-                key="dashboard_experience"
-            )
+    experience_values = pd.to_numeric(
+        df["Experience_Years"], errors="coerce"
+    ).dropna()
 
-    perf_min = float(df["Performance_Score"].min())
-    perf_max = float(df["Performance_Score"].max())
+    if experience_values.empty:
+        st.warning("Experience data is unavailable.")
+        return
 
-    with c5:
-        if perf_min == perf_max:
-            selected_performance = (perf_min, perf_max)
-            st.caption(f"Performance score: {perf_min}")
-        else:
-            selected_performance = st.slider(
-                "Performance score",
-                min_value=perf_min,
-                max_value=perf_max,
-                value=(perf_min, perf_max),
-                key="dashboard_performance"
-            )
+    exp_min = 0
+    exp_max = max(0, int(experience_values.max()))
 
-    # Apply filters
-    filtered_df = df[
-        df["Department"].isin(selected_departments)
-        & df["Designation"].astype(str).isin(selected_designations)
-        & df["Basic_Salary"].between(*selected_salary)
-        & df["Experience_Years"].between(*selected_experience)
-        & df["Performance_Score"].between(*selected_performance)
+    st.markdown("**Experience Range (Years)**")
+
+    e1, e2 = st.columns(2)
+
+    with e1:
+        selected_experience_min = st.number_input(
+            "Minimum Experience",
+            min_value=exp_min,
+            max_value=exp_max,
+            value=exp_min,
+            step=1,
+            key="dashboard_experience_min"
+        )
+
+    with e2:
+        selected_experience_max = st.number_input(
+            "Maximum Experience",
+            min_value=exp_min,
+            max_value=exp_max,
+            value=exp_max,
+            step=1,
+            key="dashboard_experience_max"
+        )
+
+    # ==================== PERFORMANCE RANGE ====================
+
+    performance_values = pd.to_numeric(
+        df["Performance_Score"], errors="coerce"
+    ).dropna()
+
+    if performance_values.empty:
+        st.warning("Performance data is unavailable.")
+        return
+
+    perf_min = float(performance_values.min())
+    perf_max = float(performance_values.max())
+
+    st.markdown("**Performance Score Range**")
+
+    p1, p2 = st.columns(2)
+
+    with p1:
+        selected_performance_min = st.number_input(
+            "Minimum Performance",
+            min_value=perf_min,
+            max_value=perf_max,
+            value=perf_min,
+            key="dashboard_performance_min"
+        )
+
+    with p2:
+        selected_performance_max = st.number_input(
+            "Maximum Performance",
+            min_value=perf_min,
+            max_value=perf_max,
+            value=perf_max,
+            key="dashboard_performance_max"
+        )
+
+    # ==================== VALIDATE RANGES ====================
+
+    if selected_salary_min > selected_salary_max:
+        st.error("Minimum salary cannot exceed maximum salary.")
+        return
+
+    if selected_experience_min > selected_experience_max:
+        st.error("Minimum experience cannot exceed maximum experience.")
+        return
+
+    if selected_performance_min > selected_performance_max:
+        st.error("Minimum performance cannot exceed maximum performance.")
+        return
+
+    # ==================== APPLY FILTERS ====================
+
+    filtered_df = df.copy()
+
+    filtered_df["Basic_Salary"] = pd.to_numeric(
+        filtered_df["Basic_Salary"], errors="coerce"
+    )
+
+    filtered_df["Experience_Years"] = pd.to_numeric(
+        filtered_df["Experience_Years"], errors="coerce"
+    )
+
+    filtered_df["Performance_Score"] = pd.to_numeric(
+        filtered_df["Performance_Score"], errors="coerce"
+    )
+
+    filtered_df = filtered_df[
+        filtered_df["Basic_Salary"].between(
+            selected_salary_min, selected_salary_max
+        )
+        & filtered_df["Experience_Years"].between(
+            selected_experience_min, selected_experience_max
+        )
+        & filtered_df["Performance_Score"].between(
+            selected_performance_min, selected_performance_max
+        )
     ]
+
+    if selected_department != "All Departments":
+        filtered_df = filtered_df[
+            filtered_df["Department"] == selected_department
+        ]
+
+    if selected_designation != "All Designations":
+        filtered_df = filtered_df[
+            filtered_df["Designation"].astype(str)
+            == selected_designation
+        ]
+
+    # ==================== FILTER RESULTS ====================
 
     if filtered_df.empty:
         st.warning("No employees match your selected filters.")
@@ -476,7 +580,8 @@ def page_dashboard(df):
         f"Showing {len(filtered_df):,} of {len(df):,} employee records."
     )
 
-    # KPI cards
+    # ==================== KPI CARDS ====================
+
     k = an.kpis(filtered_df)
 
     kpis([
@@ -494,13 +599,15 @@ def page_dashboard(df):
         ("Maximum performance", f"{k['maximum_performance']:.2f}")
     ])
 
-    # Automated insights
+    # ==================== AUTOMATED INSIGHTS ====================
+
     st.subheader("Automated Insights")
 
     for line in an.insights(filtered_df):
         st.info(line)
 
-    # Chart selection
+    # ==================== VISUAL ANALYTICS ====================
+
     st.subheader("Visual Analytics")
 
     chart_functions = {
@@ -523,6 +630,7 @@ def page_dashboard(df):
 
     else:
         show(chart_functions[chart_choice](filtered_df))
+
         
 def manage_employees(df):
     uid = st.session_state.user["id"]
