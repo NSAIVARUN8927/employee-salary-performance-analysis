@@ -80,7 +80,7 @@ def auth_page():
     }
 
     .login-brand .brand-icon {
-        font-size: 3.5rem;
+        font-size: 3.7rem;
         margin-bottom: 15px;
     }
 
