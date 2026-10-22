@@ -381,7 +381,7 @@ def page_dashboard(df):
 
     st.subheader("Dashboard Filters")
 
-    # ==================== DEPARTMENT & DESIGNATION ====================
+    # ==================== DEPARTMENT & DESIGNATION DROPDOWNS ====================
 
     c1, c2, c3 = st.columns(3)
 
@@ -417,7 +417,7 @@ def page_dashboard(df):
             key="dashboard_chart"
         )
 
-    # ==================== SALARY RANGE ====================
+    # ==================== BASIC SALARY RANGE ====================
 
     salary_values = pd.to_numeric(
         df["Basic_Salary"], errors="coerce"
@@ -524,7 +524,7 @@ def page_dashboard(df):
             key="dashboard_performance_max"
         )
 
-    # ==================== VALIDATE FILTERS ====================
+    # ==================== VALIDATE RANGES ====================
 
     if selected_salary_min > selected_salary_max:
         st.error("Minimum salary cannot exceed maximum salary.")
@@ -556,16 +556,13 @@ def page_dashboard(df):
 
     filtered_df = filtered_df[
         filtered_df["Basic_Salary"].between(
-            selected_salary_min,
-            selected_salary_max
+            selected_salary_min, selected_salary_max
         )
         & filtered_df["Experience_Years"].between(
-            selected_experience_min,
-            selected_experience_max
+            selected_experience_min, selected_experience_max
         )
         & filtered_df["Performance_Score"].between(
-            selected_performance_min,
-            selected_performance_max
+            selected_performance_min, selected_performance_max
         )
     ]
 
@@ -590,87 +587,80 @@ def page_dashboard(df):
         f"Showing {len(filtered_df):,} of {len(df):,} employee records."
     )
 
-    
     # ==================== KPI CARDS ====================
-    
+
     k = an.kpis(filtered_df)
-    
-    # Preserve the original KPI card structure and values
+
     kpis([
         ("Employees", f"{k['total_employees']:,}"),
         ("Average salary", f"{k['average_salary']:,.0f}"),
         ("Median salary", f"{k['median_salary']:,.0f}"),
         ("Minimum salary", f"{k['minimum_salary']:,.0f}")
     ])
-    
-    # Click actions for the first four KPI cards
-    action_cols1 = st.columns(4)
-    
-    with action_cols1[0]:
-        if st.button("Open Employees", key="open_employees", use_container_width=True):
-            st.session_state["page_navigation"] = "Employees"
-            st.rerun()
-    
-    with action_cols1[1]:
-        if st.button("Details", key="details_average_salary", use_container_width=True):
-            show_metric_popup(
-                "Average Salary",
-                f"{k['average_salary']:,.0f}",
-                "The average basic salary of employees matching your current dashboard filters."
-            )
-    
-    with action_cols1[2]:
-        if st.button("Details", key="details_median_salary", use_container_width=True):
-            show_metric_popup(
-                "Median Salary",
-                f"{k['median_salary']:,.0f}",
-                "The middle salary when the included employees' salaries are arranged in ascending order."
-            )
-    
-    with action_cols1[3]:
-        if st.button("Details", key="details_minimum_salary", use_container_width=True):
-            show_metric_popup(
-                "Minimum Salary",
-                f"{k['minimum_salary']:,.0f}",
-                "The lowest basic salary among employees matching your current dashboard filters."
-            )
-    
+
     st.write("")
-    
-    # Preserve the original second row of KPI cards
+
     kpis([
         ("Maximum salary", f"{k['maximum_salary']:,.0f}"),
         ("Average performance", f"{k['average_performance']:.2f}"),
         ("Maximum performance", f"{k['maximum_performance']:.2f}")
     ])
-    
-    # Click actions for the remaining three KPI cards
-    action_cols2 = st.columns(3)
-    
-    with action_cols2[0]:
-        if st.button("Details", key="details_maximum_salary", use_container_width=True):
-            show_metric_popup(
-                "Maximum Salary",
-                f"{k['maximum_salary']:,.0f}",
-                "The highest basic salary among employees matching your current dashboard filters."
-            )
-    
-    with action_cols2[1]:
-        if st.button("Details", key="details_average_performance", use_container_width=True):
-            show_metric_popup(
-                "Average Performance",
-                f"{k['average_performance']:.2f}",
-                "The average performance score of employees matching your current dashboard filters."
-            )
-    
-    with action_cols2[2]:
-        if st.button("Details", key="details_maximum_performance", use_container_width=True):
-            show_metric_popup(
-                "Maximum Performance",
-                f"{k['maximum_performance']:.2f}",
-                "The highest performance score among employees matching your current dashboard filters."
-            )
 
+    # ==================== AUTOMATED INSIGHTS ====================
+
+    st.subheader("Automated Insights")
+
+    for line in an.insights(filtered_df):
+        st.info(line)
+
+    # ==================== VISUAL ANALYTICS ====================
+
+    st.subheader("Visual Analytics")
+
+    chart_functions = {
+        "Department-wise salary": an.fig_dept_salary,
+        "Salary distribution": an.fig_salary_dist,
+        "Department-wise performance": an.fig_dept_perf,
+        "Salary vs. performance": an.fig_salary_vs_perf
+    }
+
+    if chart_choice == "All charts":
+        a, b = st.columns(2)
+
+        with a:
+            show(an.fig_dept_salary(filtered_df))
+            show(an.fig_salary_dist(filtered_df))
+
+        with b:
+            show(an.fig_dept_perf(filtered_df))
+            show(an.fig_salary_vs_perf(filtered_df))
+
+    else:
+        show(chart_functions[chart_choice](filtered_df))
+
+        
+def manage_employees(df):
+    uid = st.session_state.user["id"]
+    with st.expander("Add an employee"), st.form("add_emp"):
+        c = st.columns(3)
+        e = {"Employee_ID": c[0].text_input("Employee ID"), "Name": c[1].text_input("Name"), "Age": c[2].number_input("Age", 18, 70, 30),
+             "Gender": c[0].selectbox("Gender", ["Female", "Male"]), "Department": c[1].selectbox("Department", sorted(df["Department"].unique())),
+             "Designation": c[2].text_input("Designation"), "Experience_Years": c[0].number_input("Experience (years)", 0, 45, 3),
+             "Joining_Year": c[1].number_input("Joining year", 1990, 2030, 2024), "Basic_Salary": c[2].number_input("Basic salary", 1.0, 1e7, 50000.0),
+             "Performance_Score": c[1].number_input("Performance score (0-5)", 0.0, 5.0, 3.0, 0.5)}
+        if st.form_submit_button("Add employee"):
+            try:
+                db.add_employee(e)
+                db.log_activity(uid, f"added employee {e['Employee_ID']}")
+                st.success("Employee added. It appears in the table the next time the page refreshes.")
+            except Exception as ex:
+                st.error(f"The employee could not be added: {ex}")
+    with st.expander("Delete an employee"):
+        who = st.selectbox("Employee", df["Employee_ID"])
+        if st.button("Delete employee"):
+            db.delete_employee(who)
+            db.log_activity(uid, f"deleted employee {who}")
+            st.rerun()
 
 
         
