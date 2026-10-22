@@ -32,13 +32,13 @@ def clean_data(raw):
     return df, log
 MAP = {"Employee_Name": "Name", "Job_Role": "Designation", "Salary": "Basic_Salary", "Performance_Rating": "Performance_Score"}
 STD = ["Employee_ID", "Name", "Age", "Gender", "Designation", "Experience_Years", "Joining_Year", "Department",
-       "Basic_Salary", "Bonus", "Total_Salary", "Effective_Date", "Performance_Score"]
+       "Basic_Salary","Total_Salary", "Effective_Date", "Performance_Score"]
 
 
 def standardise(df):
     d = df.rename(columns=MAP).copy()
     d["Employee_ID"] = d["Employee_ID"].astype(str)
-    for col, default in {"Age": np.nan, "Gender": "Unknown", "Designation": "Unknown", "Bonus": 0.0}.items():
+    for col, default in {"Age": np.nan, "Gender": "Unknown", "Designation": "Unknown": 0.0}.items():
         if col not in d:
             d[col] = default
     if "Name" not in d:
@@ -46,7 +46,7 @@ def standardise(df):
     jd = pd.to_datetime(d["Joining_Date"], errors="coerce") if "Joining_Date" in d else pd.Series(pd.NaT, index=d.index)
     d["Joining_Year"] = jd.dt.year.astype("Int64")
     d["Effective_Date"] = jd.dt.strftime("%Y-%m-%d")
-    d["Total_Salary"] = d["Basic_Salary"] + d["Bonus"]
+    d["Salary"] = d["Basic_Salary"]
     return d[STD].reset_index(drop=True)
 
 
@@ -77,7 +77,7 @@ def dept_performance(df):
 
 def dept_table(df):
     g = df.groupby("Department").agg(Employees=("Employee_ID", "count"), Avg_Salary=("Basic_Salary", "mean"),
-                                     Avg_Performance=("Performance_Score", "mean"), Total_Bonus=("Bonus", "sum"))
+                                     Avg_Performance=("Performance_Score", "mean"))
     return g.round(2).sort_values("Avg_Salary", ascending=False).reset_index()
 
 
