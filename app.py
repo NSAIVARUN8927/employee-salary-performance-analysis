@@ -548,26 +548,130 @@ def manage_employees(df):
             st.rerun()
 
 
+
 def page_employees(df, is_db):
     banner("Employees", "Search, filter and manage employee records")
+
+    # ==================== FILTER OPTIONS ====================
+
     c1, c2, c3 = st.columns(3)
-    dept = c1.multiselect("Department", sorted(df["Department"].unique()))
-    role = c2.multiselect("Designation", sorted(df["Designation"].astype(str).unique()))
-    lo, hi = int(df["Experience_Years"].min()), int(df["Experience_Years"].max())
-    exp = c3.slider("Experience (years)", lo, max(hi, lo + 1), (lo, max(hi, lo + 1)))
+
+    dept = c1.multiselect(
+        "Department",
+        sorted(df["Department"].dropna().unique())
+    )
+
+    role = c2.multiselect(
+        "Designation",
+        sorted(df["Designation"].dropna().astype(str).unique())
+    )
+
+    # ==================== DYNAMIC EXPERIENCE RANGE ====================
+
+    experience = pd.to_numeric(
+        df["Experience_Years"],
+        errors="coerce"
+    ).dropna()
+
+    if experience.empty:
+        st.warning("Experience data is not available.")
+        return
+
+    min_exp = 0
+    max_exp = max(0, int(experience.max()))
+
+    with c3:
+        st.markdown("**Experience Range (Years)**")
+
+        selected_min_exp = st.number_input(
+            "From (Minimum)",
+            min_value=min_exp,
+            max_value=max_exp,
+            value=min_exp,
+            step=1,
+            key="employees_min_exp"
+        )
+
+        selected_max_exp = st.number_input(
+            "To (Maximum)",
+            min_value=min_exp,
+            max_value=max_exp,
+            value=max_exp,
+            step=1,
+            key="employees_max_exp"
+        )
+
+    # ==================== SEARCH ====================
+
     q = st.text_input("Search by ID or name")
-    f = df[df["Experience_Years"].between(*exp)]
+
+    # ==================== APPLY FILTERS ====================
+
+    if selected_min_exp > selected_max_exp:
+        st.error(
+            "Minimum experience cannot be greater than maximum experience."
+        )
+        return
+
+    f = df.copy()
+
+    f["Experience_Years"] = pd.to_numeric(
+        f["Experience_Years"],
+        errors="coerce"
+    )
+
+    f = f[
+        f["Experience_Years"].between(
+            selected_min_exp,
+            selected_max_exp,
+            inclusive="both"
+        )
+    ]
+
     if dept:
         f = f[f["Department"].isin(dept)]
+
     if role:
         f = f[f["Designation"].astype(str).isin(role)]
+
     if q:
-        f = f[f["Employee_ID"].astype(str).str.contains(q, case=False) | f["Name"].astype(str).str.contains(q, case=False)]
-    st.caption(f"{len(f)} employees")
-    st.dataframe(f, hide_index=True)
-    st.download_button("Download filtered records (CSV)", f.to_csv(index=False), "employees_filtered.csv")
+        q = q.strip()
+
+        f = f[
+            f["Employee_ID"].astype(str).str.contains(
+                q, case=False, na=False, regex=False
+            )
+            |
+            f["Name"].astype(str).str.contains(
+                q, case=False, na=False, regex=False
+            )
+        ]
+
+    # ==================== DISPLAY RESULTS ====================
+
+    st.caption(f"{len(f)} employees found")
+
+    st.dataframe(
+        f,
+        hide_index=True,
+        use_container_width=True
+    )
+
+    # ==================== EXPORT ====================
+
+    st.download_button(
+        "Download filtered records (CSV)",
+        data=f.to_csv(index=False).encode("utf-8"),
+        file_name="employees_filtered.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+    # ==================== ADMIN MANAGEMENT ====================
+
     if is_db and st.session_state.user["role"] == "admin":
         manage_employees(df)
+
 
 def page_analysis(df):
     banner(
