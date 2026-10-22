@@ -106,7 +106,7 @@ def auth_page():
     }
 
     .stButton > button {
-        width: 100%;
+        width: 25%;
         border-radius: 10px;
         min-height: 45px;
         font-weight: 600;
