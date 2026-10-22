@@ -622,13 +622,54 @@ def page_data(df):
         except Exception as ex:
             st.error(str(ex))
     st.subheader("Export")
-    c = st.columns(4)
-    c[0].download_button("Cleaned data (CSV)", df.to_csv(index=False), "Employee_Salary_Performance_Cleaned.csv")
-    c[1].download_button("KPI summary (CSV)", pd.Series(an.kpis(df)).rename("value").to_csv(), "kpi_summary.csv")
-    c[2].download_button("Correlation matrix (CSV)", an.correlation(df).round(3).to_csv(), "correlation_matrix.csv")
-    c[3].download_button("Printable report (HTML)", an.report_html(df, st.session_state.user["username"]), "report.html", mime="text/html")
 
-
+    export_option = st.selectbox(
+        "Choose what to export",
+        [
+            "Cleaned data (CSV)",
+            "KPI summary (CSV)",
+            "Correlation matrix (CSV)",
+            "Printable report (HTML)"
+        ],
+        index=None,
+        placeholder="Select an export option..."
+    )
+    
+    if export_option == "Cleaned data (CSV)":
+        st.download_button(
+            "⬇️ Download",
+            data=df.to_csv(index=False),
+            file_name="Employee_Salary_Performance_Cleaned.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
+    elif export_option == "KPI summary (CSV)":
+        st.download_button(
+            "⬇️ Download",
+            data=pd.Series(an.kpis(df)).rename("value").to_csv(),
+            file_name="kpi_summary.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
+    elif export_option == "Correlation matrix (CSV)":
+        st.download_button(
+            "⬇️ Download",
+            data=an.correlation(df).round(3).to_csv(),
+            file_name="correlation_matrix.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
+    elif export_option == "Printable report (HTML)":
+        st.download_button(
+            "⬇️ Download",
+            data=an.report_html(df, st.session_state.user["username"]),
+            file_name="report.html",
+            mime="text/html",
+            use_container_width=True
+        )
 def page_admin():
     banner("Administration", "Registered users and recent activity")
     st.dataframe(pd.DataFrame(db.list_users()), hide_index=True)
