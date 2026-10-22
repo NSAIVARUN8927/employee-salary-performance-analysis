@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
-from backend import analytics as an, auth, database as db, sql_queries as Q
+from backend import analytics as an, auth, database as db
 
 st.set_page_config(page_title="Employee Salary & Performance Analysis", page_icon="📊", layout="wide")
 db.init_db()
