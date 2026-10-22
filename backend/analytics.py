@@ -146,12 +146,7 @@ def _summary(s, label):
     s = pd.to_numeric(s, errors="coerce").dropna()
 
     return pd.Series({
-        f"Average {label}": s.mean(),
-        f"Median {label}": s.median(),
-        f"Minimum {label}": s.min(),
-        f"Maximum {label}": s.max(),
-        f"{label} Std. Deviation": s.std()
-    })
+       "Average": s.mean(), "Median": s.median(), "Minimum": s.min(), "Maximum": s.max(), "Std. Deviation": s.std() }, name=label)
 
 
 def salary_summary(df):
