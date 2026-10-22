@@ -590,194 +590,87 @@ def page_dashboard(df):
         f"Showing {len(filtered_df):,} of {len(df):,} employee records."
     )
 
-    # ==================== KPI VALUES ====================
-
+    
+    # ==================== KPI CARDS ====================
+    
     k = an.kpis(filtered_df)
-
-    st.subheader("Key Performance Indicators")
-
-    st.caption(
-        "Select a metric's Details button to learn more. "
-        "Use View Employees to open the employee records."
-    )
-
-    # ==================== KPI ROW 1 ====================
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    with c1:
-        st.metric(
-            "👥 Employees",
-            f"{k['total_employees']:,}"
-        )
-
-        if st.button(
-            "View Employees →",
-            key="kpi_employees",
-            use_container_width=True
-        ):
+    
+    # Preserve the original KPI card structure and values
+    kpis([
+        ("Employees", f"{k['total_employees']:,}"),
+        ("Average salary", f"{k['average_salary']:,.0f}"),
+        ("Median salary", f"{k['median_salary']:,.0f}"),
+        ("Minimum salary", f"{k['minimum_salary']:,.0f}")
+    ])
+    
+    # Click actions for the first four KPI cards
+    action_cols1 = st.columns(4)
+    
+    with action_cols1[0]:
+        if st.button("Open Employees", key="open_employees", use_container_width=True):
             st.session_state["page_navigation"] = "Employees"
             st.rerun()
-
-    with c2:
-        st.metric(
-            "💰 Average Salary",
-            f"₹{k['average_salary']:,.0f}"
-        )
-
-        if st.button(
-            "Details",
-            key="kpi_average_salary",
-            use_container_width=True
-        ):
+    
+    with action_cols1[1]:
+        if st.button("Details", key="details_average_salary", use_container_width=True):
             show_metric_popup(
                 "Average Salary",
-                f"₹{k['average_salary']:,.2f}",
-                "The average basic salary of employees matching your "
-                "current dashboard filters.",
-                "The sum of valid basic salaries divided by the number "
-                "of employees with valid salary data."
+                f"{k['average_salary']:,.0f}",
+                "The average basic salary of employees matching your current dashboard filters."
             )
-
-    with c3:
-        st.metric(
-            "📊 Median Salary",
-            f"₹{k['median_salary']:,.0f}"
-        )
-
-        if st.button(
-            "Details",
-            key="kpi_median_salary",
-            use_container_width=True
-        ):
+    
+    with action_cols1[2]:
+        if st.button("Details", key="details_median_salary", use_container_width=True):
             show_metric_popup(
                 "Median Salary",
-                f"₹{k['median_salary']:,.2f}",
-                "The middle salary after arranging included employee "
-                "salaries in ascending order. It is less affected by "
-                "extremely high or low salaries than the mean.",
-                "For an odd number of values, take the middle value. "
-                "For an even number, average the two middle values."
+                f"{k['median_salary']:,.0f}",
+                "The middle salary when the included employees' salaries are arranged in ascending order."
             )
-
-    with c4:
-        st.metric(
-            "📉 Minimum Salary",
-            f"₹{k['minimum_salary']:,.0f}"
-        )
-
-        if st.button(
-            "Details",
-            key="kpi_minimum_salary",
-            use_container_width=True
-        ):
+    
+    with action_cols1[3]:
+        if st.button("Details", key="details_minimum_salary", use_container_width=True):
             show_metric_popup(
                 "Minimum Salary",
-                f"₹{k['minimum_salary']:,.2f}",
-                "The lowest basic salary among employees matching "
-                "your current dashboard filters.",
-                "The smallest valid value in the Basic_Salary column "
-                "of the filtered dataset."
+                f"{k['minimum_salary']:,.0f}",
+                "The lowest basic salary among employees matching your current dashboard filters."
             )
-
-    # ==================== KPI ROW 2 ====================
-
-    c5, c6, c7 = st.columns(3)
-
-    with c5:
-        st.metric(
-            "💎 Maximum Salary",
-            f"₹{k['maximum_salary']:,.0f}"
-        )
-
-        if st.button(
-            "Details",
-            key="kpi_maximum_salary",
-            use_container_width=True
-        ):
+    
+    st.write("")
+    
+    # Preserve the original second row of KPI cards
+    kpis([
+        ("Maximum salary", f"{k['maximum_salary']:,.0f}"),
+        ("Average performance", f"{k['average_performance']:.2f}"),
+        ("Maximum performance", f"{k['maximum_performance']:.2f}")
+    ])
+    
+    # Click actions for the remaining three KPI cards
+    action_cols2 = st.columns(3)
+    
+    with action_cols2[0]:
+        if st.button("Details", key="details_maximum_salary", use_container_width=True):
             show_metric_popup(
                 "Maximum Salary",
-                f"₹{k['maximum_salary']:,.2f}",
-                "The highest basic salary among employees matching "
-                "your current dashboard filters.",
-                "The largest valid value in the Basic_Salary column "
-                "of the filtered dataset."
+                f"{k['maximum_salary']:,.0f}",
+                "The highest basic salary among employees matching your current dashboard filters."
             )
-
-    with c6:
-        st.metric(
-            "⭐ Average Performance",
-            f"{k['average_performance']:.2f}"
-        )
-
-        if st.button(
-            "Details",
-            key="kpi_average_performance",
-            use_container_width=True
-        ):
+    
+    with action_cols2[1]:
+        if st.button("Details", key="details_average_performance", use_container_width=True):
             show_metric_popup(
                 "Average Performance",
                 f"{k['average_performance']:.2f}",
-                "The average performance score of employees included "
-                "in the filtered dataset.",
-                "The mean of valid Performance_Score values. "
-                "Interpret the result using your organization's "
-                "performance-rating scale."
+                "The average performance score of employees matching your current dashboard filters."
             )
-
-    with c7:
-        st.metric(
-            "🏆 Maximum Performance",
-            f"{k['maximum_performance']:.2f}"
-        )
-
-        if st.button(
-            "Details",
-            key="kpi_maximum_performance",
-            use_container_width=True
-        ):
+    
+    with action_cols2[2]:
+        if st.button("Details", key="details_maximum_performance", use_container_width=True):
             show_metric_popup(
                 "Maximum Performance",
                 f"{k['maximum_performance']:.2f}",
-                "The highest performance score among employees "
-                "matching your current dashboard filters.",
-                "The largest valid value in the Performance_Score "
-                "column of the filtered dataset."
+                "The highest performance score among employees matching your current dashboard filters."
             )
 
-    st.divider()
-
-    # ==================== AUTOMATED INSIGHTS ====================
-
-    st.subheader("Automated Insights")
-
-    for line in an.insights(filtered_df):
-        st.info(line)
-
-    # ==================== VISUAL ANALYTICS ====================
-
-    st.subheader("Visual Analytics")
-
-    chart_functions = {
-        "Department-wise salary": an.fig_dept_salary,
-        "Salary distribution": an.fig_salary_dist,
-        "Department-wise performance": an.fig_dept_perf,
-        "Salary vs. performance": an.fig_salary_vs_perf
-    }
-
-    if chart_choice == "All charts":
-        a, b = st.columns(2)
-
-        with a:
-            show(an.fig_dept_salary(filtered_df))
-            show(an.fig_salary_dist(filtered_df))
-
-        with b:
-            show(an.fig_dept_perf(filtered_df))
-            show(an.fig_salary_vs_perf(filtered_df))
-
-    else:
-        show(chart_functions[chart_choice](filtered_df))
 
 
         
