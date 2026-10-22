@@ -568,22 +568,79 @@ def page_employees(df, is_db):
     st.download_button("Download filtered records (CSV)", f.to_csv(index=False), "employees_filtered.csv")
     if is_db and st.session_state.user["role"] == "admin":
         manage_employees(df)
+
 def page_analysis(df):
-    banner("Salary and performance analysis", "Statistics, experience trends and correlations")
+    banner(
+        "Salary and performance analysis",
+        "Statistics, experience trends and correlations"
+    )
+
     t1, t2, t3 = st.tabs(["Salary", "Performance", "Correlation"])
+
+    # ==================== SALARY ANALYSIS ====================
     with t1:
-        st.dataframe(an.salary_summary(df).round(2).to_frame("Value"))
+        st.subheader("Salary Summary")
+
+        salary_df = an.salary_summary(df).round(2).rename_axis("Salary").reset_index()
+        salary_df.columns = ["Salary", "Value"]
+
+        # Shorter row labels: Average, Median, Minimum, Maximum, Std. Deviation
+        salary_df["Salary"] = (
+            salary_df["Salary"]
+            .astype(str)
+            .str.replace("Average Salary", "Average", regex=False)
+            .str.replace("Median Salary", "Median", regex=False)
+            .str.replace("Minimum Salary", "Minimum", regex=False)
+            .str.replace("Maximum Salary", "Maximum", regex=False)
+            .str.replace("Salary Std. Deviation", "Std. Deviation", regex=False)
+        )
+
+        st.dataframe(salary_df, hide_index=True, use_container_width=True)
+
         show(an.fig_salary_dist(df))
-        st.subheader("By experience")
-        st.dataframe(an.by_experience(df), hide_index=True)
+
+        st.subheader("Salary by Experience")
+        st.dataframe(an.by_experience(df), hide_index=True, use_container_width=True)
         show(an.fig_experience(df))
+
+    # ==================== PERFORMANCE ANALYSIS ====================
     with t2:
-        st.dataframe(an.performance_summary(df).round(2).to_frame("Value"))
+        st.subheader("Performance Summary")
+
+        performance_df = (
+            an.performance_summary(df)
+            .round(2)
+            .rename_axis("Performance")
+            .reset_index()
+        )
+        performance_df.columns = ["Performance", "Value"]
+
+        # Shorter row labels: Average, Median, Minimum, Maximum, Std. Deviation
+        performance_df["Performance"] = (
+            performance_df["Performance"]
+            .astype(str)
+            .str.replace("Average Performance", "Average", regex=False)
+            .str.replace("Median Performance", "Median", regex=False)
+            .str.replace("Minimum Performance", "Minimum", regex=False)
+            .str.replace("Maximum Performance", "Maximum", regex=False)
+            .str.replace("Performance Std. Deviation", "Std. Deviation", regex=False)
+        )
+
+        st.dataframe(performance_df, hide_index=True, use_container_width=True)
+
         show(an.fig_perf_dist(df))
         show(an.fig_dept_perf(df))
+
+    # ==================== CORRELATION ANALYSIS ====================
     with t3:
-        st.dataframe(an.correlation(df).round(2))
+        st.subheader("Correlation Matrix")
+
+        correlation_df = an.correlation(df).round(2)
+        correlation_df = correlation_df.rename_axis("Metric").reset_index()
+
+        st.dataframe(correlation_df, hide_index=True, use_container_width=True)
         show(an.fig_corr(df))
+
 
 
 def page_departments(df):
