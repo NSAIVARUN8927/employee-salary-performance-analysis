@@ -586,20 +586,6 @@ def page_departments(df):
         show(an.fig_dept_salary(df))
 
 
-def page_sql():
-    banner("SQL explorer", "Run the prepared queries or write your own SELECT")
-    titles = [f"Q{i}. {t}" for i, (t, _) in enumerate(Q.QUERIES, 1)]
-    pick = st.selectbox("Prepared query", titles)
-    sql = st.text_area("SQL (read-only)", Q.QUERIES[titles.index(pick)][1], height=130)
-    if st.button("Run query"):
-        if not sql.strip().lower().startswith("select"):
-            st.error("Only SELECT statements can be run here.")
-        else:
-            try:
-                st.dataframe(db.run_query(sql), hide_index=True)
-            except Exception as ex:
-                st.error(f"The query failed: {ex}")
-
 
 def page_data(df):
     banner("Upload and export", "Analyse your own CSV and download results")
@@ -691,7 +677,6 @@ def main():
     elif page == "Employees": page_employees(df, is_db)
     elif page == "Analysis": page_analysis(df)
     elif page == "Departments": page_departments(df)
-   
     elif page == "Upload and export": page_data(df)
     else: page_admin()
 
