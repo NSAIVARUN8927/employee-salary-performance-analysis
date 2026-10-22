@@ -940,37 +940,161 @@ def page_data(df):
             mime="text/html",
             use_container_width=True
         )
-def page_admin():
-    banner("Administration", "Registered users and recent activity")
-    st.dataframe(pd.DataFrame(db.list_users()), hide_index=True)
-    st.dataframe(pd.DataFrame(db.recent_activity()), hide_index=True)
+
+def page_profile():
+    user = st.session_state.user
+
+    full_name = user.get("full_name") or user.get("username", "User")
+    username = user.get("username", "Not available")
+    email = user.get("email", "Not available")
+    role = user.get("role", "user").title()
+
+    banner(
+        f"Welcome, {full_name}",
+        "Your personal account information and registration details"
+    )
+
+    st.subheader("My Account")
+
+    # Profile header
+    st.markdown(
+        f"""
+        <div style="
+            background: linear-gradient(135deg, #14213d, #233e70);
+            padding: 28px;
+            border-radius: 14px;
+            color: white;
+            margin-bottom: 22px;
+        ">
+            <div style="
+                width: 70px;
+                height: 70px;
+                border-radius: 50%;
+                background: #0f766e;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 30px;
+                font-weight: bold;
+                margin-bottom: 14px;
+            ">
+                {full_name.strip()[:1].upper()}
+            </div>
+            <h2 style="color: white; margin: 0;">
+                {full_name}
+            </h2>
+            <p style="color: #dbeafe; margin: 6px 0 0;">
+                @{username}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.subheader("Registration Details")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.text_input(
+            "Full Name",
+            value=full_name,
+            disabled=True
+        )
+
+        st.text_input(
+            "Username",
+            value=username,
+            disabled=True
+        )
+
+    with col2:
+        st.text_input(
+            "Email Address",
+            value=email,
+            disabled=True
+        )
+
+        st.text_input(
+            "Account Role",
+            value=role,
+            disabled=True
+        )
+
+    st.info(
+        "This page displays the account details available to the "
+        "application. Contact the administrator if your registration "
+        "information needs to be corrected."
+    )
+
+
+
 def main():
     user = st.session_state.user
-    pages = ["Dashboard", "Employees", "Analysis", "Departments","Upload and export"]
-    if user["role"] == "admin":
-        pages.append("Administration")
+
+    # Dynamically obtain the logged-in user's display name
+    display_name = (
+        user.get("full_name")
+        or user.get("username")
+        or "User"
+    )
+
+    # Main application pages
+    pages = [
+        "Dashboard",
+        "Employees",
+        "Analysis",
+        "Departments",
+        "Upload and export"
+    ]
+
+    # The profile navigation label changes for each logged-in user
+    pages.append(display_name)
+
     with st.sidebar:
-        st.markdown(f"### {user['full_name'] or user['username']}")
-        st.caption(f"{user['role'].title()} account")
+        st.markdown(f"### 👤 {display_name}")
+        st.caption(f"{user.get('role', 'user').title()} account")
+
         page = st.selectbox(
             "Navigate to page",
             pages,
             key="page_navigation"
         )
+
         up = st.session_state.get("upload")
-        src = st.selectbox("Data source", ["Employee database"] + (["Uploaded file"] if up is not None else []))
+
+        src = st.selectbox(
+            "Data source",
+            ["Employee database"]
+            + (["Uploaded file"] if up is not None else [])
+        )
+
         if st.button("Sign out"):
             db.log_activity(user["id"], "signed out")
             del st.session_state["user"]
             st.rerun()
+
     is_db = src == "Employee database"
     df = db.employee_frame() if is_db else up
-    if page == "Dashboard": page_dashboard(df)
-    elif page == "Employees": page_employees(df, is_db)
-    elif page == "Analysis": page_analysis(df)
-    elif page == "Departments": page_departments(df)
-    elif page == "Upload and export": page_data(df)
-    else: page_admin()
+
+    if page == "Dashboard":
+        page_dashboard(df)
+
+    elif page == "Employees":
+        page_employees(df, is_db)
+
+    elif page == "Analysis":
+        page_analysis(df)
+
+    elif page == "Departments":
+        page_departments(df)
+
+    elif page == "Upload and export":
+        page_data(df)
+
+    elif page == display_name:
+        page_profile()
+
 
 
 if "user" not in st.session_state:
