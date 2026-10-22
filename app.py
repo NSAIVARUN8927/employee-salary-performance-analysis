@@ -49,7 +49,7 @@ def auth_page():
     }
 
     .block-container {
-        max-width: 900px;
+        max-width: 1000px;
         padding-top: 3rem;
         padding-bottom: 3rem;
     }
