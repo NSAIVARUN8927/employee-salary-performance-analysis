@@ -180,14 +180,13 @@ def auth_page():
         </div>
         """, unsafe_allow_html=True)
 
-    with right:
+with right:
         st.markdown("""
         <div class="login-card">
             <div class="login-heading">Welcome back!</div>
             <div class="login-description">
                 Sign in to access your analytics dashboard.
             </div>
-        </div>
         """, unsafe_allow_html=True)
 
         login_tab, register_tab = st.tabs(
@@ -227,11 +226,6 @@ def auth_page():
 
                     if user:
                         st.session_state.user = user
-
-                        # This flag records the user's preference for
-                        # the current Streamlit session only.
-                        
-
                         st.rerun()
                     else:
                         st.error(
@@ -353,12 +347,8 @@ def auth_page():
                     else:
                         st.error(message)
 
-        st.markdown(
-            '<div class="security-note">'
-            'StaffMetrics · Employee Salary & Performance Analysis'
-            '</div>',
-            unsafe_allow_html=True
-        )
+        # Close the .login-card div wrapper
+        st.markdown('</div>', unsafe_allow_html=True)
 def show(fig):
     st.pyplot(fig)
     plt.close(fig)
