@@ -581,52 +581,63 @@ def page_analysis(df):
     with t1:
         st.subheader("Salary Summary")
 
-        salary_df = an.salary_summary(df).round(2).rename_axis("Salary").reset_index()
+        salary_summary = an.salary_summary(df).round(2)
+
+        salary_df = salary_summary.rename_axis(None).reset_index()
         salary_df.columns = ["Salary", "Value"]
 
-        # Shorter row labels: Average, Median, Minimum, Maximum, Std. Deviation
-        salary_df["Salary"] = (
-            salary_df["Salary"]
-            .astype(str)
-            .str.replace("Average Salary", "Average", regex=False)
-            .str.replace("Median Salary", "Median", regex=False)
-            .str.replace("Minimum Salary", "Minimum", regex=False)
-            .str.replace("Maximum Salary", "Maximum", regex=False)
-            .str.replace("Salary Std. Deviation", "Std. Deviation", regex=False)
-        )
+        salary_labels = {
+            "Average Salary": "Average",
+            "Median Salary": "Median",
+            "Minimum Salary": "Minimum",
+            "Maximum Salary": "Maximum",
+            "Salary Std. Deviation": "Std. Deviation",
+        }
 
-        st.dataframe(salary_df, hide_index=True, use_container_width=True)
+        salary_df["Salary"] = salary_df["Salary"].replace(salary_labels)
+
+        st.dataframe(
+            salary_df,
+            hide_index=True,
+            use_container_width=True
+        )
 
         show(an.fig_salary_dist(df))
 
         st.subheader("Salary by Experience")
-        st.dataframe(an.by_experience(df), hide_index=True, use_container_width=True)
+        st.dataframe(
+            an.by_experience(df),
+            hide_index=True,
+            use_container_width=True
+        )
         show(an.fig_experience(df))
 
     # ==================== PERFORMANCE ANALYSIS ====================
     with t2:
         st.subheader("Performance Summary")
 
-        performance_df = (
-            an.performance_summary(df)
-            .round(2)
-            .rename_axis("Performance")
-            .reset_index()
-        )
+        performance_summary = an.performance_summary(df).round(2)
+
+        performance_df = performance_summary.rename_axis(None).reset_index()
         performance_df.columns = ["Performance", "Value"]
 
-        # Shorter row labels: Average, Median, Minimum, Maximum, Std. Deviation
+        performance_labels = {
+            "Average Performance": "Average",
+            "Median Performance": "Median",
+            "Minimum Performance": "Minimum",
+            "Maximum Performance": "Maximum",
+            "Performance Std. Deviation": "Std. Deviation",
+        }
+
         performance_df["Performance"] = (
-            performance_df["Performance"]
-            .astype(str)
-            .str.replace("Average Performance", "Average", regex=False)
-            .str.replace("Median Performance", "Median", regex=False)
-            .str.replace("Minimum Performance", "Minimum", regex=False)
-            .str.replace("Maximum Performance", "Maximum", regex=False)
-            .str.replace("Performance Std. Deviation", "Std. Deviation", regex=False)
+            performance_df["Performance"].replace(performance_labels)
         )
 
-        st.dataframe(performance_df, hide_index=True, use_container_width=True)
+        st.dataframe(
+            performance_df,
+            hide_index=True,
+            use_container_width=True
+        )
 
         show(an.fig_perf_dist(df))
         show(an.fig_dept_perf(df))
@@ -636,12 +647,16 @@ def page_analysis(df):
         st.subheader("Correlation Matrix")
 
         correlation_df = an.correlation(df).round(2)
-        correlation_df = correlation_df.rename_axis("Metric").reset_index()
+        correlation_df.index.name = "Metric"
+        correlation_df = correlation_df.reset_index()
 
-        st.dataframe(correlation_df, hide_index=True, use_container_width=True)
+        st.dataframe(
+            correlation_df,
+            hide_index=True,
+            use_container_width=True
+        )
+
         show(an.fig_corr(df))
-
-
 
 def page_departments(df):
     banner("Departments", "Employee count, salary and performance by department")
