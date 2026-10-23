@@ -352,7 +352,7 @@ def fig_salary_dist(df):
         "Employees",
         lambda ax: sns.histplot(
             df["Basic_Salary"],
-            kde=True,
+            kde=False,
             color=TEAL,
             ax=ax
         )
