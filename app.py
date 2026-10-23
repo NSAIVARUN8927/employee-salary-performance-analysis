@@ -757,6 +757,130 @@ body,
 }
 
 
+/* ==========================================
+   USER DATA — REGISTRATION DETAILS VISIBILITY
+========================================== */
+
+/* Registration section headings */
+.user-data-page-banner ~ div h1,
+.user-data-page-banner ~ div h2,
+.user-data-page-banner ~ div h3 {
+    color: #0F766E !important;
+    font-weight: 750 !important;
+}
+
+/* Form labels and field labels */
+.stApp [data-testid="stWidgetLabel"] p,
+.stApp [data-testid="stWidgetLabel"] label,
+.stApp .stTextInput label,
+.stApp .stNumberInput label,
+.stApp .stSelectbox label,
+.stApp .stDateInput label,
+.stApp .stTextArea label,
+.stApp .stRadio label,
+.stApp .stCheckbox label {
+    color: #164E63 !important;
+    font-weight: 650 !important;
+    opacity: 1 !important;
+}
+
+/* Text input fields */
+.stApp div[data-baseweb="input"] input,
+.stApp div[data-baseweb="textarea"] textarea,
+.stApp div[data-baseweb="select"] input {
+    color: #102A43 !important;
+    -webkit-text-fill-color: #102A43 !important;
+    background-color: #FFFFFF !important;
+    caret-color: #0891B2 !important;
+    font-weight: 500 !important;
+}
+
+/* Input field backgrounds and borders */
+.stApp div[data-baseweb="input"],
+.stApp div[data-baseweb="textarea"],
+.stApp div[data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+    border: 1px solid #94C5D3 !important;
+    border-radius: 9px !important;
+}
+
+/* Focused input fields */
+.stApp div[data-baseweb="input"]:focus-within,
+.stApp div[data-baseweb="textarea"]:focus-within,
+.stApp div[data-baseweb="select"]:focus-within {
+    border-color: #0891B2 !important;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15) !important;
+}
+
+/* Placeholder text */
+.stApp input::placeholder,
+.stApp textarea::placeholder {
+    color: #64748B !important;
+    -webkit-text-fill-color: #64748B !important;
+    opacity: 1 !important;
+}
+
+/* Registration details and informational text */
+.stApp [data-testid="stMarkdownContainer"] p,
+.stApp [data-testid="stMarkdownContainer"] li {
+    line-height: 1.7;
+}
+
+/* Captions and secondary information */
+.stApp [data-testid="stCaptionContainer"],
+.stApp [data-testid="stCaptionContainer"] p {
+    color: #475569 !important;
+    opacity: 1 !important;
+}
+
+/* Information boxes */
+.stApp [data-testid="stAlert"] {
+    background-color: #ECFEFF !important;
+    border: 1px solid #67C8D7 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px rgba(8, 47, 73, 0.08) !important;
+}
+
+.stApp [data-testid="stAlert"] p,
+.stApp [data-testid="stAlert"] li {
+    color: #164E63 !important;
+    opacity: 1 !important;
+}
+
+/* Registration data displayed in bordered containers */
+.stApp [data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: #B6DCE5 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 5px 16px rgba(8, 47, 73, 0.07) !important;
+}
+
+/* Selectbox selected text and dropdown indicators */
+.stApp [data-baseweb="select"] *,
+.stApp [data-baseweb="select"] svg {
+    color: #102A43 !important;
+}
+
+/* Ensure disabled/read-only values remain readable */
+.stApp input:disabled,
+.stApp textarea:disabled {
+    color: #475569 !important;
+    -webkit-text-fill-color: #475569 !important;
+    opacity: 1 !important;
+    background-color: #F1F5F9 !important;
+}
+
+/* Responsive spacing */
+@media (max-width: 768px) {
+    .stApp [data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 10px !important;
+    }
+
+    .stApp [data-testid="stWidgetLabel"] p {
+        font-size: 14px !important;
+    }
+}
+
+
 
 </style>
 """, unsafe_allow_html=True)
