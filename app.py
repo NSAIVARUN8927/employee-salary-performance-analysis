@@ -255,6 +255,121 @@ body,
         transition: none;
     }
 }
+
+/* ==================== ANALYSIS PAGE HEADER ==================== */
+
+.analysis-page-banner {
+    position: relative;
+    overflow: hidden;
+    padding: 25px 28px;
+    margin: 10px 0 26px 0;
+    border-radius: 18px;
+    background: linear-gradient(
+        120deg,
+        #2E1065 0%,
+        #4C1D95 48%,
+        #6D28D9 100%
+    );
+    border: 1px solid rgba(196, 181, 253, 0.35);
+    box-shadow:
+        0 10px 28px rgba(76, 29, 149, 0.18),
+        0 3px 8px rgba(46, 16, 101, 0.10);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Violet accent on the left */
+.analysis-page-banner::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(
+        180deg,
+        #C4B5FD,
+        #F0ABFC
+    );
+}
+
+/* Decorative glow */
+.analysis-page-banner::after {
+    content: "";
+    position: absolute;
+    top: -55px;
+    right: -35px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(196, 181, 253, 0.10);
+    pointer-events: none;
+}
+
+.analysis-page-banner h2 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    color: #FFFFFF !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 29px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    line-height: 1.4;
+}
+
+.analysis-page-banner p {
+    position: relative;
+    z-index: 1;
+    margin: 7px 0 0 0;
+    padding: 0;
+    color: #E9D5FF !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.7;
+}
+
+/* Elegant divider */
+.analysis-page-banner .analysis-header-divider {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 2px;
+    margin-top: 18px;
+    border-radius: 10px;
+    background: linear-gradient(
+        90deg,
+        #C4B5FD 0%,
+        #F0ABFC 35%,
+        rgba(255, 255, 255, 0.12) 100%
+    );
+}
+
+@media (hover: hover) {
+    .analysis-page-banner:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 34px rgba(76, 29, 149, 0.25);
+    }
+}
+
+@media (max-width: 768px) {
+    .analysis-page-banner {
+        padding: 20px;
+        border-radius: 14px;
+    }
+
+    .analysis-page-banner h2 {
+        font-size: 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .analysis-page-banner {
+        transition: none;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -1377,10 +1492,16 @@ def page_employees(df, is_db):
 
 
 def page_analysis(df):
-    banner(
-        "Salary and performance analysis",
-        "Statistics, experience trends and correlations"
-    )
+    
+    st.markdown("""
+    <div class="analysis-page-banner">
+        <h2>Salary and performance analysis</h2>
+        <p>Statistics, experience trends and correlations</p>
+        <div class="analysis-header-divider"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 
     t1, t2, t3 = st.tabs(["Salary", "Performance", "Correlation"])
 
