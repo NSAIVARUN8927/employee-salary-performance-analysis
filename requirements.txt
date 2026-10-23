@@ -3,3 +3,4 @@ pandas
 matplotlib
 extra-streamlit-components
 itsdangerous
+seaborn
