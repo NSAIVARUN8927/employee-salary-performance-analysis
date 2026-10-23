@@ -370,6 +370,120 @@ body,
     }
 }
 
+/* ==================== DEPARTMENTS PAGE HEADER ==================== */
+
+.departments-page-banner {
+    position: relative;
+    overflow: hidden;
+    padding: 25px 28px;
+    margin: 10px 0 26px 0;
+    border-radius: 18px;
+    background: linear-gradient(
+        120deg,
+        #064E3B 0%,
+        #047857 50%,
+        #0F766E 100%
+    );
+    border: 1px solid rgba(110, 231, 183, 0.35);
+    box-shadow:
+        0 10px 28px rgba(6, 78, 59, 0.18),
+        0 3px 8px rgba(6, 78, 59, 0.10);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Green accent on the left */
+.departments-page-banner::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(
+        180deg,
+        #6EE7B7,
+        #67E8F9
+    );
+}
+
+/* Soft decorative circle */
+.departments-page-banner::after {
+    content: "";
+    position: absolute;
+    top: -55px;
+    right: -35px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(167, 243, 208, 0.10);
+    pointer-events: none;
+}
+
+.departments-page-banner h2 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    color: #FFFFFF !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 29px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    line-height: 1.4;
+}
+
+.departments-page-banner p {
+    position: relative;
+    z-index: 1;
+    margin: 7px 0 0 0;
+    padding: 0;
+    color: #D1FAE5 !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.7;
+}
+
+.departments-page-banner .departments-header-divider {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 2px;
+    margin-top: 18px;
+    border-radius: 10px;
+    background: linear-gradient(
+        90deg,
+        #6EE7B7 0%,
+        #67E8F9 35%,
+        rgba(255, 255, 255, 0.12) 100%
+    );
+}
+
+@media (hover: hover) {
+    .departments-page-banner:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 34px rgba(6, 78, 59, 0.25);
+    }
+}
+
+@media (max-width: 768px) {
+    .departments-page-banner {
+        padding: 20px;
+        border-radius: 14px;
+    }
+
+    .departments-page-banner h2 {
+        font-size: 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .departments-page-banner {
+        transition: none;
+    }
+}
+
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -1587,7 +1701,16 @@ def page_analysis(df):
         show(an.fig_corr(df))
 
 def page_departments(df):
-    banner("Departments", "Employee count, salary and performance by department")
+    
+    st.markdown("""
+    <div class="departments-page-banner">
+        <h2>Departments</h2>
+        <p>Explore department-wise employee distribution, salary trends and performance insights</p>
+        <div class="departments-header-divider"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
     st.dataframe(an.dept_table(df), hide_index=True)
     a, b = st.columns(2)
     with a:
