@@ -199,35 +199,213 @@ def banner(title, subtitle=""):
     st.markdown(f'<div class="banner"><h1>{title}</h1><p>{subtitle}</p></div>', unsafe_allow_html=True)
 
 
+# ============================================================
+# INTERACTIVE DASHBOARD KPI CARDS
+# ============================================================
+
+import html
+
+
+@st.dialog("Statistical Measure", width="small")
+def show_metric_dialog(label, value, description, formula):
+    """Display details about a selected dashboard statistic."""
+
+    st.markdown(
+        f"""
+        <div style="
+            padding: 22px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #eff6ff, #f0fdfa);
+            border: 1px solid #bfdbfe;
+            margin-bottom: 18px;
+        ">
+            <div style="
+                font-size: 13px;
+                color: #475569;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 8px;
+            ">
+                {html.escape(str(label))}
+            </div>
+
+            <div style="
+                font-size: 34px;
+                font-weight: 800;
+                color: #1d4ed8;
+                margin-bottom: 12px;
+            ">
+                {html.escape(str(value))}
+            </div>
+
+            <div style="
+                color: #334155;
+                font-size: 14px;
+                line-height: 1.7;
+            ">
+                {html.escape(str(description))}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown("#### How is it calculated?")
+    st.info(formula)
+
+    if st.button("Close", use_container_width=True):
+        st.rerun()
 def kpis(items):
-    """Display employee and performance statistics in individual cards."""
+    """Render interactive KPI cards with popups and employee navigation."""
+
+    descriptions = {
+        "Average salary": (
+            "The average salary represents the mean salary of all employees "
+            "included in the current dashboard filters.",
+            "Average Salary = Total Salary of Employees / Number of Employees"
+        ),
+
+        "Median salary": (
+            "The median salary is the middle salary when all employee "
+            "salaries are arranged in ascending order. It helps describe "
+            "a typical salary without being heavily influenced by extreme values.",
+            "Sort the salaries. For an odd number of records, select the middle "
+            "value. For an even number, average the two middle values."
+        ),
+
+        "Minimum salary": (
+            "This is the lowest salary among employees included in the "
+            "current dashboard filters.",
+            "Minimum Salary = The smallest salary value in the selected records."
+        ),
+
+        "Maximum salary": (
+            "This is the highest salary among employees included in the "
+            "current dashboard filters.",
+            "Maximum Salary = The largest salary value in the selected records."
+        ),
+
+        "Average performance": (
+            "This measure represents the mean performance score of employees "
+            "included in the current dashboard filters.",
+            "Average Performance = Total Performance Score / Number of Employees"
+        ),
+
+        "Maximum performance": (
+            "This represents the highest recorded performance score among "
+            "employees included in the current dashboard filters.",
+            "Maximum Performance = The largest performance score in the selected records."
+        )
+    }
 
     card_colors = [
-        "kpi-blue",
-        "kpi-green",
-        "kpi-purple",
-        "kpi-orange",
-        "kpi-pink",
-        "kpi-cyan",
-        "kpi-teal"
+        "#2563eb",
+        "#059669",
+        "#7c3aed",
+        "#ea580c",
+        "#db2777",
+        "#0891b2",
+        "#0f766e"
     ]
 
     columns = st.columns(len(items), gap="medium")
 
     for index, (col, item) in enumerate(zip(columns, items)):
         label, value = item
-        color_class = card_colors[index % len(card_colors)]
+
+        safe_label = html.escape(str(label))
+        safe_value = html.escape(str(value))
+        accent = card_colors[index % len(card_colors)]
 
         with col:
+            # Display the statistic in an attractive card.
             st.markdown(
                 f"""
-                <div class="kpi-card {color_class}">
-                    <span class="kpi-label">{label}</span>
-                    <span class="kpi-value">{value}</span>
+                <div style="
+                    border-radius: 16px 16px 0 0;
+                    padding: 19px 17px 10px 17px;
+                    background: linear-gradient(
+                        135deg,
+                        rgba(37, 99, 235, 0.09),
+                        rgba(15, 118, 110, 0.05)
+                    );
+                    border-top: 3px solid {accent};
+                    border-left: 1px solid rgba(148, 163, 184, 0.25);
+                    border-right: 1px solid rgba(148, 163, 184, 0.25);
+                ">
+                    <div style="
+                        color: #64748b;
+                        font-size: 13px;
+                        font-weight: 700;
+                        min-height: 22px;
+                    ">
+                        {safe_label}
+                    </div>
+
+                    <div style="
+                        color: {accent};
+                        font-size: 27px;
+                        font-weight: 800;
+                        margin-top: 9px;
+                        overflow-wrap: anywhere;
+                    ">
+                        {safe_value}
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+
+            # The button directly beneath the card makes the whole
+            # card area appear and behave like an interactive card.
+            if label == "Employees":
+                clicked = st.button(
+                    "👥 View Employees →",
+                    key="metric_employees",
+                    use_container_width=True,
+                    help="Open the Employees module to view employee records."
+                )
+
+                if clicked:
+                    st.session_state["navigate_to_employees"] = True
+                    st.rerun()
+
+            else:
+                clicked = st.button(
+                    "ⓘ View Details",
+                    key=f"metric_{index}",
+                    use_container_width=True,
+                    help=f"Learn more about {label.lower()}."
+                )
+
+                if clicked:
+                    description, formula = descriptions.get(
+                        label,
+                        (
+                            "This statistic summarizes the selected employee data.",
+                            "The value is calculated from the employee records "
+                            "currently included in the dashboard."
+                        )
+                    )
+
+                    st.session_state["selected_metric"] = {
+                        "label": label,
+                        "value": value,
+                        "description": description,
+                        "formula": formula
+                    }
+
+    # Open the selected statistic's popup.
+    selected = st.session_state.get("selected_metric")
+
+    if selected:
+        show_metric_dialog(
+            selected["label"],
+            selected["value"],
+            selected["description"],
+            selected["formula"]
+        )
 def auth_page():
     # Login page styling
     st.markdown("""
@@ -1408,6 +1586,13 @@ def main():
         st.markdown(f"### 👤 {display_name}")
         st.caption(f"{user.get('role', 'user').title()} account")
 
+       # ============================================================
+        # HANDLE NAVIGATION FROM DASHBOARD KPI CARDS
+        # ============================================================
+        
+        if st.session_state.pop("navigate_to_employees", False):
+            st.session_state["page_navigation"] = "Employees"
+        
         page = st.selectbox(
             "Navigate to page",
             pages,
