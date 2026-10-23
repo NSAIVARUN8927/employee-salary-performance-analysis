@@ -12,15 +12,63 @@ if not db.is_seeded():
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 html, body, [class*="css"] {font-family: 'IBM Plex Sans', sans-serif;}
-[data-testid="stSidebar"] {background: #14213d;}
-[data-testid="stSidebar"] * {color: #e6ebf5;}
-.block-container {padding-top: 1.6rem; max-width: 1250px;}
-h1, h2, h3 {color: #14213d; font-weight: 600;}
-.banner {background: #14213d; color: #fff; padding: 22px 28px; border-radius: 6px; margin-bottom: 20px;}
-.banner h1 {color: #fff; margin: 0; font-size: 1.7rem;} .banner p {margin: 4px 0 0; color: #b9c4dc;}
-.kpi {background: #fff; border: 1px solid #dde3ee; border-top: 3px solid #0f766e; border-radius: 6px; padding: 14px 16px;}
-.kpi span {color: #5b6b82; font-size: 0.85rem;} .kpi b {display: block; font-size: 1.55rem; color: #14213d; font-weight: 600;}
-</style>""", unsafe_allow_html=True)
+/* ===== STAFFMETRICS SIDEBAR BOX STYLING ===== */
+
+/* Sidebar background */
+[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+
+/* Sidebar headings and labels */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] p {
+    color: #F9FAFB !important;
+}
+
+/* Navigate to Page and Data Source select boxes */
+[data-testid="stSidebar"] [data-baseweb="select"] > div {
+    background-color: #263449 !important;
+    border: 1px solid #475569 !important;
+    border-radius: 8px !important;
+}
+
+/* Text inside select boxes */
+[data-testid="stSidebar"] [data-baseweb="select"] div,
+[data-testid="stSidebar"] [data-baseweb="select"] input {
+    color: #FFFFFF !important;
+}
+
+/* Dropdown arrow */
+[data-testid="stSidebar"] [data-baseweb="select"] svg {
+    fill: #FFFFFF !important;
+}
+
+/* Select box focus */
+[data-testid="stSidebar"] [data-baseweb="select"]:focus-within > div {
+    border-color: #38BDF8 !important;
+    box-shadow: 0 0 0 1px #38BDF8 !important;
+}
+
+/* Sign Out button */
+[data-testid="stSidebar"] button {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Sign Out button text */
+[data-testid="stSidebar"] button p {
+    color: #FFFFFF !important;
+}
+
+/* Sign Out hover effect */
+[data-testid="stSidebar"] button:hover {
+    border-color: #38BDF8 !important;
+    transform: translateY(-1px);
+}
 
 
 def banner(title, subtitle=""):
