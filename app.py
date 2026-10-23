@@ -46,6 +46,13 @@ body,
     color: #F8FAFC;
 }
 
+/* Improve visibility of sidebar labels */
+.stApp [data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+.stApp [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+    color: #67E8F9 !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
 /* Navigation and data source dropdowns */
 [data-testid="stSidebar"] [data-baseweb="select"] > div {
     background-color: #263449 !important;
