@@ -1064,10 +1064,40 @@ def kpis(items):
 
                 if clicked:
                     if label == "Employees":
-                        # Navigate to the Employees page.
+                        # Apply Dashboard filters when opening Employees.
+                        st.session_state["apply_dashboard_filters_to_employees"] = True
+                
+                        # Transfer Department and Designation filters.
+                        dashboard_department = st.session_state.get(
+                            "dashboard_department", "All Departments"
+                        )
+                        dashboard_designation = st.session_state.get(
+                            "dashboard_designation", "All Designations"
+                        )
+                
+                        st.session_state["employees_department"] = (
+                            [] if dashboard_department == "All Departments"
+                            else [dashboard_department]
+                        )
+                
+                        st.session_state["employees_designation"] = (
+                            [] if dashboard_designation == "All Designations"
+                            else [dashboard_designation]
+                        )
+                
+                        # Transfer Experience range.
+                        st.session_state["employees_min_exp"] = int(
+                            st.session_state.get("dashboard_experience_min", 0)
+                        )
+                
+                        st.session_state["employees_max_exp"] = int(
+                            st.session_state.get("dashboard_experience_max", 0)
+                        )
+                
+                        # Navigate to Employees using your existing navigation.
                         st.session_state["navigate_to_employees"] = True
                         st.rerun()
-
+                
                     else:
                         description, formula = descriptions.get(
                             label,
@@ -1078,16 +1108,17 @@ def kpis(items):
                                 "records included in the current filters."
                             )
                         )
-
+                
                         st.session_state["selected_metric"] = {
                             "label": label,
                             "value": value,
                             "description": description,
                             "formula": formula
                         }
-
+                
                         st.rerun()
 
+                    
     # Display the selected metric popup.
     selected = st.session_state.get("selected_metric")
 
@@ -1895,12 +1926,14 @@ def page_employees(df, is_db):
 
     dept = c1.multiselect(
         "Department",
-        sorted(df["Department"].dropna().unique())
+        sorted(df["Department"].dropna().unique()),
+        key="employees_department"
     )
 
     role = c2.multiselect(
         "Designation",
-        sorted(df["Designation"].dropna().astype(str).unique())
+        sorted(df["Designation"].dropna().astype(str).unique()),
+        key="employees_designation"
     )
 
     # ==================== DYNAMIC EXPERIENCE RANGE ====================
@@ -1937,7 +1970,62 @@ def page_employees(df, is_db):
             step=1,
             key="employees_max_exp"
         )
+    # ================================================
+    # APPLY DASHBOARD SALARY AND PERFORMANCE FILTERS
+    # ================================================
 
+    if st.session_state.get(
+        "apply_dashboard_filters_to_employees", False
+    ):
+        dashboard_salary_min = st.session_state.get(
+            "dashboard_salary_min"
+        )
+        dashboard_salary_max = st.session_state.get(
+            "dashboard_salary_max"
+        )
+        dashboard_performance_min = st.session_state.get(
+            "dashboard_performance_min"
+        )
+        dashboard_performance_max = st.session_state.get(
+            "dashboard_performance_max"
+        )
+
+        # Apply salary range selected on the Dashboard.
+        if (
+            dashboard_salary_min is not None
+            and dashboard_salary_max is not None
+        ):
+            f["Basic_Salary"] = pd.to_numeric(
+                f["Basic_Salary"], errors="coerce"
+            )
+
+            f = f[
+                f["Basic_Salary"].between(
+                    dashboard_salary_min,
+                    dashboard_salary_max
+                )
+            ]
+
+        # Apply performance range selected on the Dashboard.
+        if (
+            dashboard_performance_min is not None
+            and dashboard_performance_max is not None
+        ):
+            f["Performance_Score"] = pd.to_numeric(
+                f["Performance_Score"], errors="coerce"
+            )
+
+            f = f[
+                f["Performance_Score"].between(
+                    dashboard_performance_min,
+                    dashboard_performance_max
+                )
+            ]
+
+        st.info(
+            "Dashboard salary and performance filters are applied "
+            "to these employee records."
+        )
     # ==================== SEARCH ====================
 
     q = st.text_input("Search by ID or name")
@@ -2341,6 +2429,12 @@ def main():
 
     is_db = src == "Employee database"
     df = db.employee_frame() if is_db else up
+    
+    # Keep transferred Dashboard filters active only in Employees.
+    if page != "Employees":
+        st.session_state["apply_dashboard_filters_to_employees"] = False
+
+
 
     if page == "Dashboard":
         page_dashboard(df)
