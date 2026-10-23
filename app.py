@@ -203,12 +203,11 @@ def banner(title, subtitle=""):
 # INTERACTIVE DASHBOARD KPI CARDS
 # ============================================================
 
-import html
-
-
 @st.dialog("Statistical Measure", width="small")
 def show_metric_dialog(label, value, description, formula):
     """Display details about a selected dashboard statistic."""
+
+    import html
 
     st.markdown(
         f"""
@@ -254,149 +253,183 @@ def show_metric_dialog(label, value, description, formula):
     st.markdown("#### How is it calculated?")
     st.info(formula)
 
-    if st.button("Close", use_container_width=True):
+    if st.button("Close", key="close_metric_dialog", use_container_width=True):
+        st.session_state.pop("selected_metric", None)
         st.rerun()
+# ============================================================
+# FULLY CLICKABLE KPI CARDS
+# ============================================================
+
 def kpis(items):
-    """Render interactive KPI cards with popups and employee navigation."""
+    """Make the entire KPI card clickable."""
+
+    import html
 
     descriptions = {
         "Average salary": (
-            "The average salary represents the mean salary of all employees "
-            "included in the current dashboard filters.",
+            "The average salary of employees matching the current dashboard filters.",
             "Average Salary = Total Salary of Employees / Number of Employees"
         ),
-
         "Median salary": (
-            "The median salary is the middle salary when all employee "
-            "salaries are arranged in ascending order. It helps describe "
-            "a typical salary without being heavily influenced by extreme values.",
-            "Sort the salaries. For an odd number of records, select the middle "
-            "value. For an even number, average the two middle values."
+            "The middle salary when employee salaries are arranged in ascending order. "
+            "It helps identify the typical salary without being heavily affected by "
+            "extremely high or low salaries.",
+            "Sort all salaries. For an odd number of employees, select the middle value. "
+            "For an even number, calculate the average of the two middle values."
         ),
-
         "Minimum salary": (
-            "This is the lowest salary among employees included in the "
-            "current dashboard filters.",
-            "Minimum Salary = The smallest salary value in the selected records."
+            "The lowest salary among employees matching the current dashboard filters.",
+            "Minimum Salary = The smallest salary in the selected employee records."
         ),
-
         "Maximum salary": (
-            "This is the highest salary among employees included in the "
-            "current dashboard filters.",
-            "Maximum Salary = The largest salary value in the selected records."
+            "The highest salary among employees matching the current dashboard filters.",
+            "Maximum Salary = The largest salary in the selected employee records."
         ),
-
         "Average performance": (
-            "This measure represents the mean performance score of employees "
-            "included in the current dashboard filters.",
+            "The average performance score of employees matching the current dashboard filters.",
             "Average Performance = Total Performance Score / Number of Employees"
         ),
-
         "Maximum performance": (
-            "This represents the highest recorded performance score among "
-            "employees included in the current dashboard filters.",
+            "The highest performance score among employees matching the current dashboard filters.",
             "Maximum Performance = The largest performance score in the selected records."
         )
     }
 
     card_colors = [
-        "#2563eb",
+        "#2563EB",
         "#059669",
-        "#7c3aed",
-        "#ea580c",
-        "#db2777",
-        "#0891b2",
-        "#0f766e"
+        "#7C3AED",
+        "#EA580C",
+        "#DB2777",
+        "#0891B2",
+        "#0F766E"
     ]
+
+    # Style the actual buttons as KPI cards.
+    st.markdown(
+        """
+        <style>
+        /* Each KPI button becomes a complete clickable card */
+        div[class*="st-key-kpi_card_"] button {
+            width: 100% !important;
+            min-height: 132px !important;
+            height: auto !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            white-space: pre-wrap !important;
+            overflow-wrap: anywhere !important;
+            padding: 20px 18px !important;
+            border-radius: 15px !important;
+            border: 1px solid #D8E2EF !important;
+            border-top: 4px solid var(--kpi-accent, #2563EB) !important;
+            background: linear-gradient(
+                135deg,
+                #FFFFFF 0%,
+                #EFF6FF 100%
+            ) !important;
+            box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07) !important;
+            transition: all 0.22s ease-in-out !important;
+        }
+
+        /* Hover over any part of the card */
+        div[class*="st-key-kpi_card_"] button:hover {
+            transform: translateY(-4px) !important;
+            border-color: var(--kpi-accent, #2563EB) !important;
+            box-shadow: 0 12px 25px rgba(15, 23, 42, 0.14) !important;
+            background: linear-gradient(
+                135deg,
+                #EFF6FF 0%,
+                #DBEAFE 100%
+            ) !important;
+        }
+
+        /* Make card text readable */
+        div[class*="st-key-kpi_card_"] button p {
+            color: #0F172A !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            line-height: 1.8 !important;
+            white-space: pre-wrap !important;
+        }
+
+        /* Click feedback */
+        div[class*="st-key-kpi_card_"] button:active {
+            transform: scale(0.98) !important;
+        }
+
+        @media (max-width: 768px) {
+            div[class*="st-key-kpi_card_"] button {
+                min-height: 105px !important;
+                padding: 14px !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
     columns = st.columns(len(items), gap="medium")
 
     for index, (col, item) in enumerate(zip(columns, items)):
         label, value = item
-
-        safe_label = html.escape(str(label))
-        safe_value = html.escape(str(value))
         accent = card_colors[index % len(card_colors)]
 
+        # The whole card is one Streamlit button.
         with col:
-            # Display the statistic in an attractive card.
-            st.markdown(
-                f"""
-                <div style="
-                    border-radius: 16px 16px 0 0;
-                    padding: 19px 17px 10px 17px;
-                    background: linear-gradient(
-                        135deg,
-                        rgba(37, 99, 235, 0.09),
-                        rgba(15, 118, 110, 0.05)
-                    );
-                    border-top: 3px solid {accent};
-                    border-left: 1px solid rgba(148, 163, 184, 0.25);
-                    border-right: 1px solid rgba(148, 163, 184, 0.25);
-                ">
-                    <div style="
-                        color: #64748b;
-                        font-size: 13px;
-                        font-weight: 700;
-                        min-height: 22px;
-                    ">
-                        {safe_label}
-                    </div>
+            with st.container(key=f"kpi_card_{index}"):
 
-                    <div style="
-                        color: {accent};
-                        font-size: 27px;
-                        font-weight: 800;
-                        margin-top: 9px;
-                        overflow-wrap: anywhere;
-                    ">
-                        {safe_value}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+                st.markdown(
+                    f"""
+                    <style>
+                    div.st-key-kpi_card_{index} {{
+                        --kpi-accent: {accent};
+                    }}
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            # The button directly beneath the card makes the whole
-            # card area appear and behave like an interactive card.
-            if label == "Employees":
+                card_text = (
+                    f"**{label}**\n\n"
+                    f"### {value}\n\n"
+                    f"{'Click to view employee records' if label == 'Employees' else 'Click anywhere to view details →'}"
+                )
+
                 clicked = st.button(
-                    "👥 View Employees →",
-                    key="metric_employees",
-                    use_container_width=True,
-                    help="Open the Employees module to view employee records."
+                    card_text,
+                    key=f"kpi_button_{index}",
+                    use_container_width=True
                 )
 
                 if clicked:
-                    st.session_state["navigate_to_employees"] = True
-                    st.rerun()
+                    if label == "Employees":
+                        # Navigate to the Employees page.
+                        st.session_state["navigate_to_employees"] = True
+                        st.rerun()
 
-            else:
-                clicked = st.button(
-                    "ⓘ View Details",
-                    key=f"metric_{index}",
-                    use_container_width=True,
-                    help=f"Learn more about {label.lower()}."
-                )
-
-                if clicked:
-                    description, formula = descriptions.get(
-                        label,
-                        (
-                            "This statistic summarizes the selected employee data.",
-                            "The value is calculated from the employee records "
-                            "currently included in the dashboard."
+                    else:
+                        description, formula = descriptions.get(
+                            label,
+                            (
+                                "This statistic summarizes the employee data "
+                                "currently selected in the dashboard.",
+                                "The value is calculated using the employee "
+                                "records included in the current filters."
+                            )
                         )
-                    )
 
-                    st.session_state["selected_metric"] = {
-                        "label": label,
-                        "value": value,
-                        "description": description,
-                        "formula": formula
-                    }
+                        st.session_state["selected_metric"] = {
+                            "label": label,
+                            "value": value,
+                            "description": description,
+                            "formula": formula
+                        }
 
-    # Open the selected statistic's popup.
+                        st.rerun()
+
+    # Display the selected metric popup.
     selected = st.session_state.get("selected_metric")
 
     if selected:
