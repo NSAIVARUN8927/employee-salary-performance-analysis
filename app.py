@@ -572,12 +572,135 @@ def show_metric_popup(title, value, description):
         st.rerun()
 
 def page_dashboard(df):
-    banner(
-        "Executive Dashboard",
-        f"Welcome, {st.session_state.user['full_name'] or st.session_state.user['username']}"
+    # ==================== EXECUTIVE DASHBOARD WELCOME BANNER ====================
+
+    user = st.session_state.user
+    display_name = user.get("full_name") or user.get("username") or "User"
+
+    st.markdown("""
+    <style>
+    .executive-banner {
+        position: relative;
+        overflow: hidden;
+        padding: 30px 34px;
+        margin: 5px 0 28px 0;
+        border-radius: 20px;
+        background: linear-gradient(
+            120deg,
+            #0F172A 0%,
+            #1E3A8A 55%,
+            #0F766E 100%
+        );
+        border: 1px solid rgba(147, 197, 253, 0.35);
+        box-shadow:
+            0 12px 30px rgba(15, 23, 42, 0.20),
+            0 4px 10px rgba(37, 99, 235, 0.12);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .executive-banner:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 18px 38px rgba(15, 23, 42, 0.25),
+            0 6px 16px rgba(37, 99, 235, 0.18);
+    }
+
+    .executive-banner::before {
+        content: "";
+        position: absolute;
+        width: 230px;
+        height: 230px;
+        top: -125px;
+        right: -45px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .executive-banner::after {
+        content: "";
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        bottom: -105px;
+        right: 115px;
+        border-radius: 50%;
+        background: rgba(45, 212, 191, 0.13);
+    }
+
+    .executive-banner-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .executive-eyebrow {
+        margin-bottom: 8px;
+        color: #99F6E4 !important;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .executive-title {
+        margin: 0 0 12px 0;
+        color: #FFFFFF !important;
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(26px, 3vw, 36px);
+        font-weight: 800;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+    }
+
+    .executive-welcome {
+        margin: 0;
+        color: #DBEAFE !important;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.6;
+    }
+
+    .executive-welcome strong {
+        color: #FFFFFF !important;
+        font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+        .executive-banner {
+            padding: 24px 20px;
+            border-radius: 15px;
+        }
+
+        .executive-welcome {
+            font-size: 14px;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(
+        f"""
+        <div class="executive-banner">
+            <div class="executive-banner-content">
+                <div class="executive-eyebrow">
+                    STAFFMETRICS · WORKFORCE INTELLIGENCE
+                </div>
+                <h1 class="executive-title">
+                    Executive Dashboard
+                </h1>
+                <p class="executive-welcome">
+                    Welcome back, <strong>{display_name}</strong>!
+                    Here's your employee analytics overview.
+                </p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.subheader("Dashboard Filters")
+    # Continue with your existing Dashboard Filters section below.
+
 
     # ==================== DEPARTMENT & DESIGNATION DROPDOWNS ====================
 
