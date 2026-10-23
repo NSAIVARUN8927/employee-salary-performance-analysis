@@ -22,72 +22,177 @@ if not db.is_seeded():
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* Global fonts */
 html,
 body,
 [class*="css"] {
     font-family: 'IBM Plex Sans', sans-serif;
 }
 
-/* Sidebar background */
+/* ==================== SIDEBAR ==================== */
+
 [data-testid="stSidebar"] {
-    background-color: #111827;
+    background: linear-gradient(180deg, #111827 0%, #172554 100%);
 }
 
-/* Sidebar headings and labels */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
 [data-testid="stSidebar"] label,
-[data-testid="stSidebar"] p {
-    color: #F9FAFB !important;
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span {
+    color: #F8FAFC;
 }
 
-/* Navigate to Page and Data Source dropdown boxes */
+/* Navigation and data source dropdowns */
 [data-testid="stSidebar"] [data-baseweb="select"] > div {
     background-color: #263449 !important;
     border: 1px solid #475569 !important;
-    border-radius: 8px !important;
+    border-radius: 9px !important;
 }
 
-/* Dropdown text */
 [data-testid="stSidebar"] [data-baseweb="select"] div,
 [data-testid="stSidebar"] [data-baseweb="select"] input {
     color: #FFFFFF !important;
 }
 
-/* Dropdown arrow */
 [data-testid="stSidebar"] [data-baseweb="select"] svg {
     fill: #FFFFFF !important;
 }
 
-/* Dropdown focus effect */
 [data-testid="stSidebar"] [data-baseweb="select"]:focus-within > div {
     border-color: #38BDF8 !important;
-    box-shadow: 0 0 0 1px #38BDF8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
 }
 
-/* Sidebar buttons */
-[data-testid="stSidebar"] button {
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    transition: all 0.2s ease-in-out !important;
-}
+/* ==================== SIGN OUT BUTTON ==================== */
 
-/* Sidebar button text */
-[data-testid="stSidebar"] button p {
+[data-testid="stSidebar"] .stButton > button {
+    width: 100%;
+    min-height: 43px;
+    background: linear-gradient(135deg, #EF4444, #B91C1C) !important;
     color: #FFFFFF !important;
+    border: 1px solid #F87171 !important;
+    border-radius: 10px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.25);
+    transition: all 0.25s ease-in-out !important;
 }
 
-/* Sidebar button hover */
-[data-testid="stSidebar"] button:hover {
-    border-color: #38BDF8 !important;
-    transform: translateY(-1px);
+[data-testid="stSidebar"] .stButton > button p,
+[data-testid="stSidebar"] .stButton > button span {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: linear-gradient(135deg, #DC2626, #7F1D1D) !important;
+    border-color: #FCA5A5 !important;
+    box-shadow: 0 7px 18px rgba(185, 28, 28, 0.35);
+    transform: translateY(-2px);
+}
+
+[data-testid="stSidebar"] .stButton > button:active {
+    transform: translateY(0);
+}
+
+/* ==================== KPI STATISTIC CARDS ==================== */
+
+.kpi-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 125px;
+    padding: 21px 20px;
+    margin: 5px 0 12px 0;
+    background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
+    border: 1px solid #D8E2EF;
+    border-left: 5px solid #2563EB;
+    border-radius: 14px;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.13);
+}
+
+.kpi-label {
+    display: block;
+    margin-bottom: 13px;
+    color: #475569 !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    line-height: 1.4;
+}
+
+.kpi-value {
+    display: block;
+    color: #0F172A !important;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(21px, 2vw, 29px);
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+/* Different colors for each statistic card */
+.kpi-blue {
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+    border-left-color: #2563EB;
+}
+
+.kpi-green {
+    background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+    border-left-color: #059669;
+}
+
+.kpi-purple {
+    background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
+    border-left-color: #7C3AED;
+}
+
+.kpi-orange {
+    background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+    border-left-color: #EA580C;
+}
+
+.kpi-pink {
+    background: linear-gradient(135deg, #FDF2F8, #FCE7F3);
+    border-left-color: #DB2777;
+}
+
+.kpi-cyan {
+    background: linear-gradient(135deg, #ECFEFF, #CFFAFE);
+    border-left-color: #0891B2;
+}
+
+.kpi-teal {
+    background: linear-gradient(135deg, #F0FDFA, #CCFBF1);
+    border-left-color: #0D9488;
+}
+
+/* Responsive card sizing */
+@media (max-width: 768px) {
+    .kpi-card {
+        min-height: 105px;
+        padding: 16px;
+    }
+
+    .kpi-value {
+        font-size: 22px;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 
 def banner(title, subtitle=""):
@@ -95,8 +200,34 @@ def banner(title, subtitle=""):
 
 
 def kpis(items):
-    for col, (label, value) in zip(st.columns(len(items)), items):
-        col.markdown(f'<div class="kpi"><span>{label}</span><b>{value}</b></div>', unsafe_allow_html=True)
+    """Display employee and performance statistics in individual cards."""
+
+    card_colors = [
+        "kpi-blue",
+        "kpi-green",
+        "kpi-purple",
+        "kpi-orange",
+        "kpi-pink",
+        "kpi-cyan",
+        "kpi-teal"
+    ]
+
+    columns = st.columns(len(items), gap="medium")
+
+    for index, (col, item) in enumerate(zip(columns, items)):
+        label, value = item
+        color_class = card_colors[index % len(card_colors)]
+
+        with col:
+            st.markdown(
+                f"""
+                <div class="kpi-card {color_class}">
+                    <span class="kpi-label">{label}</span>
+                    <span class="kpi-value">{value}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 def auth_page():
     # Login page styling
     st.markdown("""
