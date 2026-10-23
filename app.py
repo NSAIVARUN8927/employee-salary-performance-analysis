@@ -203,54 +203,15 @@ def banner(title, subtitle=""):
 # INTERACTIVE DASHBOARD KPI CARDS
 # ============================================================
 
-@st.dialog("Statistical Measure", width="small")
+@st.dialog("Statistical Measure")
 def show_metric_dialog(label, value, description, formula):
-    """Display details about a selected dashboard statistic."""
 
-    import html
+    st.metric(label, value)
 
-    st.markdown(
-        f"""
-        <div style="
-            padding: 22px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #eff6ff, #f0fdfa);
-            border: 1px solid #bfdbfe;
-            margin-bottom: 18px;
-        ">
-            <div style="
-                font-size: 13px;
-                color: #475569;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 8px;
-            ">
-                {html.escape(str(label))}
-            </div>
+    st.markdown("### About this metric")
+    st.write(description)
 
-            <div style="
-                font-size: 34px;
-                font-weight: 800;
-                color: #1d4ed8;
-                margin-bottom: 12px;
-            ">
-                {html.escape(str(value))}
-            </div>
-
-            <div style="
-                color: #334155;
-                font-size: 14px;
-                line-height: 1.7;
-            ">
-                {html.escape(str(description))}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown("#### How is it calculated?")
+    st.markdown("### How is it calculated?")
     st.info(formula)
 
     if st.button("Close", key="close_metric_dialog", use_container_width=True):
@@ -378,7 +339,7 @@ def kpis(items):
 
         # The whole card is one Streamlit button.
         with col:
-            with st.container(key=f"kpi_card_{index}"):
+            with st.container(key=f"kpi_card_{items[0][0].replace(' ', '_').lower()}_{index}"):
 
                 st.markdown(
                     f"""
@@ -399,7 +360,7 @@ def kpis(items):
 
                 clicked = st.button(
                     card_text,
-                    key=f"kpi_button_{index}",
+                    key=f"kpi_button_{items[0][0].replace(' ', '_').lower()}_{index}",
                     use_container_width=True
                 )
 
