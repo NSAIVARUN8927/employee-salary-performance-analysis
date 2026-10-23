@@ -483,6 +483,280 @@ body,
     }
 }
 
+/* ==================== UPLOAD & EXPORT PAGE HEADER ==================== */
+
+.upload-export-page-banner {
+    position: relative;
+    overflow: hidden;
+    padding: 25px 28px;
+    margin: 10px 0 26px 0;
+    border-radius: 18px;
+    background: linear-gradient(
+        120deg,
+        #431407 0%,
+        #7C2D12 48%,
+        #C2410C 100%
+    );
+    border: 1px solid rgba(253, 186, 116, 0.35);
+    box-shadow:
+        0 10px 28px rgba(124, 45, 18, 0.20),
+        0 3px 8px rgba(67, 20, 7, 0.10);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Orange accent on the left */
+.upload-export-page-banner::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: linear-gradient(
+        180deg,
+        #FDBA74,
+        #FDE68A
+    );
+}
+
+/* Soft decorative circle */
+.upload-export-page-banner::after {
+    content: "";
+    position: absolute;
+    top: -65px;
+    right: -35px;
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    background: rgba(253, 186, 116, 0.10);
+    pointer-events: none;
+}
+
+.upload-export-page-banner h2 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+    color: #FFFFFF !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 29px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    line-height: 1.4;
+}
+
+.upload-export-page-banner p {
+    position: relative;
+    z-index: 1;
+    margin: 7px 0 0 0;
+    padding: 0;
+    color: #FFEDD5 !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.7;
+}
+
+/* Orange-gold divider */
+.upload-export-page-banner .upload-export-header-divider {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 2px;
+    margin-top: 18px;
+    border-radius: 10px;
+    background: linear-gradient(
+        90deg,
+        #FDBA74 0%,
+        #FDE68A 35%,
+        rgba(255, 255, 255, 0.12) 100%
+    );
+}
+
+@media (hover: hover) {
+    .upload-export-page-banner:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 34px rgba(124, 45, 18, 0.28);
+    }
+}
+
+@media (max-width: 768px) {
+    .upload-export-page-banner {
+        padding: 20px;
+        border-radius: 14px;
+    }
+
+    .upload-export-page-banner h2 {
+        font-size: 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .upload-export-page-banner {
+        transition: none;
+    }
+}
+
+
+/* =========================================
+   USER DATA — PREMIUM TEAL & BLUE THEME
+========================================= */
+
+.user-data-page-banner {
+    position: relative;
+    overflow: hidden;
+    padding: 30px 34px;
+    margin: 8px 0 28px 0;
+    border-radius: 20px;
+
+    background: linear-gradient(
+        125deg,
+        #042F2E 0%,
+        #075985 58%,
+        #0E7490 100%
+    );
+
+    border: 1px solid rgba(103, 232, 249, 0.32);
+
+    box-shadow:
+        0 12px 30px rgba(8, 47, 73, 0.24),
+        0 4px 12px rgba(6, 182, 212, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+/* Decorative cyan accent */
+.user-data-page-banner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 7px;
+    height: 100%;
+
+    background: linear-gradient(
+        180deg,
+        #67E8F9,
+        #2DD4BF,
+        #38BDF8
+    );
+
+    box-shadow: 0 0 18px rgba(103, 232, 249, 0.55);
+}
+
+/* Decorative glow in the top-right corner */
+.user-data-page-banner::after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    right: -65px;
+    top: -90px;
+    border-radius: 50%;
+
+    background: rgba(103, 232, 249, 0.12);
+    border: 1px solid rgba(165, 243, 252, 0.15);
+
+    box-shadow:
+        0 0 50px rgba(34, 211, 238, 0.12);
+    
+    pointer-events: none;
+}
+
+.user-data-page-banner:hover {
+    transform: translateY(-3px);
+
+    border-color: rgba(103, 232, 249, 0.65);
+
+    box-shadow:
+        0 18px 38px rgba(8, 47, 73, 0.30),
+        0 6px 20px rgba(6, 182, 212, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* Main heading */
+.user-data-page-banner h2 {
+    position: relative;
+    z-index: 1;
+
+    margin: 0 0 10px 0;
+    padding: 0;
+
+    color: #FFFFFF !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    line-height: 1.3;
+
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.20);
+}
+
+/* Subtitle */
+.user-data-page-banner p {
+    position: relative;
+    z-index: 1;
+
+    margin: 0;
+    max-width: 760px;
+
+    color: #CFFAFE !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.7;
+    letter-spacing: 0.2px;
+}
+
+/* Bottom accent divider */
+.user-data-header-divider {
+    position: relative;
+    z-index: 1;
+
+    width: 92px;
+    height: 4px;
+    margin-top: 19px;
+    border-radius: 20px;
+
+    background: linear-gradient(
+        90deg,
+        #67E8F9,
+        #2DD4BF,
+        #38BDF8
+    );
+
+    box-shadow: 0 0 12px rgba(103, 232, 249, 0.35);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .user-data-page-banner {
+        padding: 24px 23px;
+        margin-bottom: 22px;
+        border-radius: 16px;
+    }
+
+    .user-data-page-banner h2 {
+        font-size: 24px;
+    }
+
+    .user-data-page-banner p {
+        font-size: 14px;
+    }
+
+    .user-data-page-banner::after {
+        width: 120px;
+        height: 120px;
+        right: -50px;
+        top: -60px;
+    }
+}
+
+
 
 </style>
 """, unsafe_allow_html=True)
@@ -1721,7 +1995,16 @@ def page_departments(df):
 
 
 def page_data(df):
-    banner("Upload and export", "Analyse your own CSV and download results")
+    
+    st.markdown("""
+    <div class="upload-export-page-banner">
+        <h2>Upload & Export</h2>
+        <p>Import employee datasets, validate records and export reports with ease</p>
+        <div class="upload-export-header-divider"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
     up = st.file_uploader("Upload a CSV with the same columns as the sample dataset", type="csv")
     if up and st.button("Analyse this file"):
         try:
@@ -1788,10 +2071,15 @@ def page_profile():
     email = user.get("email", "Not available")
     role = user.get("role", "user").title()
 
-    banner(
-        f"Welcome, {full_name}",
-        "Your personal account information and registration details"
-    )
+    
+    st.markdown("""
+    <div class="user-data-page-banner">
+        <h2>👤 User Data</h2>
+        <p>Manage user information, review account details, and maintain your application data in one place.</p>
+        <div class="user-data-header-divider"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
     st.subheader("My Account")
 
