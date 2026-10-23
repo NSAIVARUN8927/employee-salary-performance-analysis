@@ -191,6 +191,70 @@ body,
         font-size: 22px;
     }
 }
+/* Professional Employees Header */
+.employee-page-banner {
+    position: relative;
+    padding: 24px 28px;
+    margin: 10px 0 26px 0;
+    border-radius: 16px;
+    background: linear-gradient(120deg, #101B35 0%, #1D3557 55%, #304B75 100%);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.employee-page-banner::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(180deg, #38BDF8, #818CF8);
+}
+
+.employee-page-banner h2 {
+    margin: 0;
+    padding: 0;
+    color: #F8FAFC;
+    font-size: 28px;
+    font-weight: 750;
+    letter-spacing: -0.6px;
+}
+
+.employee-page-banner p {
+    margin: 7px 0 0 0;
+    color: #CBD5E1;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.employee-page-banner .banner-divider {
+    height: 2px;
+    width: 100%;
+    margin-top: 17px;
+    border-radius: 10px;
+    background: linear-gradient(
+        90deg,
+        #38BDF8 0%,
+        #818CF8 35%,
+        rgba(255, 255, 255, 0.12) 100%
+    );
+}
+
+@media (hover: hover) {
+    .employee-page-banner:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.24);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .employee-page-banner {
+        transition: none;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1183,7 +1247,13 @@ def manage_employees(df):
 
 
 def page_employees(df, is_db):
-    banner("Employees", "Search, filter and manage employee records")
+    st.markdown("""
+    <div class="employee-page-banner">
+        <h2>Employees</h2>
+        <p>Search, filter and manage employee records</p>
+        <div class="banner-divider"></div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ==================== FILTER OPTIONS ====================
 
