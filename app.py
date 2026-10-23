@@ -1911,6 +1911,7 @@ def manage_employees(df):
 
 
 
+
 def page_employees(df, is_db):
     st.markdown("""
     <div class="employee-page-banner">
@@ -1970,9 +1971,62 @@ def page_employees(df, is_db):
             step=1,
             key="employees_max_exp"
         )
-    # ================================================
-    # APPLY DASHBOARD SALARY AND PERFORMANCE FILTERS
-    # ================================================
+
+    # ==================== SEARCH ====================
+
+    q = st.text_input("Search by ID or name")
+
+    # ==================== VALIDATE EXPERIENCE ====================
+
+    if selected_min_exp > selected_max_exp:
+        st.error(
+            "Minimum experience cannot be greater than maximum experience."
+        )
+        return
+
+    # ==================== INITIALIZE DATAFRAME ====================
+
+    f = df.copy()
+
+    f["Experience_Years"] = pd.to_numeric(
+        f["Experience_Years"],
+        errors="coerce"
+    )
+
+    # Convert salary and performance columns to numeric when available.
+    if "Basic_Salary" in f.columns:
+        f["Basic_Salary"] = pd.to_numeric(
+            f["Basic_Salary"],
+            errors="coerce"
+        )
+
+    if "Performance_Score" in f.columns:
+        f["Performance_Score"] = pd.to_numeric(
+            f["Performance_Score"],
+            errors="coerce"
+        )
+
+    # ==================== APPLY EXPERIENCE FILTER ====================
+
+    f = f[
+        f["Experience_Years"].between(
+            selected_min_exp,
+            selected_max_exp,
+            inclusive="both"
+        )
+    ]
+
+    # ==================== APPLY DEPARTMENT FILTER ====================
+
+    if dept:
+        f = f[f["Department"].isin(dept)]
+
+    # ==================== APPLY DESIGNATION FILTER ====================
+
+    if role:
+        f = f[f["Designation"].astype(str).isin(role)]
+
+    # ==================== APPLY DASHBOARD FILTERS ====================
 
     if st.session_state.get(
         "apply_dashboard_filters_to_employees", False
@@ -1994,15 +2048,13 @@ def page_employees(df, is_db):
         if (
             dashboard_salary_min is not None
             and dashboard_salary_max is not None
+            and "Basic_Salary" in f.columns
         ):
-            f["Basic_Salary"] = pd.to_numeric(
-                f["Basic_Salary"], errors="coerce"
-            )
-
             f = f[
                 f["Basic_Salary"].between(
                     dashboard_salary_min,
-                    dashboard_salary_max
+                    dashboard_salary_max,
+                    inclusive="both"
                 )
             ]
 
@@ -2010,15 +2062,13 @@ def page_employees(df, is_db):
         if (
             dashboard_performance_min is not None
             and dashboard_performance_max is not None
+            and "Performance_Score" in f.columns
         ):
-            f["Performance_Score"] = pd.to_numeric(
-                f["Performance_Score"], errors="coerce"
-            )
-
             f = f[
                 f["Performance_Score"].between(
                     dashboard_performance_min,
-                    dashboard_performance_max
+                    dashboard_performance_max,
+                    inclusive="both"
                 )
             ]
 
@@ -2026,38 +2076,8 @@ def page_employees(df, is_db):
             "Dashboard salary and performance filters are applied "
             "to these employee records."
         )
-    # ==================== SEARCH ====================
 
-    q = st.text_input("Search by ID or name")
-
-    # ==================== APPLY FILTERS ====================
-
-    if selected_min_exp > selected_max_exp:
-        st.error(
-            "Minimum experience cannot be greater than maximum experience."
-        )
-        return
-
-    f = df.copy()
-
-    f["Experience_Years"] = pd.to_numeric(
-        f["Experience_Years"],
-        errors="coerce"
-    )
-
-    f = f[
-        f["Experience_Years"].between(
-            selected_min_exp,
-            selected_max_exp,
-            inclusive="both"
-        )
-    ]
-
-    if dept:
-        f = f[f["Department"].isin(dept)]
-
-    if role:
-        f = f[f["Designation"].astype(str).isin(role)]
+    # ==================== APPLY SEARCH ====================
 
     if q:
         q = q.strip()
@@ -2096,6 +2116,7 @@ def page_employees(df, is_db):
 
     if is_db and st.session_state.user["role"] == "admin":
         manage_employees(df)
+
 
 
 def page_analysis(df):
