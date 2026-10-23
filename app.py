@@ -4,15 +4,31 @@ import streamlit as st
 
 from backend import analytics as an, auth, database as db
 
-st.set_page_config(page_title="Employee Salary & Performance Analysis", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="Employee Salary & Performance Analysis",
+    page_icon="📊",
+    layout="wide"
+)
+
 db.init_db()
+
 CSV = "data/employee_salary_performance.csv"
+
 if not db.is_seeded():
     db.seed_database(an.prepare(an.load_data(CSV))[0])
-st.markdown("""<style>
+
+
+# ==================== GLOBAL AND SIDEBAR STYLING ====================
+
+st.markdown("""
+<style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-html, body, [class*="css"] {font-family: 'IBM Plex Sans', sans-serif;}
-/* ===== STAFFMETRICS SIDEBAR BOX STYLING ===== */
+
+html,
+body,
+[class*="css"] {
+    font-family: 'IBM Plex Sans', sans-serif;
+}
 
 /* Sidebar background */
 [data-testid="stSidebar"] {
@@ -28,14 +44,14 @@ html, body, [class*="css"] {font-family: 'IBM Plex Sans', sans-serif;}
     color: #F9FAFB !important;
 }
 
-/* Navigate to Page and Data Source select boxes */
+/* Navigate to Page and Data Source dropdown boxes */
 [data-testid="stSidebar"] [data-baseweb="select"] > div {
     background-color: #263449 !important;
     border: 1px solid #475569 !important;
     border-radius: 8px !important;
 }
 
-/* Text inside select boxes */
+/* Dropdown text */
 [data-testid="stSidebar"] [data-baseweb="select"] div,
 [data-testid="stSidebar"] [data-baseweb="select"] input {
     color: #FFFFFF !important;
@@ -46,29 +62,32 @@ html, body, [class*="css"] {font-family: 'IBM Plex Sans', sans-serif;}
     fill: #FFFFFF !important;
 }
 
-/* Select box focus */
+/* Dropdown focus effect */
 [data-testid="stSidebar"] [data-baseweb="select"]:focus-within > div {
     border-color: #38BDF8 !important;
     box-shadow: 0 0 0 1px #38BDF8 !important;
 }
 
-/* Sign Out button */
+/* Sidebar buttons */
 [data-testid="stSidebar"] button {
     border-radius: 8px !important;
     font-weight: 600 !important;
     transition: all 0.2s ease-in-out !important;
 }
 
-/* Sign Out button text */
+/* Sidebar button text */
 [data-testid="stSidebar"] button p {
     color: #FFFFFF !important;
 }
 
-/* Sign Out hover effect */
+/* Sidebar button hover */
 [data-testid="stSidebar"] button:hover {
     border-color: #38BDF8 !important;
     transform: translateY(-1px);
 }
+</style>
+""", unsafe_allow_html=True)
+
 
 
 def banner(title, subtitle=""):
