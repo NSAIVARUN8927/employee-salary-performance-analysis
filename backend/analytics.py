@@ -1,8 +1,8 @@
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 REQUIRED = [
     "Employee_ID",
@@ -16,13 +16,62 @@ NAVY, TEAL = "#14213d", "#0f766e"
 
 
 # ============================================================
+# INDIAN CURRENCY FORMATTER
+# ============================================================
+
+def _indian_currency(value, _position=None):
+    """Format numbers using Indian numbering, e.g. ₹1,00,000."""
+    try:
+        number = float(value)
+        if not np.isfinite(number):
+            return ""
+
+        negative = number < 0
+        number = abs(int(round(number)))
+        digits = str(number)
+
+        if len(digits) > 3:
+            last_three = digits[-3:]
+            remaining = digits[:-3]
+            groups = []
+
+            while remaining:
+                groups.insert(0, remaining[-2:])
+                remaining = remaining[:-2]
+
+            digits = ",".join(groups + [last_three])
+
+        return f"{'-' if negative else ''}₹{digits}"
+
+    except (TypeError, ValueError, OverflowError):
+        return ""
+
+
+def _format_salary_axis(ax, axis="x"):
+    """Format salary axis labels and prevent clipping."""
+    if axis == "x":
+        ax.xaxis.set_major_formatter(FuncFormatter(_indian_currency))
+        ax.tick_params(axis="x", labelsize=9)
+    else:
+        ax.yaxis.set_major_formatter(FuncFormatter(_indian_currency))
+        ax.tick_params(axis="y", labelsize=9)
+
+    ax.figure.tight_layout(pad=1.5)
+
+    if axis == "x":
+        ax.figure.subplots_adjust(bottom=0.25)
+    else:
+        ax.figure.subplots_adjust(left=0.25)
+
+
+# ============================================================
 # DATA LOADING
 # ============================================================
 
 def load_data(source):
     df = pd.read_csv(source)
 
-    missing = [c for c in REQUIRED if c not in df.columns]
+    missing = [column for column in REQUIRED if column not in df.columns]
 
     if missing:
         raise ValueError(
@@ -37,38 +86,49 @@ def load_data(source):
 # ============================================================
 
 def clean_data(raw):
-    df, log = raw.copy(), []
-    n = len(df)
+    df = raw.copy()
+    log = []
+    original_count = len(df)
 
     df = df.drop_duplicates().copy()
-    log.append(f"Removed {n - len(df)} duplicate records")
+    log.append(
+        f"Removed {original_count - len(df)} duplicate records"
+    )
 
-    text = [
-        c for c in df.columns
-        if not pd.api.types.is_numeric_dtype(df[c])
+    text_columns = [
+        column for column in df.columns
+        if not pd.api.types.is_numeric_dtype(df[column])
     ]
 
-    for c in text:
-        df[c] = df[c].astype("string").str.strip()
+    for column in text_columns:
+        df[column] = df[column].astype("string").str.strip()
 
-    num = df.select_dtypes(include=np.number).columns
+    numeric_columns = df.select_dtypes(include=np.number).columns
 
-    log.append(
-        f"Filled {int(df[num].isna().sum().sum())} missing numeric values with the median"
+    missing_numeric = int(
+        df[numeric_columns].isna().sum().sum()
     )
 
-    for c in num:
-        median = df[c].median()
+    log.append(
+        f"Filled {missing_numeric} missing numeric values with the median"
+    )
+
+    for column in numeric_columns:
+        median = df[column].median()
 
         if pd.notna(median):
-            df[c] = df[c].fillna(median)
+            df[column] = df[column].fillna(median)
 
-    log.append(
-        f"Filled {int(df[text].isna().sum().sum())} missing text values with 'Unknown'"
+    missing_text = int(
+        df[text_columns].isna().sum().sum()
     )
 
-    for c in text:
-        df[c] = df[c].fillna("Unknown")
+    log.append(
+        f"Filled {missing_text} missing text values with 'Unknown'"
+    )
+
+    for column in text_columns:
+        df[column] = df[column].fillna("Unknown")
 
     return df, log
 
@@ -106,55 +166,85 @@ def standardise(df):
 
     d["Employee_ID"] = d["Employee_ID"].astype(str)
 
-    for col, default in {
+    defaults = {
         "Age": np.nan,
         "Gender": "Unknown",
         "Designation": "Unknown",
         "Bonus": 0.0
-    }.items():
-        if col not in d.columns:
-            d[col] = default
+    }
+
+    for column, default in defaults.items():
+        if column not in d.columns:
+            d[column] = default
 
     if "Name" not in d.columns:
         d["Name"] = d["Employee_ID"]
 
-    jd = (
-        pd.to_datetime(d["Joining_Date"], errors="coerce")
-        if "Joining_Date" in d.columns
-        else pd.Series(pd.NaT, index=d.index)
+    if "Joining_Date" in d.columns:
+        joining_date = pd.to_datetime(
+            d["Joining_Date"],
+            errors="coerce"
+        )
+    else:
+        joining_date = pd.Series(
+            pd.NaT,
+            index=d.index
+        )
+
+    d["Joining_Year"] = joining_date.dt.year.astype("Int64")
+    d["Effective_Date"] = joining_date.dt.strftime("%Y-%m-%d")
+
+    d["Basic_Salary"] = pd.to_numeric(
+        d["Basic_Salary"],
+        errors="coerce"
     )
 
-    d["Joining_Year"] = jd.dt.year.astype("Int64")
-    d["Effective_Date"] = jd.dt.strftime("%Y-%m-%d")
+    d["Bonus"] = pd.to_numeric(
+        d["Bonus"],
+        errors="coerce"
+    ).fillna(0)
 
-    # Preserve existing total salary calculations.
     d["Total_Salary"] = d["Basic_Salary"] + d["Bonus"]
 
-    # Keep the normalized columns required by the existing SQLite application,
-    # plus every original dataset field needed for notebook-style analysis.
-    extra_cols = [c for c in d.columns if c not in STD]
-    return d[STD + extra_cols].reset_index(drop=True)
+    if "Performance_Score" in d.columns:
+        d["Performance_Score"] = pd.to_numeric(
+            d["Performance_Score"],
+            errors="coerce"
+        )
+
+    for column in STD:
+        if column not in d.columns:
+            d[column] = np.nan
+
+    extra_columns = [
+        column for column in d.columns
+        if column not in STD
+    ]
+
+    return d[STD + extra_columns].reset_index(drop=True)
 
 
 def prepare(raw):
-    clean, log = clean_data(raw)
-    return standardise(clean), log
+    cleaned, log = clean_data(raw)
+    return standardise(cleaned), log
 
 
 # ============================================================
 # STATISTICAL SUMMARIES
 # ============================================================
 
-
-def _summary(s, label):
-    s = pd.to_numeric(s, errors="coerce").dropna()
+def _summary(series, label):
+    series = pd.to_numeric(
+        series,
+        errors="coerce"
+    ).dropna()
 
     return pd.Series({
-        "Average": s.mean(),
-        "Median": s.median(),
-        "Minimum": s.min(),
-        "Maximum": s.max(),
-        "Std. Deviation": s.std()
+        "Average": series.mean(),
+        "Median": series.median(),
+        "Minimum": series.min(),
+        "Maximum": series.max(),
+        "Std. Deviation": series.std()
     }, name=label)
 
 
@@ -164,8 +254,6 @@ def salary_summary(df):
 
 def performance_summary(df):
     return _summary(df["Performance_Score"], "Performance")
-
-
 
 
 # ============================================================
@@ -189,24 +277,15 @@ def dept_performance(df):
 
 
 def dept_table(df):
-    """
-    Department summary without the Bonus column.
-
-    Returns:
-    - Department
-    - Employees
-    - Avg_Salary
-    - Avg_Performance
-    """
-
-    g = df.groupby("Department").agg(
+    """Return department statistics without the Bonus column."""
+    grouped = df.groupby("Department").agg(
         Employees=("Employee_ID", "count"),
         Avg_Salary=("Basic_Salary", "mean"),
         Avg_Performance=("Performance_Score", "mean")
     )
 
     return (
-        g.round(2)
+        grouped.round(2)
         .sort_values("Avg_Salary", ascending=False)
         .reset_index()
     )
@@ -228,16 +307,47 @@ def by_experience(df):
         ]
     )
 
-    g = df.groupby(bands, observed=True).agg(
+    grouped = df.groupby(
+        bands,
+        observed=True
+    ).agg(
         Employees=("Employee_ID", "count"),
         Avg_Salary=("Basic_Salary", "mean"),
         Avg_Performance=("Performance_Score", "mean")
     )
 
     return (
-        g.round(2)
+        grouped.round(2)
         .reset_index()
         .rename(columns={"Experience_Years": "Experience"})
+    )
+
+
+def experience_category_counts(df):
+    if "Experience_Years" not in df.columns:
+        return pd.DataFrame(
+            columns=["Experience group", "Employees"]
+        )
+
+    years = pd.to_numeric(
+        df["Experience_Years"],
+        errors="coerce"
+    )
+
+    bands = pd.cut(
+        years,
+        bins=[-np.inf, 2, 5, np.inf],
+        labels=[
+            "Fresher (0-2)",
+            "Mid-level (3-5)",
+            "Experienced (6+)"
+        ]
+    )
+
+    return (
+        bands.value_counts(sort=False)
+        .rename_axis("Experience group")
+        .reset_index(name="Employees")
     )
 
 
@@ -249,22 +359,41 @@ def correlation(df):
     return df.select_dtypes(include=np.number).corr()
 
 
+def numeric_correlation(df):
+    excluded = {"Bonus", "Total_Salary"}
+
+    numeric = df.select_dtypes(include=np.number)
+
+    numeric = numeric[
+        [column for column in numeric.columns if column not in excluded]
+    ]
+
+    return numeric.corr()
+
+
 # ============================================================
 # KEY PERFORMANCE INDICATORS
 # ============================================================
 
 def kpis(df):
-    s = df["Basic_Salary"]
-    p = df["Performance_Score"]
+    salary = pd.to_numeric(
+        df["Basic_Salary"],
+        errors="coerce"
+    )
+
+    performance = pd.to_numeric(
+        df["Performance_Score"],
+        errors="coerce"
+    )
 
     return {
         "total_employees": int(len(df)),
-        "average_salary": round(float(s.mean()), 2),
-        "median_salary": round(float(s.median()), 2),
-        "minimum_salary": round(float(s.min()), 2),
-        "maximum_salary": round(float(s.max()), 2),
-        "average_performance": round(float(p.mean()), 2),
-        "maximum_performance": round(float(p.max()), 2)
+        "average_salary": round(float(salary.mean()), 2),
+        "median_salary": round(float(salary.median()), 2),
+        "minimum_salary": round(float(salary.min()), 2),
+        "maximum_salary": round(float(salary.max()), 2),
+        "average_performance": round(float(performance.mean()), 2),
+        "maximum_performance": round(float(performance.max()), 2)
     }
 
 
@@ -273,73 +402,111 @@ def kpis(df):
 # ============================================================
 
 def insights(df):
-    k = kpis(df)
-    ds = dept_salary(df)
-    dp = dept_performance(df)
+    indicators = kpis(df)
+    department_salaries = dept_salary(df)
+    department_performance = dept_performance(df)
 
-    c1 = df["Basic_Salary"].corr(df["Experience_Years"])
-    c2 = df["Basic_Salary"].corr(df["Performance_Score"])
+    salary = pd.to_numeric(df["Basic_Salary"], errors="coerce")
+    experience = pd.to_numeric(df["Experience_Years"], errors="coerce")
+    performance = pd.to_numeric(df["Performance_Score"], errors="coerce")
 
-    def word(c):
-        if pd.isna(c):
+    correlation_experience = salary.corr(experience)
+    correlation_performance = salary.corr(performance)
+
+    def strength(value):
+        if pd.isna(value):
             return "not meaningfully"
 
-        return (
-            "strongly" if abs(c) > 0.6
-            else "moderately" if abs(c) > 0.3
-            else "weakly"
-        )
+        if abs(value) > 0.6:
+            return "strongly"
+
+        if abs(value) > 0.3:
+            return "moderately"
+
+        return "weakly"
 
     results = [
         (
-            f"The average salary is {k['average_salary']:,.0f}, "
-            f"ranging from {k['minimum_salary']:,.0f} "
-            f"to {k['maximum_salary']:,.0f}."
+            f"The average salary is "
+            f"{_indian_currency(indicators['average_salary'])}, "
+            f"ranging from "
+            f"{_indian_currency(indicators['minimum_salary'])} "
+            f"to "
+            f"{_indian_currency(indicators['maximum_salary'])}."
         )
     ]
 
-    if not ds.empty:
+    if not department_salaries.empty:
         results.append(
-            f"{ds.index[0]} has the highest average salary "
-            f"({ds.iloc[0]:,.0f}); {ds.index[-1]} has the lowest "
-            f"({ds.iloc[-1]:,.0f})."
+            f"{department_salaries.index[0]} has the highest average "
+            f"salary ({_indian_currency(department_salaries.iloc[0])}); "
+            f"{department_salaries.index[-1]} has the lowest "
+            f"({_indian_currency(department_salaries.iloc[-1])})."
         )
 
-    if not dp.empty:
+    if not department_performance.empty:
         results.append(
-            f"{dp.index[0]} has the best average performance score "
-            f"({dp.iloc[0]:.2f}); {dp.index[-1]} has the lowest "
-            f"({dp.iloc[-1]:.2f})."
+            f"{department_performance.index[0]} has the best average "
+            f"performance score ({department_performance.iloc[0]:.2f}); "
+            f"{department_performance.index[-1]} has the lowest "
+            f"({department_performance.iloc[-1]:.2f})."
         )
 
-    results.extend([
-        f"Experience and salary are {word(c1)} related (correlation {c1:.2f}).",
-        f"Performance and salary are {word(c2)} related (correlation {c2:.2f}).",
-        (
-            f"{(df['Performance_Score'] >= 4).mean() * 100:.1f}% "
-            "of employees have a performance score of 4 or higher."
-        )
-    ])
+    results.append(
+        f"Experience and salary are "
+        f"{strength(correlation_experience)} related "
+        f"(correlation {correlation_experience:.2f})."
+    )
+
+    results.append(
+        f"Performance and salary are "
+        f"{strength(correlation_performance)} related "
+        f"(correlation {correlation_performance:.2f})."
+    )
+
+    results.append(
+        f"{(performance >= 4).mean() * 100:.1f}% of employees "
+        f"have a performance score of 4 or higher."
+    )
 
     return results
 
 
 # ============================================================
-# CHART HELPER
+# GENERAL CHART HELPER
 # ============================================================
 
-def _fig(title, xl, yl, draw, size=(7, 3.8)):
+def _fig(title, xlabel, ylabel, draw, size=(7, 3.8)):
     fig, ax = plt.subplots(figsize=size)
 
     draw(ax)
 
     ax.set(
         title=title,
-        xlabel=xl,
-        ylabel=yl
+        xlabel=xlabel,
+        ylabel=ylabel
     )
 
-    fig.tight_layout()
+    salary_x = "salary" in str(xlabel).lower()
+    salary_y = "salary" in str(ylabel).lower()
+
+    if salary_x:
+        ax.xaxis.set_major_formatter(
+            FuncFormatter(_indian_currency)
+        )
+
+    if salary_y:
+        ax.yaxis.set_major_formatter(
+            FuncFormatter(_indian_currency)
+        )
+
+    fig.tight_layout(pad=1.5)
+
+    if salary_x:
+        fig.subplots_adjust(bottom=0.25)
+
+    if salary_y:
+        fig.subplots_adjust(left=0.25)
 
     return fig
 
@@ -349,17 +516,27 @@ def _fig(title, xl, yl, draw, size=(7, 3.8)):
 # ============================================================
 
 def fig_salary_dist(df):
-    return _fig(
-        "Salary distribution",
-        "Salary",
-        "Employees",
-        lambda ax: sns.histplot(
-            df["Basic_Salary"],
-            kde=False,
-            color=TEAL,
-            ax=ax
-        )
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    salary = pd.to_numeric(
+        df["Basic_Salary"],
+        errors="coerce"
+    ).dropna()
+
+    sns.histplot(
+        salary,
+        kde=False,
+        color=TEAL,
+        ax=ax
     )
+
+    ax.set_title("Salary distribution")
+    ax.set_xlabel("Salary")
+    ax.set_ylabel("Employees")
+
+    _format_salary_axis(ax, "x")
+
+    return fig
 
 
 def fig_perf_dist(df):
@@ -375,36 +552,92 @@ def fig_perf_dist(df):
     )
 
 
-# ============================================================
-# DEPARTMENT CHARTS
-# ============================================================
+def fig_salary_box(df):
+    if df is None or df.empty or "Basic_Salary" not in df.columns:
+        return None
 
-def fig_dept_salary(df):
-    s = dept_salary(df)
+    salary = pd.to_numeric(
+        df["Basic_Salary"],
+        errors="coerce"
+    ).dropna()
+
+    if salary.empty:
+        return None
+
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    sns.boxplot(
+        x=salary,
+        color=TEAL,
+        ax=ax
+    )
+
+    ax.set_title("Salary Distribution — Box Plot")
+    ax.set_xlabel("Basic Salary")
+    ax.set_ylabel("")
+
+    _format_salary_axis(ax, "x")
+
+    return fig
+
+
+def fig_performance_box(df):
+    performance = pd.to_numeric(
+        df["Performance_Score"],
+        errors="coerce"
+    ).dropna()
+
+    if performance.empty:
+        return None
 
     return _fig(
-        "Average salary by department",
-        "Department",
-        "Average salary",
-        lambda ax: sns.barplot(
-            x=s.index,
-            y=s.values,
+        "Performance score box plot",
+        "Performance score",
+        "",
+        lambda ax: sns.boxplot(
+            x=performance,
             color=NAVY,
             ax=ax
         )
     )
 
 
+# ============================================================
+# DEPARTMENT CHARTS
+# ============================================================
+
+def fig_dept_salary(df):
+    salary_by_department = dept_salary(df)
+
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    sns.barplot(
+        x=salary_by_department.index,
+        y=salary_by_department.values,
+        color=NAVY,
+        ax=ax
+    )
+
+    ax.set_title("Average salary by department")
+    ax.set_xlabel("Department")
+    ax.set_ylabel("Average salary")
+    ax.tick_params(axis="x", rotation=25)
+
+    _format_salary_axis(ax, "y")
+
+    return fig
+
+
 def fig_dept_perf(df):
-    s = dept_performance(df)
+    scores = dept_performance(df)
 
     return _fig(
         "Average performance by department",
         "Department",
         "Average score",
         lambda ax: sns.barplot(
-            x=s.index,
-            y=s.values,
+            x=scores.index,
+            y=scores.values,
             color=TEAL,
             ax=ax
         )
@@ -430,37 +663,47 @@ def fig_dept_count(df):
 # ============================================================
 
 def fig_salary_vs_perf(df):
-    return _fig(
-        "Salary vs performance",
-        "Salary",
-        "Performance score",
-        lambda ax: sns.scatterplot(
-            data=df,
-            x="Basic_Salary",
-            y="Performance_Score",
-            hue="Department",
-            ax=ax
-        )
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    sns.scatterplot(
+        data=df,
+        x="Basic_Salary",
+        y="Performance_Score",
+        hue="Department" if "Department" in df.columns else None,
+        ax=ax
     )
+
+    ax.set_title("Salary vs performance")
+    ax.set_xlabel("Salary")
+    ax.set_ylabel("Performance score")
+
+    _format_salary_axis(ax, "x")
+
+    return fig
 
 
 def fig_experience(df):
-    return _fig(
-        "Experience vs salary",
-        "Experience (years)",
-        "Salary",
-        lambda ax: sns.scatterplot(
-            data=df,
-            x="Experience_Years",
-            y="Basic_Salary",
-            hue="Department",
-            ax=ax
-        )
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    sns.scatterplot(
+        data=df,
+        x="Experience_Years",
+        y="Basic_Salary",
+        hue="Department" if "Department" in df.columns else None,
+        ax=ax
     )
+
+    ax.set_title("Experience vs salary")
+    ax.set_xlabel("Experience (years)")
+    ax.set_ylabel("Salary")
+
+    _format_salary_axis(ax, "y")
+
+    return fig
 
 
 # ============================================================
-# CORRELATION HEATMAP
+# CORRELATION HEATMAPS
 # ============================================================
 
 def fig_corr(df):
@@ -479,6 +722,30 @@ def fig_corr(df):
         ),
         size=(8, 6)
     )
+
+
+def fig_full_corr(df):
+    corr = numeric_correlation(df)
+
+    if corr.empty:
+        return None
+
+    fig, ax = plt.subplots(figsize=(11, 7))
+
+    sns.heatmap(
+        corr,
+        annot=True,
+        fmt=".2f",
+        cmap="coolwarm",
+        center=0,
+        ax=ax,
+        annot_kws={"size": 7}
+    )
+
+    ax.set_title("Employee dataset correlation heatmap")
+    fig.tight_layout()
+
+    return fig
 
 
 # ============================================================
@@ -519,25 +786,32 @@ def report_html(df, user):
     )
 
 
-
 # ============================================================
 # NOTEBOOK-ALIGNED WORKFORCE AND PRODUCTIVITY ANALYSIS
 # ============================================================
 
 def _has(df, columns):
-    return all(c in df.columns for c in columns)
+    return all(column in df.columns for column in columns)
 
 
 def _numeric(df, column):
-    return pd.to_numeric(df[column], errors="coerce") if column in df.columns else pd.Series(dtype=float)
+    if column not in df.columns:
+        return pd.Series(dtype=float)
+
+    return pd.to_numeric(df[column], errors="coerce")
 
 
 def categorical_counts(df, column):
     if column not in df.columns:
         return pd.DataFrame(columns=[column, "Employees"])
+
     return (
-        df[column].fillna("Unknown").astype(str).value_counts()
-        .rename_axis(column).reset_index(name="Employees")
+        df[column]
+        .fillna("Unknown")
+        .astype(str)
+        .value_counts()
+        .rename_axis(column)
+        .reset_index(name="Employees")
     )
 
 
@@ -546,71 +820,96 @@ def workforce_summary(df):
         ("Gender", "Gender"),
         ("Education", "Education"),
         ("Employment type", "Employment_Type"),
-        ("Job role", "Designation"),
+        ("Job role", "Designation")
     ]
+
     rows = []
-    for label, col in fields:
-        if col in df.columns:
+
+    for label, column in fields:
+        if column in df.columns:
             rows.append({
                 "Category": label,
-                "Distinct values": int(df[col].nunique(dropna=True)),
-                "Employees": int(df[col].notna().sum())
+                "Distinct values": int(df[column].nunique(dropna=True)),
+                "Employees": int(df[column].notna().sum())
             })
+
     return pd.DataFrame(rows)
 
 
 def missing_summary(df):
     return pd.DataFrame({
         "Column": df.columns,
-        "Missing values": [int(df[c].isna().sum()) for c in df.columns],
+        "Missing values": [
+            int(df[column].isna().sum())
+            for column in df.columns
+        ],
         "Missing (%)": [
-            round(float(df[c].isna().mean() * 100), 2) for c in df.columns
+            round(float(df[column].isna().mean() * 100), 2)
+            for column in df.columns
         ]
-    }).sort_values(["Missing values", "Column"], ascending=[False, True])
+    }).sort_values(
+        ["Missing values", "Column"],
+        ascending=[False, True]
+    )
 
 
 def _categorical_chart(df, column, title, kind="bar"):
     if column not in df.columns:
         return None
-    counts = df[column].fillna("Unknown").astype(str).value_counts()
+
+    counts = (
+        df[column]
+        .fillna("Unknown")
+        .astype(str)
+        .value_counts()
+    )
+
     if counts.empty:
         return None
+
     fig, ax = plt.subplots(figsize=(7, 3.8))
+
     if kind == "pie":
-        counts.plot(kind="pie", autopct="%1.1f%%", ax=ax)
+        counts.plot(
+            kind="pie",
+            autopct="%1.1f%%",
+            ax=ax
+        )
         ax.set_ylabel("")
     else:
-        counts.plot(kind="bar", color=TEAL, ax=ax)
+        counts.plot(
+            kind="bar",
+            color=TEAL,
+            ax=ax
+        )
         ax.set_xlabel(column.replace("_", " "))
         ax.set_ylabel("Employees")
         ax.tick_params(axis="x", rotation=35)
+
     ax.set_title(title)
     fig.tight_layout()
+
     return fig
 
 
-def fig_salary_box(df):
-    return _fig(
-        "Salary box plot", "Salary", "",
-        lambda ax: sns.boxplot(x=_numeric(df, "Basic_Salary"), color=TEAL, ax=ax)
-    )
-
-
-def fig_performance_box(df):
-    return _fig(
-        "Performance score box plot", "Performance score", "",
-        lambda ax: sns.boxplot(x=_numeric(df, "Performance_Score"), color=NAVY, ax=ax)
-    )
-
+# ============================================================
+# ATTENDANCE AND PRODUCTIVITY CHARTS
+# ============================================================
 
 def fig_attendance_vs_performance(df):
     if not _has(df, ["Attendance_Percentage", "Performance_Score"]):
         return None
+
     return _fig(
-        "Attendance vs performance", "Attendance (%)", "Performance score",
+        "Attendance vs performance",
+        "Attendance (%)",
+        "Performance score",
         lambda ax: sns.scatterplot(
-            data=df, x="Attendance_Percentage", y="Performance_Score",
-            hue="Department" if "Department" in df.columns else None, ax=ax
+            data=df,
+            x="Attendance_Percentage",
+            y="Performance_Score",
+            hue="Department" if "Department" in df.columns else None,
+            ax=ax
         )
     )
 
@@ -618,11 +917,17 @@ def fig_attendance_vs_performance(df):
 def fig_training_vs_performance(df):
     if not _has(df, ["Training_Hours", "Performance_Score"]):
         return None
+
     return _fig(
-        "Training hours vs performance", "Training hours", "Performance score",
+        "Training hours vs performance",
+        "Training hours",
+        "Performance score",
         lambda ax: sns.scatterplot(
-            data=df, x="Training_Hours", y="Performance_Score",
-            hue="Department" if "Department" in df.columns else None, ax=ax
+            data=df,
+            x="Training_Hours",
+            y="Performance_Score",
+            hue="Department" if "Department" in df.columns else None,
+            ax=ax
         )
     )
 
@@ -630,60 +935,83 @@ def fig_training_vs_performance(df):
 def fig_overtime_vs_satisfaction(df):
     if not _has(df, ["Overtime_Hours", "Job_Satisfaction"]):
         return None
+
     return _fig(
-        "Overtime vs job satisfaction", "Overtime hours", "Job satisfaction",
+        "Overtime vs job satisfaction",
+        "Overtime hours",
+        "Job satisfaction",
         lambda ax: sns.scatterplot(
-            data=df, x="Overtime_Hours", y="Job_Satisfaction",
-            hue="Department" if "Department" in df.columns else None, ax=ax
+            data=df,
+            x="Overtime_Hours",
+            y="Job_Satisfaction",
+            hue="Department" if "Department" in df.columns else None,
+            ax=ax
         )
     )
 
 
-def fig_numeric_relationship(df, x, y, title, xlabel=None, ylabel=None):
+def fig_numeric_relationship(
+    df,
+    x,
+    y,
+    title,
+    xlabel=None,
+    ylabel=None
+):
     if not _has(df, [x, y]):
         return None
+
     return _fig(
-        title, xlabel or x.replace("_", " "), ylabel or y.replace("_", " "),
-        lambda ax: sns.scatterplot(data=df, x=x, y=y, ax=ax)
+        title,
+        xlabel or x.replace("_", " "),
+        ylabel or y.replace("_", " "),
+        lambda ax: sns.scatterplot(
+            data=df,
+            x=x,
+            y=y,
+            ax=ax
+        )
     )
 
 
-def numeric_correlation(df):
-    excluded = {"Bonus", "Total_Salary"}
-    numeric = df.select_dtypes(include=np.number)
-    numeric = numeric[[c for c in numeric.columns if c not in excluded]]
-    return numeric.corr()
-
-
-def fig_full_corr(df):
-    corr = numeric_correlation(df)
-    if corr.empty:
-        return None
-    fig, ax = plt.subplots(figsize=(11, 7))
-    sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm",
-                center=0, ax=ax, annot_kws={"size": 7})
-    ax.set_title("Employee dataset correlation heatmap")
-    fig.tight_layout()
-    return fig
-
+# ============================================================
+# DEPARTMENT SUMMARY
+# ============================================================
 
 def department_full_summary(df):
     required = ["Department", "Employee_ID"]
+
     if not _has(df, required):
         return pd.DataFrame()
-    aggregations = {"Employees": ("Employee_ID", "count")}
-    for col, label in [
+
+    aggregations = {
+        "Employees": ("Employee_ID", "count")
+    }
+
+    metrics = [
         ("Basic_Salary", "Average salary"),
         ("Performance_Score", "Average performance"),
         ("Experience_Years", "Average experience"),
         ("Attendance_Percentage", "Average attendance"),
         ("Training_Hours", "Average training hours"),
-        ("Projects_Completed", "Average projects completed"),
-    ]:
-        if col in df.columns:
-            aggregations[label] = (col, "mean")
-    return df.groupby("Department").agg(**aggregations).round(2).reset_index()
+        ("Projects_Completed", "Average projects completed")
+    ]
 
+    for column, label in metrics:
+        if column in df.columns:
+            aggregations[label] = (column, "mean")
+
+    return (
+        df.groupby("Department")
+        .agg(**aggregations)
+        .round(2)
+        .reset_index()
+    )
+
+
+# ============================================================
+# PRODUCTIVITY SUMMARY
+# ============================================================
 
 def productivity_summary(df):
     metrics = [
@@ -693,67 +1021,51 @@ def productivity_summary(df):
         ("Leave_Days", "Average leave days"),
         ("Projects_Completed", "Average projects completed"),
         ("Job_Satisfaction", "Average job satisfaction"),
-        ("Manager_Rating", "Average manager rating"),
+        ("Manager_Rating", "Average manager rating")
     ]
+
     rows = []
-    for col, label in metrics:
-        if col in df.columns:
-            values = _numeric(df, col).dropna()
+
+    for column, label in metrics:
+        if column in df.columns:
+            values = _numeric(df, column).dropna()
+
             rows.append({
                 "Metric": label,
-                "Average": round(float(values.mean()), 2) if not values.empty else None,
-                "Median": round(float(values.median()), 2) if not values.empty else None,
-                "Minimum": round(float(values.min()), 2) if not values.empty else None,
-                "Maximum": round(float(values.max()), 2) if not values.empty else None,
+                "Average": (
+                    round(float(values.mean()), 2)
+                    if not values.empty else None
+                ),
+                "Median": (
+                    round(float(values.median()), 2)
+                    if not values.empty else None
+                ),
+                "Minimum": (
+                    round(float(values.min()), 2)
+                    if not values.empty else None
+                ),
+                "Maximum": (
+                    round(float(values.max()), 2)
+                    if not values.empty else None
+                )
             })
+
     return pd.DataFrame(rows)
 
+
+# ============================================================
+# PROMOTION ELIGIBILITY
+# ============================================================
 
 def promotion_eligible_count(df):
     if "Promotion_Eligible" not in df.columns:
         return None
+
     return int(
-        df["Promotion_Eligible"].astype(str).str.strip().str.lower()
-        .isin(["yes", "true", "1"]).sum()
+        df["Promotion_Eligible"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .isin(["yes", "true", "1"])
+        .sum()
     )
-
-
-def experience_category_counts(df):
-    if "Experience_Years" not in df.columns:
-        return pd.DataFrame(columns=["Experience group", "Employees"])
-    years = _numeric(df, "Experience_Years")
-    bands = pd.cut(
-        years, bins=[-np.inf, 2, 5, np.inf],
-        labels=["Fresher (0-2)", "Mid-level (3-5)", "Experienced (6+)"]
-    )
-    return bands.value_counts(sort=False).rename_axis("Experience group").reset_index(name="Employees")
-# ============================================================
-# SALARY BOX PLOT — FIX FOR ANALYSIS PAGE
-# ============================================================
-
-def fig_salary_box(df):
-    """Display a box plot showing employee salary distribution."""
-
-    if df is None or df.empty or "Basic_Salary" not in df.columns:
-        return None
-
-    salary = pd.to_numeric(df["Basic_Salary"], errors="coerce").dropna()
-
-    if salary.empty:
-        return None
-
-    fig, ax = plt.subplots(figsize=(7, 3.8))
-
-    sns.boxplot(
-        x=salary,
-        color=TEAL,
-        ax=ax
-    )
-
-    ax.set_title("Salary Distribution — Box Plot")
-    ax.set_xlabel("Basic Salary")
-    ax.set_ylabel("")
-
-    fig.tight_layout()
-
-    return fig
