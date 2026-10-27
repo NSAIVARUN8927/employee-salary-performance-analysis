@@ -2445,9 +2445,18 @@ def page_analysis(df):
                 f"Employees with attendance ≥ 90%: {len(high_attendance)}"
             )
     
-        if "Projects_Completed" in filtered:
-            st.subheader("Top employees by projects completed")
-    
+        # ============================================================
+        # TOP EMPLOYEES BY PROJECTS COMPLETED
+        # ============================================================
+
+        if "Projects_Completed" in filtered.columns:
+            st.subheader("🏆 Top Employees by Projects Completed")
+            st.caption(
+                "Discover your most productive employees based on "
+                "the number of projects they have completed."
+            )
+
+            # Select available columns
             cols = [
                 c for c in [
                     "Employee_ID",
@@ -2456,9 +2465,142 @@ def page_analysis(df):
                     "Designation",
                     "Projects_Completed"
                 ]
-                if c in filtered
+                if c in filtered.columns
             ]
-   
+
+            # Prepare clean data
+            project_data = filtered[cols].copy()
+
+            project_data["Projects_Completed"] = pd.to_numeric(
+                project_data["Projects_Completed"],
+                errors="coerce"
+            )
+
+            project_data = project_data.dropna(
+                subset=["Projects_Completed"]
+            )
+
+            project_data = project_data.sort_values(
+                "Projects_Completed",
+                ascending=False
+            ).reset_index(drop=True)
+
+            if project_data.empty:
+                st.info("No valid project completion data is available.")
+            else:
+                # Summary metrics
+                total_projects = int(
+                    project_data["Projects_Completed"].sum()
+                )
+
+                average_projects = project_data[
+                    "Projects_Completed"
+                ].mean()
+
+                top_employee = project_data.iloc[0]
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric(
+                        "📁 Total Projects",
+                        f"{total_projects:,}"
+                    )
+
+                with col2:
+                    st.metric(
+                        "📊 Average Projects",
+                        f"{average_projects:.1f}"
+                    )
+
+                with col3:
+                    employee_name = (
+                        str(top_employee["Name"])
+                        if "Name" in project_data.columns
+                        else str(top_employee.get("Employee_ID", "N/A"))
+                    )
+
+                    st.metric(
+                        "🥇 Highest Projects",
+                        f"{int(top_employee['Projects_Completed'])}",
+                        help=f"Top performer: {employee_name}"
+                    )
+
+                st.divider()
+
+                # Display top 10 employees
+                top_10 = project_data.head(10).copy()
+
+                # Bar chart
+                st.markdown("### 📈 Top 10 Employee Project Rankings")
+
+                chart_data = top_10.copy()
+
+                if "Name" in chart_data.columns:
+                    chart_data["Employee"] = (
+                        chart_data["Name"].astype(str)
+                    )
+                elif "Employee_ID" in chart_data.columns:
+                    chart_data["Employee"] = (
+                        chart_data["Employee_ID"].astype(str)
+                    )
+                else:
+                    chart_data["Employee"] = [
+                        f"Employee {i + 1}"
+                        for i in range(len(chart_data))
+                    ]
+
+                chart_data = chart_data.sort_values(
+                    "Projects_Completed",
+                    ascending=True
+                )
+
+                fig, ax = plt.subplots(figsize=(10, 5))
+
+                bars = ax.barh(
+                    chart_data["Employee"],
+                    chart_data["Projects_Completed"]
+                )
+
+                ax.set_xlabel("Projects Completed")
+                ax.set_ylabel("Employee")
+                ax.set_title("Top 10 Employees by Projects Completed")
+                ax.grid(axis="x", linestyle="--", alpha=0.3)
+
+                for bar in bars:
+                    width = bar.get_width()
+                    ax.text(
+                        width,
+                        bar.get_y() + bar.get_height() / 2,
+                        f" {width:g}",
+                        va="center"
+                    )
+
+                plt.tight_layout()
+                st.pyplot(fig)
+                plt.close(fig)
+
+                # Detailed ranking table
+                st.markdown("### 🏅 Employee Leaderboard")
+
+                display_data = top_10.copy()
+                display_data.insert(
+                    0,
+                    "Rank",
+                    range(1, len(display_data) + 1)
+                )
+
+                st.dataframe(
+                    display_data,
+                    hide_index=True,
+                    use_container_width=True
+                )
+
+        else:
+            st.warning(
+                "The dataset does not contain a 'Projects_Completed' "
+                "column. Please check the column name in your CSV file."
+            )   
     with correlation_tab:
         st.subheader("Correlation matrix")
         corr = an.numeric_correlation(filtered)
