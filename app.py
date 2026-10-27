@@ -2129,49 +2129,148 @@ def page_analysis(df):
     """, unsafe_allow_html=True)
 
     # Filters apply consistently to every analysis on this page.
-    left, right, third = st.columns(3)
+        # ============================================================
+    # ANALYSIS FILTERS
+    # Department: Dropdown
+    # Job Role: Dropdown (dependent on Department)
+    # Experience: Editable Min and Max fields
+    # ============================================================
+
     filtered = df.copy()
 
-    departments = sorted(filtered["Department"].dropna().astype(str).unique()) if "Department" in filtered else []
-    with left:
-        chosen_departments = st.multiselect(
-            "Department", departments, default=departments, key="analysis_departments"
+    # Clean filter columns
+    if "Department" in filtered.columns:
+        filtered["Department"] = (
+            filtered["Department"].fillna("Unknown").astype(str)
         )
-    if "Department" in filtered:
-        filtered = filtered[filtered["Department"].astype(str).isin(chosen_departments)]
 
-    if "Designation" in filtered:
-        roles = sorted(filtered["Designation"].dropna().astype(str).unique())
-        with right:
-            chosen_roles = st.multiselect(
-                "Job role", roles, default=roles, key="analysis_roles"
+    if "Designation" in filtered.columns:
+        filtered["Designation"] = (
+            filtered["Designation"].fillna("Unknown").astype(str)
+        )
+
+    # Three-part filter layout
+    department_col, role_col, experience_col = st.columns([1, 1, 1.5])
+
+    # ------------------------------------------------------------
+    # 1. DEPARTMENT DROPDOWN
+    # ------------------------------------------------------------
+    with department_col:
+        if "Department" in filtered.columns:
+            departments = sorted(filtered["Department"].unique().tolist())
+
+            department_options = ["All Departments"] + departments
+
+            selected_department = st.selectbox(
+                "🏢 Department",
+                options=department_options,
+                index=0,
+                key="analysis_department_dropdown",
             )
-        filtered = filtered[filtered["Designation"].astype(str).isin(chosen_roles)]
-    else:
-        with right:
-            st.caption("Job role filter is unavailable for this dataset.")
 
-    if "Experience_Years" in filtered:
-        experience_values = pd.to_numeric(filtered["Experience_Years"], errors="coerce").dropna()
-        if not experience_values.empty:
-            with third:
-                exp_range = st.slider(
-                    "Experience (years)",
-                    min_value=int(experience_values.min()),
-                    max_value=max(int(experience_values.max()), int(experience_values.min())),
-                    value=(int(experience_values.min()), int(experience_values.max())),
-                    key="analysis_experience_range"
-                )
-            filtered = filtered[
-                pd.to_numeric(filtered["Experience_Years"], errors="coerce").between(*exp_range)
-            ]
+            if selected_department != "All Departments":
+                filtered = filtered[
+                    filtered["Department"] == selected_department
+                ]
         else:
-            with third:
-                st.caption("Experience filter is unavailable.")
-    else:
-        with third:
-            st.caption("Experience filter is unavailable.")
+            selected_department = "All Departments"
+            st.caption("Department data unavailable.")
 
+    # ------------------------------------------------------------
+    # 2. JOB ROLE DROPDOWN
+    # Updates based on the selected department
+    # ------------------------------------------------------------
+    with role_col:
+        if "Designation" in filtered.columns:
+            roles = sorted(filtered["Designation"].unique().tolist())
+
+            role_options = ["All Job Roles"] + roles
+
+            selected_role = st.selectbox(
+                "💼 Job Role",
+                options=role_options,
+                index=0,
+                key="analysis_job_role_dropdown",
+            )
+
+            if selected_role != "All Job Roles":
+                filtered = filtered[
+                    filtered["Designation"] == selected_role
+                ]
+        else:
+            selected_role = "All Job Roles"
+            st.caption("Job role data unavailable.")
+
+    # ------------------------------------------------------------
+    # 3. EXPERIENCE MIN AND MAX INPUTS
+    # ------------------------------------------------------------
+    with experience_col:
+        if "Experience_Years" in df.columns:
+            all_experience = pd.to_numeric(
+                df["Experience_Years"],
+                errors="coerce"
+            ).dropna()
+
+            if not all_experience.empty:
+                experience_min = int(all_experience.min())
+                experience_max = int(all_experience.max())
+
+                st.markdown("**⏳ Experience (Years)**")
+
+                min_col, max_col = st.columns(2)
+
+                with min_col:
+                    selected_min_experience = st.number_input(
+                        "Min",
+                        min_value=experience_min,
+                        max_value=experience_max,
+                        value=experience_min,
+                        step=1,
+                        key="analysis_min_experience",
+                    )
+
+                with max_col:
+                    selected_max_experience = st.number_input(
+                        "Max",
+                        min_value=experience_min,
+                        max_value=experience_max,
+                        value=experience_max,
+                        step=1,
+                        key="analysis_max_experience",
+                    )
+
+                if selected_min_experience > selected_max_experience:
+                    st.warning(
+                        "Min experience cannot be greater than Max experience."
+                    )
+                    return
+
+                filtered_experience = pd.to_numeric(
+                    filtered["Experience_Years"],
+                    errors="coerce"
+                )
+
+                filtered = filtered[
+                    filtered_experience.between(
+                        selected_min_experience,
+                        selected_max_experience
+                    )
+                ]
+
+            else:
+                st.caption("Experience data unavailable.")
+        else:
+            st.caption("Experience data unavailable.")
+
+    # ------------------------------------------------------------
+    # FILTER SUMMARY
+    # ------------------------------------------------------------
+    st.caption(
+        f"📊 Showing analysis for {len(filtered):,} employees "
+        "matching your filters."
+    )
+
+    st.divider()
     if filtered.empty:
         st.warning("No employees match the selected filters. Change the filters to see analysis.")
         return
