@@ -2396,7 +2396,7 @@ def page_analysis(df):
                 hide_index=True, use_container_width=True
             )
 
-    with productivity_tab:
+with productivity_tab:
     st.subheader("Attendance and productivity statistics")
 
     # Display one shared Department legend above all charts.
