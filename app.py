@@ -2488,25 +2488,24 @@ def page_data(df):
     if up and st.button("Analyse this file"):
 
         try:
-            # Process the uploaded dataset
-            uploaded_df, log = an.prepare(
-                an.load_data(up)
-            )
+            # Read and process the uploaded CSV
+            raw_df = an.load_data(up)
+            processed_df, log = an.prepare(raw_df)
     
-            # Store the processed dataset
-            st.session_state.upload = uploaded_df
+            # Save the processed dataset
+            st.session_state["upload"] = processed_df
     
-            # Store the original uploaded filename
-            st.session_state.upload_filename = up.name
+            # IMPORTANT: Save the original uploaded filename
+            st.session_state["upload_filename"] = up.name
     
-            st.toast(
+            st.success(
                 f"Successfully analysed: {up.name}"
             )
     
             st.rerun()
     
         except Exception as ex:
-            st.error(str(ex))
+            st.error(f"Unable to analyse file: {ex}")
     export_option = st.selectbox(
         "Choose what to export",
         [
@@ -2687,18 +2686,27 @@ def main():
             key="page_navigation"
         )
 
+                # ==================== DATA SOURCE ====================
+
         up = st.session_state.get("upload")
+
+        data_sources = ["Employee database"]
+
+        if up is not None:
+
+            # Get the original filename saved during upload
+            uploaded_filename = st.session_state.get(
+                "upload_filename",
+                "Uploaded file"
+            )
+
+            data_sources.append(uploaded_filename)
 
         src = st.selectbox(
             "Data source",
-            ["Employee database"]
-            + (["Uploaded file"] if up is not None else [])
+            options=data_sources,
+            key="data_source_selection"
         )
-
-        if st.button("Sign out"):
-            db.log_activity(user["id"], "signed out")
-            del st.session_state["user"]
-            st.rerun()
 
     is_db = src == "Employee database"
     df = db.employee_frame() if is_db else up
