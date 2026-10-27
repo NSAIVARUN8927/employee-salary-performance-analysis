@@ -2505,8 +2505,7 @@ def page_data(df):
 
         st.rerun()
 
-    except Exception as ex:
-        st.error(str(ex))
+    
 
     export_option = st.selectbox(
         "Choose what to export",
