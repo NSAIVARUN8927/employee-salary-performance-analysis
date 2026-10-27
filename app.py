@@ -2487,26 +2487,26 @@ def page_data(df):
     up = st.file_uploader("Upload a CSV with the same columns as the sample dataset", type="csv")
     if up and st.button("Analyse this file"):
 
-    try:
-        # Process the uploaded dataset
-        uploaded_df, log = an.prepare(
-            an.load_data(up)
-        )
-
-        # Store the processed dataset
-        st.session_state.upload = uploaded_df
-
-        # Store the original uploaded filename
-        st.session_state.upload_filename = up.name
-
-        st.toast(
-            f"Successfully analysed: {up.name}"
-        )
-
-        st.rerun()
-
+        try:
+            # Process the uploaded dataset
+            uploaded_df, log = an.prepare(
+                an.load_data(up)
+            )
     
-
+            # Store the processed dataset
+            st.session_state.upload = uploaded_df
+    
+            # Store the original uploaded filename
+            st.session_state.upload_filename = up.name
+    
+            st.toast(
+                f"Successfully analysed: {up.name}"
+            )
+    
+            st.rerun()
+    
+        except Exception as ex:
+            st.error(str(ex))
     export_option = st.selectbox(
         "Choose what to export",
         [
