@@ -898,17 +898,6 @@ def missing_summary(df):
 
 
 def _categorical_chart(df, column, title, kind="bar"):
-    """
-    Create readable categorical charts.
-
-    Improvements:
-    - Job roles use horizontal bars.
-    - Long category names remain readable.
-    - Categories are sorted by employee count.
-    - Axis labels do not overlap.
-    - Chart spacing adapts to the number of categories.
-    """
-
     if column not in df.columns:
         return None
 
@@ -924,159 +913,134 @@ def _categorical_chart(df, column, title, kind="bar"):
     if counts.empty:
         return None
 
-    # Pie charts remain unchanged in purpose.
-    if kind == "pie":
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=(7, 3.8))
 
+    if kind == "pie":
         counts.plot(
             kind="pie",
             autopct="%1.1f%%",
-            startangle=90,
+            ax=ax
+        )
+        ax.set_ylabel("")
+
+    else:
+        # Keep the original vertical bar-chart style.
+        counts.plot(
+            kind="bar",
+            color=TEAL,
             ax=ax
         )
 
-        ax.set_ylabel("")
-        ax.set_title(title, pad=16)
-        ax.axis("equal")
+        ax.set_ylabel("Employees")
+        ax.set_xlabel(column.replace("_", " "))
 
-        fig.tight_layout()
-        return fig
+        if column == "Designation":
+            # Job roles: make labels readable without changing
+            # the overall chart style.
+            ax.tick_params(
+                axis="x",
+                labelsize=8,
+                rotation=45,
+                pad=7
+            )
 
-    # Job roles and other long category labels are easier to read
-    # when placed along the vertical axis.
-    use_horizontal_bars = (
-        column in ["Designation", "Department", "Education"]
-        or len(counts) >= 7
-    )
+            for label in ax.get_xticklabels():
+                label.set_horizontalalignment("right")
 
-    if use_horizontal_bars:
-        # Display the largest categories at the top.
-        counts = counts.sort_values(ascending=True)
+            # Add extra room for the rotated job-role labels.
+            fig.subplots_adjust(
+                bottom=0.32,
+                left=0.12,
+                right=0.97,
+                top=0.88
+            )
 
-        chart_height = max(4.2, min(8.5, 2.0 + len(counts) * 0.42))
+        else:
+            ax.tick_params(
+                axis="x",
+                rotation=35
+            )
 
-        fig, ax = plt.subplots(
-            figsize=(8, chart_height)
-        )
+    ax.set_title(title)
 
-        bars = ax.barh(
-            counts.index.astype(str),
-            counts.values,
-            color=TEAL,
-            height=0.68,
-            edgecolor="white",
-            linewidth=0.7
-        )
-
-        ax.set_xlabel("Number of Employees", labelpad=10)
-        ax.set_ylabel("")
-        ax.set_title(title, pad=18, loc="left")
-
-        # Keep category names on the left and counts on the bottom.
-        ax.tick_params(
-            axis="y",
-            labelsize=9,
-            pad=8,
-            left=False,
-            labelleft=True
-        )
-
-        ax.tick_params(
-            axis="x",
-            labelsize=9,
-            bottom=True,
-            labelbottom=True,
-            top=False,
-            labeltop=False
-        )
-
-        # Place subtle gridlines behind the bars.
-        ax.set_axisbelow(True)
-        ax.grid(
-            axis="x",
-            linestyle="--",
-            alpha=0.25
-        )
-        ax.grid(axis="y", visible=False)
-
-        # Add employee counts at the end of each bar.
-        ax.bar_label(
-            bars,
-            labels=[f"{int(value)}" for value in counts.values],
-            padding=5,
-            fontsize=9
-        )
-
-        # Leave space for the labels at the end of each bar.
-        maximum = max(counts.values) if len(counts) else 0
-        ax.set_xlim(0, maximum * 1.18 if maximum > 0 else 1)
-
-        # Clean chart appearance.
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-        fig.tight_layout()
-
-    else:
-        # Use a vertical bar chart for smaller categories.
-        fig, ax = plt.subplots(figsize=(7, 4.2))
-
-        bars = ax.bar(
-            counts.index.astype(str),
-            counts.values,
-            color=TEAL,
-            width=0.68
-        )
-
-        ax.set_xlabel(column.replace("_", " "), labelpad=10)
-        ax.set_ylabel("Number of Employees", labelpad=10)
-        ax.set_title(title, pad=16, loc="left")
-
-        ax.tick_params(
-            axis="x",
-            rotation=25,
-            labelsize=9,
-            bottom=True,
-            labelbottom=True,
-            top=False,
-            labeltop=False
-        )
-
-        ax.tick_params(
-            axis="y",
-            left=True,
-            labelleft=True,
-            right=False,
-            labelright=False
-        )
-
-        ax.set_axisbelow(True)
-        ax.grid(axis="y", linestyle="--", alpha=0.25)
-        ax.grid(axis="x", visible=False)
-
-        ax.bar_label(
-            bars,
-            padding=3,
-            fontsize=9
-        )
-
-        maximum = max(counts.values) if len(counts) else 0
-        ax.set_ylim(0, maximum * 1.18 if maximum > 0 else 1)
-
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
+    if column != "Designation":
         fig.tight_layout()
 
     return fig
+def _department_palette(df):
+    """Return consistent department colors across productivity charts."""
 
+    if "Department" not in df.columns:
+        return {}
+
+    departments = sorted(
+        df["Department"]
+        .dropna()
+        .astype(str)
+        .unique()
+        .tolist()
+    )
+
+    if not departments:
+        return {}
+
+    colors = sns.color_palette(
+        "deep",
+        n_colors=len(departments)
+    )
+
+    return dict(zip(departments, colors))
+
+
+def fig_department_legend(df):
+    """Create one shared department legend outside the graphs."""
+
+    from matplotlib.patches import Patch
+
+    palette = _department_palette(df)
+
+    if not palette:
+        return None
+
+    fig, ax = plt.subplots(figsize=(8, 0.65))
+    ax.axis("off")
+
+    handles = [
+        Patch(
+            facecolor=color,
+            edgecolor="none",
+            label=department
+        )
+        for department, color in palette.items()
+    ]
+
+    ax.legend(
+        handles=handles,
+        loc="center",
+        ncol=min(len(handles), 5),
+        frameon=False,
+        fontsize=9,
+        title="Department",
+        title_fontsize=9,
+        bbox_to_anchor=(0.5, 0.5),
+        borderaxespad=0
+    )
+
+    fig.tight_layout(pad=0.2)
+
+    return fig
 # ============================================================
 # ATTENDANCE AND PRODUCTIVITY CHARTS
 # ============================================================
 
 def fig_attendance_vs_performance(df):
-    if not _has(df, ["Attendance_Percentage", "Performance_Score"]):
+    if not _has(
+        df,
+        ["Attendance_Percentage", "Performance_Score"]
+    ):
         return None
+
+    palette = _department_palette(df)
 
     return _fig(
         "Attendance vs performance",
@@ -1086,15 +1050,22 @@ def fig_attendance_vs_performance(df):
             data=df,
             x="Attendance_Percentage",
             y="Performance_Score",
-            hue="Department" if "Department" in df.columns else None,
+            hue="Department" if palette else None,
+            palette=palette if palette else None,
+            legend=False,
             ax=ax
         )
     )
 
 
 def fig_training_vs_performance(df):
-    if not _has(df, ["Training_Hours", "Performance_Score"]):
+    if not _has(
+        df,
+        ["Training_Hours", "Performance_Score"]
+    ):
         return None
+
+    palette = _department_palette(df)
 
     return _fig(
         "Training hours vs performance",
@@ -1104,15 +1075,22 @@ def fig_training_vs_performance(df):
             data=df,
             x="Training_Hours",
             y="Performance_Score",
-            hue="Department" if "Department" in df.columns else None,
+            hue="Department" if palette else None,
+            palette=palette if palette else None,
+            legend=False,
             ax=ax
         )
     )
 
 
 def fig_overtime_vs_satisfaction(df):
-    if not _has(df, ["Overtime_Hours", "Job_Satisfaction"]):
+    if not _has(
+        df,
+        ["Overtime_Hours", "Job_Satisfaction"]
+    ):
         return None
+
+    palette = _department_palette(df)
 
     return _fig(
         "Overtime vs job satisfaction",
@@ -1122,11 +1100,12 @@ def fig_overtime_vs_satisfaction(df):
             data=df,
             x="Overtime_Hours",
             y="Job_Satisfaction",
-            hue="Department" if "Department" in df.columns else None,
+            hue="Department" if palette else None,
+            palette=palette if palette else None,
+            legend=False,
             ax=ax
         )
     )
-
 
 def fig_numeric_relationship(
     df,
