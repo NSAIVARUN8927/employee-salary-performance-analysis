@@ -476,40 +476,84 @@ def insights(df):
 # GENERAL CHART HELPER
 # ============================================================
 
-def _fig(title, xlabel, ylabel, draw, size=(7, 3.8)):
+def _fig(title, xl, yl, draw, size=(7, 3.8)):
+    """
+    Consistent chart formatting for analysis graphs.
+
+    Keeps the X-axis at the bottom and Y-axis on the left,
+    with gridlines behind the data.
+    """
+
     fig, ax = plt.subplots(figsize=size)
 
+    # Draw the graph.
     draw(ax)
 
-    ax.set(
-        title=title,
-        xlabel=xlabel,
-        ylabel=ylabel
+    # Apply titles and axis labels.
+    ax.set_title(
+        title,
+        loc="left",
+        pad=16,
+        fontsize=12,
+        fontweight="bold"
     )
 
-    salary_x = "salary" in str(xlabel).lower()
-    salary_y = "salary" in str(ylabel).lower()
+    ax.set_xlabel(
+        xl,
+        labelpad=9
+    )
 
-    if salary_x:
-        ax.xaxis.set_major_formatter(
-            FuncFormatter(_indian_currency)
-        )
+    ax.set_ylabel(
+        yl,
+        labelpad=9
+    )
 
-    if salary_y:
-        ax.yaxis.set_major_formatter(
-            FuncFormatter(_indian_currency)
-        )
+    # Keep the scale and tick labels in their normal positions.
+    ax.xaxis.set_ticks_position("bottom")
+    ax.xaxis.set_label_position("bottom")
 
+    ax.yaxis.set_ticks_position("left")
+    ax.yaxis.set_label_position("left")
+
+    ax.tick_params(
+        axis="x",
+        bottom=True,
+        labelbottom=True,
+        top=False,
+        labeltop=False,
+        direction="out",
+        pad=5
+    )
+
+    ax.tick_params(
+        axis="y",
+        left=True,
+        labelleft=True,
+        right=False,
+        labelright=False,
+        direction="out",
+        pad=5
+    )
+
+    # Ensure gridlines stay behind the plotted data.
+    ax.set_axisbelow(True)
+
+    ax.grid(
+        True,
+        axis="both",
+        linestyle="--",
+        linewidth=0.6,
+        alpha=0.22
+    )
+
+    # Avoid unnecessary borders.
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # Preserve space for labels and prevent clipping.
     fig.tight_layout(pad=1.5)
 
-    if salary_x:
-        fig.subplots_adjust(bottom=0.25)
-
-    if salary_y:
-        fig.subplots_adjust(left=0.25)
-
     return fig
-
 
 # ============================================================
 # SALARY AND PERFORMANCE CHARTS
@@ -854,6 +898,17 @@ def missing_summary(df):
 
 
 def _categorical_chart(df, column, title, kind="bar"):
+    """
+    Create readable categorical charts.
+
+    Improvements:
+    - Job roles use horizontal bars.
+    - Long category names remain readable.
+    - Categories are sorted by employee count.
+    - Axis labels do not overlap.
+    - Chart spacing adapts to the number of categories.
+    """
+
     if column not in df.columns:
         return None
 
@@ -861,36 +916,159 @@ def _categorical_chart(df, column, title, kind="bar"):
         df[column]
         .fillna("Unknown")
         .astype(str)
+        .str.strip()
+        .replace("", "Unknown")
         .value_counts()
     )
 
     if counts.empty:
         return None
 
-    fig, ax = plt.subplots(figsize=(7, 3.8))
-
+    # Pie charts remain unchanged in purpose.
     if kind == "pie":
+        fig, ax = plt.subplots(figsize=(7, 4.5))
+
         counts.plot(
             kind="pie",
             autopct="%1.1f%%",
+            startangle=90,
             ax=ax
         )
-        ax.set_ylabel("")
-    else:
-        counts.plot(
-            kind="bar",
-            color=TEAL,
-            ax=ax
-        )
-        ax.set_xlabel(column.replace("_", " "))
-        ax.set_ylabel("Employees")
-        ax.tick_params(axis="x", rotation=35)
 
-    ax.set_title(title)
-    fig.tight_layout()
+        ax.set_ylabel("")
+        ax.set_title(title, pad=16)
+        ax.axis("equal")
+
+        fig.tight_layout()
+        return fig
+
+    # Job roles and other long category labels are easier to read
+    # when placed along the vertical axis.
+    use_horizontal_bars = (
+        column in ["Designation", "Department", "Education"]
+        or len(counts) >= 7
+    )
+
+    if use_horizontal_bars:
+        # Display the largest categories at the top.
+        counts = counts.sort_values(ascending=True)
+
+        chart_height = max(4.2, min(8.5, 2.0 + len(counts) * 0.42))
+
+        fig, ax = plt.subplots(
+            figsize=(8, chart_height)
+        )
+
+        bars = ax.barh(
+            counts.index.astype(str),
+            counts.values,
+            color=TEAL,
+            height=0.68,
+            edgecolor="white",
+            linewidth=0.7
+        )
+
+        ax.set_xlabel("Number of Employees", labelpad=10)
+        ax.set_ylabel("")
+        ax.set_title(title, pad=18, loc="left")
+
+        # Keep category names on the left and counts on the bottom.
+        ax.tick_params(
+            axis="y",
+            labelsize=9,
+            pad=8,
+            left=False,
+            labelleft=True
+        )
+
+        ax.tick_params(
+            axis="x",
+            labelsize=9,
+            bottom=True,
+            labelbottom=True,
+            top=False,
+            labeltop=False
+        )
+
+        # Place subtle gridlines behind the bars.
+        ax.set_axisbelow(True)
+        ax.grid(
+            axis="x",
+            linestyle="--",
+            alpha=0.25
+        )
+        ax.grid(axis="y", visible=False)
+
+        # Add employee counts at the end of each bar.
+        ax.bar_label(
+            bars,
+            labels=[f"{int(value)}" for value in counts.values],
+            padding=5,
+            fontsize=9
+        )
+
+        # Leave space for the labels at the end of each bar.
+        maximum = max(counts.values) if len(counts) else 0
+        ax.set_xlim(0, maximum * 1.18 if maximum > 0 else 1)
+
+        # Clean chart appearance.
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        fig.tight_layout()
+
+    else:
+        # Use a vertical bar chart for smaller categories.
+        fig, ax = plt.subplots(figsize=(7, 4.2))
+
+        bars = ax.bar(
+            counts.index.astype(str),
+            counts.values,
+            color=TEAL,
+            width=0.68
+        )
+
+        ax.set_xlabel(column.replace("_", " "), labelpad=10)
+        ax.set_ylabel("Number of Employees", labelpad=10)
+        ax.set_title(title, pad=16, loc="left")
+
+        ax.tick_params(
+            axis="x",
+            rotation=25,
+            labelsize=9,
+            bottom=True,
+            labelbottom=True,
+            top=False,
+            labeltop=False
+        )
+
+        ax.tick_params(
+            axis="y",
+            left=True,
+            labelleft=True,
+            right=False,
+            labelright=False
+        )
+
+        ax.set_axisbelow(True)
+        ax.grid(axis="y", linestyle="--", alpha=0.25)
+        ax.grid(axis="x", visible=False)
+
+        ax.bar_label(
+            bars,
+            padding=3,
+            fontsize=9
+        )
+
+        maximum = max(counts.values) if len(counts) else 0
+        ax.set_ylim(0, maximum * 1.18 if maximum > 0 else 1)
+
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        fig.tight_layout()
 
     return fig
-
 
 # ============================================================
 # ATTENDANCE AND PRODUCTIVITY CHARTS
