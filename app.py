@@ -2120,99 +2120,240 @@ def page_employees(df, is_db):
 
 
 def page_analysis(df):
-    
     st.markdown("""
     <div class="analysis-page-banner">
-        <h2>Salary and performance analysis</h2>
-        <p>Statistics, experience trends and correlations</p>
+        <h2>Employee Analytics</h2>
+        <p>Notebook-aligned salary, performance, workforce and productivity analysis</p>
         <div class="analysis-header-divider"></div>
     </div>
     """, unsafe_allow_html=True)
 
+    # Filters apply consistently to every analysis on this page.
+    left, right, third = st.columns(3)
+    filtered = df.copy()
 
-
-    t1, t2, t3 = st.tabs(["Salary", "Performance", "Correlation"])
-
-    # ==================== SALARY ANALYSIS ====================
-    with t1:
-        st.subheader("Salary Summary")
-
-        salary_summary = an.salary_summary(df).round(2)
-
-        salary_df = salary_summary.rename_axis(None).reset_index()
-        salary_df.columns = ["Salary", "Value"]
-
-        salary_labels = {
-            "Average Salary": "Average",
-            "Median Salary": "Median",
-            "Minimum Salary": "Minimum",
-            "Maximum Salary": "Maximum",
-            "Salary Std. Deviation": "Std. Deviation",
-        }
-
-        salary_df["Salary"] = salary_df["Salary"].replace(salary_labels)
-
-        st.dataframe(
-            salary_df,
-            hide_index=True,
-            use_container_width=True
+    departments = sorted(filtered["Department"].dropna().astype(str).unique()) if "Department" in filtered else []
+    with left:
+        chosen_departments = st.multiselect(
+            "Department", departments, default=departments, key="analysis_departments"
         )
+    if "Department" in filtered:
+        filtered = filtered[filtered["Department"].astype(str).isin(chosen_departments)]
 
-        show(an.fig_salary_dist(df))
+    if "Designation" in filtered:
+        roles = sorted(filtered["Designation"].dropna().astype(str).unique())
+        with right:
+            chosen_roles = st.multiselect(
+                "Job role", roles, default=roles, key="analysis_roles"
+            )
+        filtered = filtered[filtered["Designation"].astype(str).isin(chosen_roles)]
+    else:
+        with right:
+            st.caption("Job role filter is unavailable for this dataset.")
 
-        st.subheader("Salary by Experience")
-        st.dataframe(
-            an.by_experience(df),
-            hide_index=True,
-            use_container_width=True
-        )
-        show(an.fig_experience(df))
+    if "Experience_Years" in filtered:
+        experience_values = pd.to_numeric(filtered["Experience_Years"], errors="coerce").dropna()
+        if not experience_values.empty:
+            with third:
+                exp_range = st.slider(
+                    "Experience (years)",
+                    min_value=int(experience_values.min()),
+                    max_value=max(int(experience_values.max()), int(experience_values.min())),
+                    value=(int(experience_values.min()), int(experience_values.max())),
+                    key="analysis_experience_range"
+                )
+            filtered = filtered[
+                pd.to_numeric(filtered["Experience_Years"], errors="coerce").between(*exp_range)
+            ]
+        else:
+            with third:
+                st.caption("Experience filter is unavailable.")
+    else:
+        with third:
+            st.caption("Experience filter is unavailable.")
 
-    # ==================== PERFORMANCE ANALYSIS ====================
-    with t2:
-        st.subheader("Performance Summary")
+    if filtered.empty:
+        st.warning("No employees match the selected filters. Change the filters to see analysis.")
+        return
 
-        performance_summary = an.performance_summary(df).round(2)
+    # KPI row. Bonus is intentionally excluded from all analysis.
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Employees analysed", f"{len(filtered):,}")
+    if "Basic_Salary" in filtered:
+        k2.metric("Average salary", f"₹{pd.to_numeric(filtered['Basic_Salary'], errors='coerce').mean():,.0f}")
+        k3.metric("Median salary", f"₹{pd.to_numeric(filtered['Basic_Salary'], errors='coerce').median():,.0f}")
+    if "Performance_Score" in filtered:
+        k4.metric("Average performance", f"{pd.to_numeric(filtered['Performance_Score'], errors='coerce').mean():.2f} / 5")
 
-        performance_df = performance_summary.rename_axis(None).reset_index()
-        performance_df.columns = ["Performance", "Value"]
+    salary_tab, performance_tab, workforce_tab, productivity_tab, correlation_tab = st.tabs([
+        "💰 Salary", "⭐ Performance", "👥 Workforce", "📈 Attendance & Productivity", "🔗 Correlation & Data Quality"
+    ])
 
-        performance_labels = {
-            "Average Performance": "Average",
-            "Median Performance": "Median",
-            "Minimum Performance": "Minimum",
-            "Maximum Performance": "Maximum",
-            "Performance Std. Deviation": "Std. Deviation",
-        }
+    def show_optional(fig):
+        if fig is not None:
+            show(fig)
 
-        performance_df["Performance"] = (
-            performance_df["Performance"].replace(performance_labels)
-        )
+    with salary_tab:
+        st.subheader("Salary statistics")
+        if "Basic_Salary" in filtered:
+            salary_stats = an.salary_summary(filtered).round(2)
+            salary_stats_df = pd.DataFrame({
+                "Measure": salary_stats.index,
+                "Value": salary_stats.values
+            })
+            st.dataframe(salary_stats_df, hide_index=True, use_container_width=True)
+            c1, c2 = st.columns(2)
+            with c1:
+                show_optional(an.fig_salary_dist(filtered))
+            with c2:
+                show_optional(an.fig_salary_box(filtered))
 
-        st.dataframe(
-            performance_df,
-            hide_index=True,
-            use_container_width=True
-        )
+            c1, c2 = st.columns(2)
+            with c1:
+                show_optional(an.fig_dept_salary(filtered))
+            with c2:
+                show_optional(an.fig_experience(filtered))
 
-        show(an.fig_perf_dist(df))
-        show(an.fig_dept_perf(df))
+            st.subheader("Salary by job role")
+            if "Designation" in filtered:
+                role_salary = filtered.groupby("Designation", dropna=False)["Basic_Salary"].mean().sort_values(ascending=False)
+                st.bar_chart(role_salary)
+                st.dataframe(role_salary.rename("Average salary").round(2).reset_index(), hide_index=True, use_container_width=True)
 
-    # ==================== CORRELATION ANALYSIS ====================
-    with t3:
-        st.subheader("Correlation Matrix")
+            st.subheader("Salary vs performance")
+            show_optional(an.fig_salary_vs_perf(filtered))
 
-        correlation_df = an.correlation(df).round(2)
-        correlation_df.index.name = "Metric"
-        correlation_df = correlation_df.reset_index()
+            st.subheader("Top 10 highest-paid employees")
+            top_salary_cols = [
+                c for c in ["Employee_ID", "Name", "Department", "Designation", "Experience_Years", "Basic_Salary"]
+                if c in filtered.columns
+            ]
+            st.dataframe(
+                filtered.sort_values("Basic_Salary", ascending=False)[top_salary_cols].head(10),
+                hide_index=True, use_container_width=True
+            )
+        else:
+            st.info("Salary analysis requires a Salary column.")
 
-        st.dataframe(
-            correlation_df,
-            hide_index=True,
-            use_container_width=True
-        )
+    with performance_tab:
+        st.subheader("Performance statistics")
+        if "Performance_Score" in filtered:
+            performance_stats = an.performance_summary(filtered).round(2)
+            performance_stats_df = pd.DataFrame({
+                "Measure": performance_stats.index,
+                "Value": performance_stats.values
+            })
+            st.dataframe(performance_stats_df, hide_index=True, use_container_width=True)
+            c1, c2 = st.columns(2)
+            with c1:
+                show_optional(an.fig_perf_dist(filtered))
+            with c2:
+                show_optional(an.fig_performance_box(filtered))
+            c1, c2 = st.columns(2)
+            with c1:
+                show_optional(an.fig_dept_perf(filtered))
+            with c2:
+                show_optional(an.fig_numeric_relationship(
+                    filtered, "Experience_Years", "Performance_Score", "Experience vs performance"
+                ))
 
-        show(an.fig_corr(df))
+            st.subheader("Top 10 highest-performing employees")
+            top_perf_cols = [
+                c for c in ["Employee_ID", "Name", "Department", "Designation", "Performance_Score", "Basic_Salary"]
+                if c in filtered.columns
+            ]
+            st.dataframe(
+                filtered.sort_values(
+                    ["Performance_Score", "Basic_Salary"], ascending=[False, False]
+                )[top_perf_cols].head(10),
+                hide_index=True, use_container_width=True
+            )
+        else:
+            st.info("Performance analysis requires a Performance_Rating column.")
+
+    with workforce_tab:
+        st.subheader("Workforce composition")
+        c1, c2 = st.columns(2)
+        with c1:
+            show_optional(an._categorical_chart(filtered, "Department", "Employees by department"))
+            show_optional(an._categorical_chart(filtered, "Gender", "Employee distribution by gender"))
+            show_optional(an._categorical_chart(filtered, "Education", "Employee distribution by education"))
+        with c2:
+            show_optional(an._categorical_chart(filtered, "Employment_Type", "Employment type distribution", kind="pie"))
+            show_optional(an._categorical_chart(filtered, "Designation", "Employee distribution by job role"))
+            show_optional(an._categorical_chart(filtered, "Experience_Years", "Employee distribution by experience"))
+        st.subheader("Department-level summary")
+        summary = an.department_full_summary(filtered)
+        if not summary.empty:
+            st.dataframe(summary, hide_index=True, use_container_width=True)
+        st.subheader("Promotion eligibility")
+        eligible = an.promotion_eligible_count(filtered)
+        if eligible is not None:
+            a, b = st.columns(2)
+            a.metric("Promotion-eligible employees", eligible)
+            b.metric("Share of filtered workforce", f"{eligible / len(filtered) * 100:.1f}%")
+            st.dataframe(
+                filtered[filtered["Promotion_Eligible"].astype(str).str.strip().str.lower().isin(["yes", "true", "1"])],
+                hide_index=True, use_container_width=True
+            )
+
+    with productivity_tab:
+        st.subheader("Attendance and productivity statistics")
+        metrics = an.productivity_summary(filtered)
+        if not metrics.empty:
+            st.dataframe(metrics, hide_index=True, use_container_width=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            show_optional(an.fig_attendance_vs_performance(filtered))
+            show_optional(an.fig_training_vs_performance(filtered))
+        with c2:
+            show_optional(an.fig_overtime_vs_satisfaction(filtered))
+            show_optional(an.fig_numeric_relationship(
+                filtered, "Projects_Completed", "Experience_Years",
+                "Projects completed vs experience"
+            ))
+        if "Attendance_Percentage" in filtered:
+            high_attendance = filtered[pd.to_numeric(filtered["Attendance_Percentage"], errors="coerce") >= 90]
+            st.caption(f"Employees with attendance ≥ 90%: {len(high_attendance)}")
+        if "Projects_Completed" in filtered:
+            st.subheader("Top employees by projects completed")
+            cols = [c for c in ["Employee_ID", "Name", "Department", "Designation", "Projects_Completed"] if c in filtered]
+            st.dataframe(
+                filtered[cols].sort_values("Projects_Completed", ascending=False).head(10),
+                hide_index=True, use_container_width=True
+            )
+
+    with correlation_tab:
+        st.subheader("Correlation matrix")
+        corr = an.numeric_correlation(filtered)
+        if not corr.empty:
+            st.dataframe(corr.round(2), use_container_width=True)
+            show_optional(an.fig_full_corr(filtered))
+
+            if "Basic_Salary" in corr.columns:
+                st.subheader("Metrics most correlated with salary")
+                st.dataframe(
+                    corr["Basic_Salary"].drop(labels=["Basic_Salary"], errors="ignore")
+                    .sort_values(key=lambda s: s.abs(), ascending=False)
+                    .rename("Correlation with salary").round(3).reset_index()
+                    .rename(columns={"index": "Metric"}),
+                    hide_index=True, use_container_width=True
+                )
+            if "Performance_Score" in corr.columns:
+                st.subheader("Metrics most correlated with performance")
+                st.dataframe(
+                    corr["Performance_Score"].drop(labels=["Performance_Score"], errors="ignore")
+                    .sort_values(key=lambda s: s.abs(), ascending=False)
+                    .rename("Correlation with performance").round(3).reset_index()
+                    .rename(columns={"index": "Metric"}),
+                    hide_index=True, use_container_width=True
+                )
+        else:
+            st.info("No numeric columns are available for correlation analysis.")
+
+        st.subheader("Data quality")
+        st.dataframe(an.missing_summary(filtered), hide_index=True, use_container_width=True)
+        st.caption("Missing-value results reflect the data currently supplied to the application. The original notebook's preprocessing fills missing numeric values with medians and missing text values with 'Unknown'.")
 
 def page_departments(df):
     
@@ -2288,7 +2429,7 @@ def page_data(df):
     elif export_option == "Correlation matrix (CSV)":
         st.download_button(
             "⬇️ Download",
-            data=an.correlation(df).round(3).to_csv(),
+            data=an.numeric_correlation(df).round(3).to_csv(),
             file_name="correlation_matrix.csv",
             mime="text/csv",
             use_container_width=True
@@ -2450,6 +2591,27 @@ def main():
 
     is_db = src == "Employee database"
     df = db.employee_frame() if is_db else up
+
+    # The normalized SQLite tables keep core employee fields. Attach the
+    # remaining original CSV columns so notebook analyses remain available.
+    # Employee values stored in SQLite remain authoritative for core fields.
+    if is_db:
+        try:
+            source_df, _ = an.prepare(an.load_data(CSV))
+            analysis_fields = [
+                "Education", "Employment_Type", "Projects_Completed",
+                "Working_Hours_Per_Day", "Attendance_Percentage",
+                "Training_Hours", "Leave_Days", "Job_Satisfaction",
+                "Promotion_Eligible", "Overtime_Hours", "Manager_Rating"
+            ]
+            available_fields = [c for c in analysis_fields if c in source_df.columns and c not in df.columns]
+            if available_fields:
+                df = df.merge(
+                    source_df[["Employee_ID"] + available_fields],
+                    on="Employee_ID", how="left"
+                )
+        except Exception as ex:
+            st.warning(f"Some optional analysis columns could not be loaded: {ex}")
     
     # Keep transferred Dashboard filters active only in Employees.
     if page != "Employees":
