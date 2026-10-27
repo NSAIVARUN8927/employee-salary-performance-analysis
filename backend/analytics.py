@@ -130,7 +130,10 @@ def standardise(df):
     # Preserve existing total salary calculations.
     d["Total_Salary"] = d["Basic_Salary"] + d["Bonus"]
 
-    return d[STD].reset_index(drop=True)
+    # Keep the normalized columns required by the existing SQLite application,
+    # plus every original dataset field needed for notebook-style analysis.
+    extra_cols = [c for c in d.columns if c not in STD]
+    return d[STD + extra_cols].reset_index(drop=True)
 
 
 def prepare(raw):
@@ -515,3 +518,212 @@ def report_html(df, user):
         "</body></html>"
     )
 
+
+
+# ============================================================
+# NOTEBOOK-ALIGNED WORKFORCE AND PRODUCTIVITY ANALYSIS
+# ============================================================
+
+def _has(df, columns):
+    return all(c in df.columns for c in columns)
+
+
+def _numeric(df, column):
+    return pd.to_numeric(df[column], errors="coerce") if column in df.columns else pd.Series(dtype=float)
+
+
+def categorical_counts(df, column):
+    if column not in df.columns:
+        return pd.DataFrame(columns=[column, "Employees"])
+    return (
+        df[column].fillna("Unknown").astype(str).value_counts()
+        .rename_axis(column).reset_index(name="Employees")
+    )
+
+
+def workforce_summary(df):
+    fields = [
+        ("Gender", "Gender"),
+        ("Education", "Education"),
+        ("Employment type", "Employment_Type"),
+        ("Job role", "Designation"),
+    ]
+    rows = []
+    for label, col in fields:
+        if col in df.columns:
+            rows.append({
+                "Category": label,
+                "Distinct values": int(df[col].nunique(dropna=True)),
+                "Employees": int(df[col].notna().sum())
+            })
+    return pd.DataFrame(rows)
+
+
+def missing_summary(df):
+    return pd.DataFrame({
+        "Column": df.columns,
+        "Missing values": [int(df[c].isna().sum()) for c in df.columns],
+        "Missing (%)": [
+            round(float(df[c].isna().mean() * 100), 2) for c in df.columns
+        ]
+    }).sort_values(["Missing values", "Column"], ascending=[False, True])
+
+
+def _categorical_chart(df, column, title, kind="bar"):
+    if column not in df.columns:
+        return None
+    counts = df[column].fillna("Unknown").astype(str).value_counts()
+    if counts.empty:
+        return None
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    if kind == "pie":
+        counts.plot(kind="pie", autopct="%1.1f%%", ax=ax)
+        ax.set_ylabel("")
+    else:
+        counts.plot(kind="bar", color=TEAL, ax=ax)
+        ax.set_xlabel(column.replace("_", " "))
+        ax.set_ylabel("Employees")
+        ax.tick_params(axis="x", rotation=35)
+    ax.set_title(title)
+    fig.tight_layout()
+    return fig
+
+
+def fig_salary_box(df):
+    return _fig(
+        "Salary box plot", "Salary", "",
+        lambda ax: sns.boxplot(x=_numeric(df, "Basic_Salary"), color=TEAL, ax=ax)
+    )
+
+
+def fig_performance_box(df):
+    return _fig(
+        "Performance score box plot", "Performance score", "",
+        lambda ax: sns.boxplot(x=_numeric(df, "Performance_Score"), color=NAVY, ax=ax)
+    )
+
+
+def fig_attendance_vs_performance(df):
+    if not _has(df, ["Attendance_Percentage", "Performance_Score"]):
+        return None
+    return _fig(
+        "Attendance vs performance", "Attendance (%)", "Performance score",
+        lambda ax: sns.scatterplot(
+            data=df, x="Attendance_Percentage", y="Performance_Score",
+            hue="Department" if "Department" in df.columns else None, ax=ax
+        )
+    )
+
+
+def fig_training_vs_performance(df):
+    if not _has(df, ["Training_Hours", "Performance_Score"]):
+        return None
+    return _fig(
+        "Training hours vs performance", "Training hours", "Performance score",
+        lambda ax: sns.scatterplot(
+            data=df, x="Training_Hours", y="Performance_Score",
+            hue="Department" if "Department" in df.columns else None, ax=ax
+        )
+    )
+
+
+def fig_overtime_vs_satisfaction(df):
+    if not _has(df, ["Overtime_Hours", "Job_Satisfaction"]):
+        return None
+    return _fig(
+        "Overtime vs job satisfaction", "Overtime hours", "Job satisfaction",
+        lambda ax: sns.scatterplot(
+            data=df, x="Overtime_Hours", y="Job_Satisfaction",
+            hue="Department" if "Department" in df.columns else None, ax=ax
+        )
+    )
+
+
+def fig_numeric_relationship(df, x, y, title, xlabel=None, ylabel=None):
+    if not _has(df, [x, y]):
+        return None
+    return _fig(
+        title, xlabel or x.replace("_", " "), ylabel or y.replace("_", " "),
+        lambda ax: sns.scatterplot(data=df, x=x, y=y, ax=ax)
+    )
+
+
+def numeric_correlation(df):
+    excluded = {"Bonus", "Total_Salary"}
+    numeric = df.select_dtypes(include=np.number)
+    numeric = numeric[[c for c in numeric.columns if c not in excluded]]
+    return numeric.corr()
+
+
+def fig_full_corr(df):
+    corr = numeric_correlation(df)
+    if corr.empty:
+        return None
+    fig, ax = plt.subplots(figsize=(11, 7))
+    sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm",
+                center=0, ax=ax, annot_kws={"size": 7})
+    ax.set_title("Employee dataset correlation heatmap")
+    fig.tight_layout()
+    return fig
+
+
+def department_full_summary(df):
+    required = ["Department", "Employee_ID"]
+    if not _has(df, required):
+        return pd.DataFrame()
+    aggregations = {"Employees": ("Employee_ID", "count")}
+    for col, label in [
+        ("Basic_Salary", "Average salary"),
+        ("Performance_Score", "Average performance"),
+        ("Experience_Years", "Average experience"),
+        ("Attendance_Percentage", "Average attendance"),
+        ("Training_Hours", "Average training hours"),
+        ("Projects_Completed", "Average projects completed"),
+    ]:
+        if col in df.columns:
+            aggregations[label] = (col, "mean")
+    return df.groupby("Department").agg(**aggregations).round(2).reset_index()
+
+
+def productivity_summary(df):
+    metrics = [
+        ("Attendance_Percentage", "Average attendance (%)"),
+        ("Training_Hours", "Average training hours"),
+        ("Overtime_Hours", "Average overtime hours"),
+        ("Leave_Days", "Average leave days"),
+        ("Projects_Completed", "Average projects completed"),
+        ("Job_Satisfaction", "Average job satisfaction"),
+        ("Manager_Rating", "Average manager rating"),
+    ]
+    rows = []
+    for col, label in metrics:
+        if col in df.columns:
+            values = _numeric(df, col).dropna()
+            rows.append({
+                "Metric": label,
+                "Average": round(float(values.mean()), 2) if not values.empty else None,
+                "Median": round(float(values.median()), 2) if not values.empty else None,
+                "Minimum": round(float(values.min()), 2) if not values.empty else None,
+                "Maximum": round(float(values.max()), 2) if not values.empty else None,
+            })
+    return pd.DataFrame(rows)
+
+
+def promotion_eligible_count(df):
+    if "Promotion_Eligible" not in df.columns:
+        return None
+    return int(
+        df["Promotion_Eligible"].astype(str).str.strip().str.lower()
+        .isin(["yes", "true", "1"]).sum()
+    )
+
+
+def experience_category_counts(df):
+    if "Experience_Years" not in df.columns:
+        return pd.DataFrame(columns=["Experience group", "Employees"])
+    years = _numeric(df, "Experience_Years")
+    bands = pd.cut(
+        years, bins=[-np.inf, 2, 5, np.inf],
+        labels=["Fresher (0-2)", "Mid-level (3-5)", "Experienced (6+)"]
+    )
+    return bands.value_counts(sort=False).rename_axis("Experience group").reset_index(name="Employees")
