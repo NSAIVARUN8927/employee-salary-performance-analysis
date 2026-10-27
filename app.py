@@ -2397,31 +2397,68 @@ def page_analysis(df):
             )
 
     with productivity_tab:
-        st.subheader("Attendance and productivity statistics")
-        metrics = an.productivity_summary(filtered)
-        if not metrics.empty:
-            st.dataframe(metrics, hide_index=True, use_container_width=True)
-        c1, c2 = st.columns(2)
-        with c1:
-            show_optional(an.fig_attendance_vs_performance(filtered))
-            show_optional(an.fig_training_vs_performance(filtered))
-        with c2:
-            show_optional(an.fig_overtime_vs_satisfaction(filtered))
-            show_optional(an.fig_numeric_relationship(
-                filtered, "Projects_Completed", "Experience_Years",
-                "Projects completed vs experience"
-            ))
-        if "Attendance_Percentage" in filtered:
-            high_attendance = filtered[pd.to_numeric(filtered["Attendance_Percentage"], errors="coerce") >= 90]
-            st.caption(f"Employees with attendance ≥ 90%: {len(high_attendance)}")
-        if "Projects_Completed" in filtered:
-            st.subheader("Top employees by projects completed")
-            cols = [c for c in ["Employee_ID", "Name", "Department", "Designation", "Projects_Completed"] if c in filtered]
-            st.dataframe(
-                filtered[cols].sort_values("Projects_Completed", ascending=False).head(10),
-                hide_index=True, use_container_width=True
-            )
+    st.subheader("Attendance and productivity statistics")
 
+    # Display one shared Department legend above all charts.
+    legend_fig = an.fig_department_legend(filtered)
+
+    if legend_fig is not None:
+        st.pyplot(legend_fig, use_container_width=True)
+        plt.close(legend_fig)
+
+    metrics = an.productivity_summary(filtered)
+
+    if not metrics.empty:
+        st.dataframe(
+            metrics,
+            hide_index=True,
+            use_container_width=True
+        )
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        show_optional(an.fig_attendance_vs_performance(filtered))
+        show_optional(an.fig_training_vs_performance(filtered))
+
+    with c2:
+        show_optional(an.fig_overtime_vs_satisfaction(filtered))
+
+        show_optional(
+            an.fig_numeric_relationship(
+                filtered,
+                "Projects_Completed",
+                "Experience_Years",
+                "Projects completed vs experience"
+            )
+        )
+
+    if "Attendance_Percentage" in filtered:
+        high_attendance = filtered[
+            pd.to_numeric(
+                filtered["Attendance_Percentage"],
+                errors="coerce"
+            ) >= 90
+        ]
+
+        st.caption(
+            f"Employees with attendance ≥ 90%: {len(high_attendance)}"
+        )
+
+    if "Projects_Completed" in filtered:
+        st.subheader("Top employees by projects completed")
+
+        cols = [
+            c for c in [
+                "Employee_ID",
+                "Name",
+                "Department",
+                "Designation",
+                "Projects_Completed"
+            ]
+            if c in filtered
+        ]
+   
     with correlation_tab:
         st.subheader("Correlation matrix")
         corr = an.numeric_correlation(filtered)
