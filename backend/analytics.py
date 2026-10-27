@@ -727,3 +727,33 @@ def experience_category_counts(df):
         labels=["Fresher (0-2)", "Mid-level (3-5)", "Experienced (6+)"]
     )
     return bands.value_counts(sort=False).rename_axis("Experience group").reset_index(name="Employees")
+# ============================================================
+# SALARY BOX PLOT — FIX FOR ANALYSIS PAGE
+# ============================================================
+
+def fig_salary_box(df):
+    """Display a box plot showing employee salary distribution."""
+
+    if df is None or df.empty or "Basic_Salary" not in df.columns:
+        return None
+
+    salary = pd.to_numeric(df["Basic_Salary"], errors="coerce").dropna()
+
+    if salary.empty:
+        return None
+
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+
+    sns.boxplot(
+        x=salary,
+        color=TEAL,
+        ax=ax
+    )
+
+    ax.set_title("Salary Distribution — Box Plot")
+    ax.set_xlabel("Basic Salary")
+    ax.set_ylabel("")
+
+    fig.tight_layout()
+
+    return fig
