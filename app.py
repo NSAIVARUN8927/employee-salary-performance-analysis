@@ -2688,26 +2688,19 @@ def main():
 
                 # ==================== DATA SOURCE ====================
 
+      
+
         up = st.session_state.get("upload")
 
         data_sources = ["Employee database"]
-
+        
         if up is not None:
-
-            # Get the original filename saved during upload
-            uploaded_filename = st.session_state.get(
-                "upload_filename",
-                "Uploaded file"
-            )
-
-            data_sources.append(uploaded_filename)
-
+            data_sources.append("Uploaded file")
+        
         src = st.selectbox(
             "Data source",
-            options=data_sources,
-            key="data_source_selection"
+            data_sources
         )
-
     is_db = src == "Employee database"
     df = db.employee_frame() if is_db else up
 
