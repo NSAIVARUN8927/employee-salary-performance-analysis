@@ -1137,18 +1137,17 @@ def auth_page():
     background:
         linear-gradient(
             135deg,
-            rgba(10, 20, 40, 0.78),
-            rgba(15, 118, 110, 0.52)
+            rgba(248, 250, 252, 0.94),
+            rgba(226, 232, 240, 0.88)
         ),
-        url("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=2000&q=85");
+        url("https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80");
 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     min-height: 100vh;
-    }
-
+    }    
     [data-testid="stSidebar"] {
         display: none;
     }
