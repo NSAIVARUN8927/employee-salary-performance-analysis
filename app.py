@@ -1134,13 +1134,19 @@ def auth_page():
     st.markdown("""
     <style>
     .stApp {
-        background:
-            radial-gradient(
-                circle at top left,
-                rgba(59, 130, 246, 0.15),
-                transparent 35%
-            ),
-            linear-gradient(135deg, #f8fafc, #eaf0fb);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(10, 20, 40, 0.78),
+            rgba(15, 118, 110, 0.52)
+        ),
+        url("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=2000&q=85");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
     }
 
     [data-testid="stSidebar"] {
