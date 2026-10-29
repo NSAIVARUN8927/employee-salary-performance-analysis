@@ -130,7 +130,26 @@ def list_uploaded_files(user_id):
         ).fetchall()
 
     return [dict(row) for row in rows]
+def get_uploaded_file(user_id, file_id):
+    """Retrieve a dataset only if it belongs to the specified user."""
 
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT filename, file_data
+            FROM uploaded_files
+            WHERE id = ? AND user_id = ?
+            """,
+            (str(file_id), int(user_id))
+        ).fetchone()
+
+    if row is None:
+        return None
+
+    return {
+        "filename": row["filename"],
+        "file_data": bytes(row["file_data"]) if row["file_data"] is not None else b""
+    }
 
 def recent_activity(limit=50):
     with get_conn() as c:
