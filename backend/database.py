@@ -115,6 +115,21 @@ def delete_employee(emp_id):
 def list_users():
     with get_conn() as c:
         return [dict(r) for r in c.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id")]
+def list_uploaded_files(user_id):
+    """Return uploaded files belonging to this user."""
+
+    with get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, filename, uploaded_at
+            FROM uploaded_files
+            WHERE user_id = ?
+            ORDER BY uploaded_at DESC, rowid DESC
+            """,
+            (int(user_id),)
+        ).fetchall()
+
+    return [dict(row) for row in rows]
 
 
 def recent_activity(limit=50):
