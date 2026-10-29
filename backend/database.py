@@ -59,8 +59,10 @@ def get_conn():
 
 
 def init_db():
-    with get_conn() as c:
-        c.executescript(USERS)
+    with get_conn() as conn:
+        conn.executescript(USERS)
+
+    migrate_uploaded_files_table()
 
 
 def is_seeded():
