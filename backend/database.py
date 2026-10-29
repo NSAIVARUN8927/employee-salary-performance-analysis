@@ -1,6 +1,7 @@
 import os
 import sqlite3
-
+import io
+import uuid
 import pandas as pd
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "app.db")
@@ -39,9 +40,16 @@ CREATE TABLE IF NOT EXISTS users(
     created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS activity_log(
     id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+
+CREATE TABLE IF NOT EXISTS uploaded_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    filename TEXT NOT NULL,
+    stored_filename TEXT NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 """
-
-
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -118,3 +126,88 @@ def recent_activity(limit=50):
     with get_conn() as c:
         q = "SELECT u.username, a.action, a.created_at FROM activity_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT ?"
         return [dict(r) for r in c.execute(q, (limit,))]
+# ============================================================
+# USER-SPECIFIC UPLOADED FILE MANAGEMENT
+# ============================================================
+
+def save_uploaded_file(user_id, filename, file_bytes):
+    """
+    Save an uploaded dataset permanently and associate it
+    with the user who uploaded it.
+    """
+    file_id = str(uuid.uuid4())
+
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO uploaded_files
+                (id, user_id, filename, file_data)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                file_id,
+                int(user_id),
+                str(filename),
+                sqlite3.Binary(file_bytes)
+            )
+        )
+
+    return file_id
+
+
+def list_uploaded_files(user_id):
+    """
+    Return only the files belonging to the specified user.
+    File contents are not loaded into the listing.
+    """
+    with get_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, filename, uploaded_at
+            FROM uploaded_files
+            WHERE user_id = ?
+            ORDER BY uploaded_at DESC, rowid DESC
+            """,
+            (int(user_id),)
+        ).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def get_uploaded_file(user_id, file_id):
+    """
+    Retrieve a dataset only if it belongs to the specified user.
+    """
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT filename, file_data
+            FROM uploaded_files
+            WHERE id = ? AND user_id = ?
+            """,
+            (str(file_id), int(user_id))
+        ).fetchone()
+
+    if row is None:
+        return None
+
+    return {
+        "filename": row["filename"],
+        "file_data": bytes(row["file_data"])
+    }
+
+
+def delete_uploaded_file(user_id, file_id):
+    """
+    Delete a file only when it belongs to the specified user.
+    """
+    with get_conn() as conn:
+        cursor = conn.execute(
+            """
+            DELETE FROM uploaded_files
+            WHERE id = ? AND user_id = ?
+            """,
+            (str(file_id), int(user_id))
+        )
+
+        return cursor.rowcount > 0
