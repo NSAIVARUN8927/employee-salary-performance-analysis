@@ -2659,7 +2659,6 @@ def page_departments(df):
 
 
 def page_data(df):
-    
     st.markdown("""
     <div class="upload-export-page-banner">
         <h2>Upload & Export</h2>
@@ -2668,15 +2667,117 @@ def page_data(df):
     </div>
     """, unsafe_allow_html=True)
 
+    user = st.session_state.user
 
-    up = st.file_uploader("Upload a CSV with the same columns as the sample dataset", type="csv")
-    if up and st.button("Analyse this file"):
-        try:
-            st.session_state.upload, log = an.prepare(an.load_data(up))
-            st.toast("File analysed. Choose 'Uploaded file' as the data source in the sidebar.")
-            st.rerun()
-        except Exception as ex:
-            st.error(str(ex))
+    st.subheader("Upload Employee Dataset")
+
+    up = st.file_uploader(
+        "Upload a CSV with the same columns as the sample dataset",
+        type=["csv"],
+        key="employee_dataset_uploader"
+    )
+
+    if up is not None:
+        st.caption(f"Selected file: {up.name}")
+
+        if st.button(
+            "Upload and analyse",
+            key="save_uploaded_dataset",
+            use_container_width=True
+        ):
+            try:
+                # Read and validate the uploaded dataset first.
+                raw_df = an.load_data(up)
+                prepared_df, log = an.prepare(raw_df)
+
+                # Save the original file bytes and filename.
+                file_id = db.save_uploaded_file(
+                    user_id=user["id"],
+                    filename=up.name,
+                    file_bytes=up.getvalue()
+                )
+
+                # Cache the processed DataFrame for the current session.
+                cache = st.session_state.setdefault(
+                    "uploaded_dataframe_cache", {}
+                )
+
+                cache[file_id] = prepared_df
+
+                # Automatically select the newly uploaded dataset.
+                st.session_state["selected_data_source"] = file_id
+
+                db.log_activity(
+                    user["id"],
+                    f"uploaded dataset {up.name}"
+                )
+
+                st.success(
+                    f"Successfully uploaded and saved: {up.name}"
+                )
+
+                st.rerun()
+
+            except Exception as ex:
+                st.error(f"Unable to upload the dataset: {ex}")
+
+    st.divider()
+
+    st.subheader("My Uploaded Files")
+
+    files = db.list_uploaded_files(user["id"])
+
+    if files:
+        for uploaded_file in files:
+            col1, col2 = st.columns([4, 1])
+
+            with col1:
+                st.write(f"📄 {uploaded_file['filename']}")
+                st.caption(
+                    f"Uploaded: {uploaded_file['uploaded_at']}"
+                )
+
+            with col2:
+                if st.button(
+                    "Delete",
+                    key=f"delete_file_{uploaded_file['id']}"
+                ):
+                    deleted = db.delete_uploaded_file(
+                        user["id"],
+                        uploaded_file["id"]
+                    )
+
+                    if deleted:
+                        cache = st.session_state.get(
+                            "uploaded_dataframe_cache", {}
+                        )
+
+                        cache.pop(uploaded_file["id"], None)
+
+                        if st.session_state.get(
+                            "selected_data_source"
+                        ) == uploaded_file["id"]:
+                            st.session_state[
+                                "selected_data_source"
+                            ] = "employee_database"
+
+                        db.log_activity(
+                            user["id"],
+                            f"deleted uploaded dataset "
+                            f"{uploaded_file['filename']}"
+                        )
+
+                        st.success("File deleted successfully.")
+                        st.rerun()
+
+    else:
+        st.info(
+            "You haven't uploaded any files yet. "
+            "Upload a CSV file to see it here."
+        )
+
+    st.divider()
+
     st.subheader("Export")
 
     export_option = st.selectbox(
@@ -2690,43 +2791,47 @@ def page_data(df):
         index=None,
         placeholder="Select an export option..."
     )
-    
+
     if export_option == "Cleaned data (CSV)":
         st.download_button(
             "⬇️ Download",
-            data=df.to_csv(index=False),
+            data=df.to_csv(index=False).encode("utf-8"),
             file_name="Employee_Salary_Performance_Cleaned.csv",
             mime="text/csv",
             use_container_width=True
         )
-    
+
     elif export_option == "KPI summary (CSV)":
         st.download_button(
             "⬇️ Download",
-            data=pd.Series(an.kpis(df)).rename("value").to_csv(),
+            data=pd.Series(
+                an.kpis(df)
+            ).rename("value").to_csv().encode("utf-8"),
             file_name="kpi_summary.csv",
             mime="text/csv",
             use_container_width=True
         )
-    
+
     elif export_option == "Correlation matrix (CSV)":
         st.download_button(
             "⬇️ Download",
-            data=an.numeric_correlation(df).round(3).to_csv(),
+            data=an.numeric_correlation(df).round(3).to_csv().encode("utf-8"),
             file_name="correlation_matrix.csv",
             mime="text/csv",
             use_container_width=True
         )
-    
+
     elif export_option == "Printable report (HTML)":
         st.download_button(
             "⬇️ Download",
-            data=an.report_html(df, st.session_state.user["username"]),
+            data=an.report_html(
+                df,
+                user["username"]
+            ),
             file_name="report.html",
             mime="text/html",
             use_container_width=True
         )
-
 def page_profile():
     user = st.session_state.user
 
@@ -2823,14 +2928,12 @@ def page_profile():
 def main():
     user = st.session_state.user
 
-    # Dynamically obtain the logged-in user's display name
     display_name = (
         user.get("full_name")
         or user.get("username")
         or "User"
     )
 
-    # Main application pages
     pages = [
         "Dashboard",
         "Employees",
@@ -2839,68 +2942,177 @@ def main():
         "Upload and export"
     ]
 
-    # The profile navigation label changes for each logged-in user
     pages.append(display_name)
 
+    # ============================================================
+    # LOAD THIS USER'S UPLOADED FILE METADATA
+    # ============================================================
+
+    uploaded_files = db.list_uploaded_files(user["id"])
+
+    # Stable identifiers prevent issues when filenames are duplicated.
+    file_options = {
+        "employee_database": "🗄️ Employee database"
+    }
+
+    for uploaded_file in uploaded_files:
+        file_options[uploaded_file["id"]] = (
+            f"📄 {uploaded_file['filename']}"
+        )
+
+    # ============================================================
+    # SIDEBAR
+    # ============================================================
+
     with st.sidebar:
+        st.markdown("### 📊 StaffMetrics")
         st.markdown(f"### 👤 {display_name}")
         st.caption(f"{user.get('role', 'user').title()} account")
 
-       # ============================================================
-        # HANDLE NAVIGATION FROM DASHBOARD KPI CARDS
-        # ============================================================
-        
-        if st.session_state.pop("navigate_to_employees", False):
+        if st.session_state.pop(
+            "navigate_to_employees", False
+        ):
             st.session_state["page_navigation"] = "Employees"
-        
+
         page = st.selectbox(
             "Navigate to page",
             pages,
             key="page_navigation"
         )
 
-        up = st.session_state.get("upload")
+        st.divider()
 
-        src = st.selectbox(
-            "Data source",
-            ["Employee database"]
-            + (["Uploaded file"] if up is not None else [])
+        st.markdown("#### 📂 DATA SOURCES")
+
+        selected_source = st.selectbox(
+            "Select a dataset",
+            options=list(file_options.keys()),
+            format_func=lambda file_id: file_options[file_id],
+            key="selected_data_source"
         )
 
-        if st.button("Sign out"):
+        st.caption(
+            f"{len(uploaded_files)} uploaded "
+            f"file(s) belonging to your account."
+        )
+
+        st.divider()
+
+        if st.button(
+            "🚪 Sign out",
+            key="sidebar_sign_out",
+            use_container_width=True
+        ):
             db.log_activity(user["id"], "signed out")
-            del st.session_state["user"]
+
+            # Remove user-specific session information.
+            st.session_state.pop("user", None)
+            st.session_state.pop("upload", None)
+            st.session_state.pop(
+                "uploaded_dataframe_cache", None
+            )
+            st.session_state.pop(
+                "selected_data_source", None
+            )
+
             st.rerun()
 
-    is_db = src == "Employee database"
-    df = db.employee_frame() if is_db else up
+    # ============================================================
+    # LOAD SELECTED DATA SOURCE
+    # ============================================================
 
-    # The normalized SQLite tables keep core employee fields. Attach the
-    # remaining original CSV columns so notebook analyses remain available.
-    # Employee values stored in SQLite remain authoritative for core fields.
+    is_db = selected_source == "employee_database"
+
     if is_db:
+        df = db.employee_frame()
+
+        # Preserve the optional analysis columns in your existing app.
         try:
             source_df, _ = an.prepare(an.load_data(CSV))
+
             analysis_fields = [
-                "Education", "Employment_Type", "Projects_Completed",
-                "Working_Hours_Per_Day", "Attendance_Percentage",
-                "Training_Hours", "Leave_Days", "Job_Satisfaction",
-                "Promotion_Eligible", "Overtime_Hours", "Manager_Rating"
+                "Education",
+                "Employment_Type",
+                "Projects_Completed",
+                "Working_Hours_Per_Day",
+                "Attendance_Percentage",
+                "Training_Hours",
+                "Leave_Days",
+                "Job_Satisfaction",
+                "Promotion_Eligible",
+                "Overtime_Hours",
+                "Manager_Rating"
             ]
-            available_fields = [c for c in analysis_fields if c in source_df.columns and c not in df.columns]
+
+            available_fields = [
+                column
+                for column in analysis_fields
+                if column in source_df.columns
+                and column not in df.columns
+            ]
+
             if available_fields:
                 df = df.merge(
                     source_df[["Employee_ID"] + available_fields],
-                    on="Employee_ID", how="left"
+                    on="Employee_ID",
+                    how="left"
                 )
+
         except Exception as ex:
-            st.warning(f"Some optional analysis columns could not be loaded: {ex}")
-    
-    # Keep transferred Dashboard filters active only in Employees.
+            st.warning(
+                "Some optional analysis columns could not be loaded: "
+                f"{ex}"
+            )
+
+    else:
+        # First check whether this dataset is already processed
+        # in the current session.
+        cache = st.session_state.setdefault(
+            "uploaded_dataframe_cache", {}
+        )
+
+        if selected_source not in cache:
+            saved_file = db.get_uploaded_file(
+                user_id=user["id"],
+                file_id=selected_source
+            )
+
+            if saved_file is None:
+                st.error(
+                    "This file is unavailable or does not belong "
+                    "to your account."
+                )
+                st.stop()
+
+            try:
+                # Restore the file using its saved bytes.
+                raw_df = pd.read_csv(
+                    io.BytesIO(saved_file["file_data"])
+                )
+
+                df, log = an.prepare(raw_df)
+
+                cache[selected_source] = df
+
+            except Exception as ex:
+                st.error(
+                    f"Unable to load "
+                    f"{saved_file['filename']}: {ex}"
+                )
+                st.stop()
+
+        df = cache[selected_source]
+
+        st.session_state["upload"] = df
+
+    # ============================================================
+    # PAGE NAVIGATION
+    # ============================================================
+
     if page != "Employees":
-        st.session_state["apply_dashboard_filters_to_employees"] = False
-
-
+        st.session_state[
+            "apply_dashboard_filters_to_employees"
+        ] = False
 
     if page == "Dashboard":
         page_dashboard(df)
@@ -2919,7 +3131,6 @@ def main():
 
     elif page == display_name:
         page_profile()
-
 
 
 if "user" not in st.session_state:
