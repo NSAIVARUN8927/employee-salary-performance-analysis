@@ -42,10 +42,11 @@ CREATE TABLE IF NOT EXISTS activity_log(
     id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS uploaded_files (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
     filename TEXT NOT NULL,
-    stored_filename TEXT NOT NULL,
+    stored_filename TEXT,
+    file_data BLOB,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -211,3 +212,38 @@ def delete_uploaded_file(user_id, file_id):
         )
 
         return cursor.rowcount > 0
+def migrate_uploaded_files_table():
+    """Safely update the uploaded_files table without deleting existing data."""
+
+    with get_conn() as conn:
+        cursor = conn.cursor()
+
+        # Create the table if it does not exist.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS uploaded_files (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                filename TEXT NOT NULL,
+                stored_filename TEXT,
+                file_data BLOB,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # Check which columns already exist.
+        cursor.execute("PRAGMA table_info(uploaded_files)")
+        columns = {row["name"] for row in cursor.fetchall()}
+
+        # Add missing columns without deleting existing records.
+        if "file_data" not in columns:
+            cursor.execute(
+                "ALTER TABLE uploaded_files ADD COLUMN file_data BLOB"
+            )
+
+        if "stored_filename" not in columns:
+            cursor.execute(
+                "ALTER TABLE uploaded_files ADD COLUMN stored_filename TEXT"
+            )
+
+        conn.commit()
