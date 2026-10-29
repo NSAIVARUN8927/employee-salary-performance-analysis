@@ -2472,7 +2472,7 @@ def page_analysis(df):
                     "Experience vs performance",
                 )
             )
-            st.subheader("Department-level summary")
+        st.subheader("Department-level summary")
         summary = an.department_full_summary(filtered)
         if not summary.empty:
             st.dataframe(summary, hide_index=True, use_container_width=True)
