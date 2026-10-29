@@ -63,18 +63,20 @@ CREATE TABLE IF NOT EXISTS uploaded_files(
 );
 """
 
-
 def get_conn():
-    conn = sqlite3.connect(DB_PATH)
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 30000")
+
     return conn
 
 
 def init_db():
     with get_conn() as conn:
         conn.executescript(USERS)
-
    
 
 
@@ -133,43 +135,50 @@ def delete_employee(emp_id):
             c.execute(f"DELETE FROM {t} WHERE Employee_ID=?", (emp_id,))
 
 def save_uploaded_file(user_id, filename, file_bytes):
-    """Save an uploaded dataset for the currently logged-in user."""
-    import uuid
+    """Save a user's uploaded CSV file and return its unique ID."""
 
-    conn = get_conn()
+    if user_id is None:
+        raise ValueError("Please log in before uploading a dataset.")
 
-    try:
-        file_id = str(uuid.uuid4())
+    if not filename:
+        raise ValueError("The uploaded file has no filename.")
+
+    if not filename.lower().endswith(".csv"):
+        raise ValueError("Only CSV files are supported.")
+
+    if not file_bytes:
+        raise ValueError("The uploaded file is empty.")
+
+    file_id = str(uuid.uuid4())
+
+    with get_conn() as conn:
+        user_exists = conn.execute(
+            "SELECT 1 FROM users WHERE id = ?",
+            (int(user_id),)
+        ).fetchone()
+
+        if user_exists is None:
+            raise ValueError("The logged-in user could not be verified.")
 
         conn.execute(
             """
-            INSERT INTO uploaded_files (
-                id,
-                user_id,
-                filename,
-                file_data
-            )
+            INSERT INTO uploaded_files
+                (id, user_id, filename, file_data)
             VALUES (?, ?, ?, ?)
             """,
             (
                 file_id,
-                user_id,
-                filename,
-                file_bytes,
+                int(user_id),
+                os.path.basename(filename),
+                sqlite3.Binary(file_bytes),
             ),
         )
 
-        conn.commit()
-        return file_id
+    return file_id
 
-    finally:
-        conn.close()
-def list_users():
-    with get_conn() as c:
-        return [dict(r) for r in c.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id")]
 
 def list_uploaded_files(user_id):
-    """Return uploaded files belonging to this user."""
+    """List only the files belonging to the logged-in user."""
 
     with get_conn() as conn:
         rows = conn.execute(
@@ -183,8 +192,10 @@ def list_uploaded_files(user_id):
         ).fetchall()
 
     return [dict(row) for row in rows]
+
+
 def get_uploaded_file(user_id, file_id):
-    """Retrieve a dataset only if it belongs to the specified user."""
+    """Retrieve a file only when it belongs to the specified user."""
 
     with get_conn() as conn:
         row = conn.execute(
@@ -201,9 +212,23 @@ def get_uploaded_file(user_id, file_id):
 
     return {
         "filename": row["filename"],
-        "file_data": bytes(row["file_data"]) if row["file_data"] is not None else b""
+        "file_data": bytes(row["file_data"]),
     }
 
+
+def delete_uploaded_file(user_id, file_id):
+    """Delete only the specified user's uploaded file."""
+
+    with get_conn() as conn:
+        cursor = conn.execute(
+            """
+            DELETE FROM uploaded_files
+            WHERE id = ? AND user_id = ?
+            """,
+            (str(file_id), int(user_id))
+        )
+
+        return cursor.rowcount > 0
 def recent_activity(limit=50):
     with get_conn() as c:
         q = "SELECT u.username, a.action, a.created_at FROM activity_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT ?"
