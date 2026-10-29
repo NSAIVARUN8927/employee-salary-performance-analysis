@@ -1464,7 +1464,47 @@ def auth_page():
             unsafe_allow_html=True
         )
 def show(fig):
-    st.pyplot(fig)
+    """Display a large, clean, readable chart."""
+
+    if fig is None:
+        return
+
+    # Make every graph large and consistent.
+    fig.set_size_inches(14, 7, forward=True)
+    fig.set_dpi(110)
+
+    # Apply calm, consistent styling to chart axes.
+    for ax in fig.axes:
+        ax.set_axisbelow(True)
+
+        # Remove unnecessary borders.
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        # Use subtle gridlines for easier reading.
+        ax.grid(
+            True,
+            axis="y",
+            linestyle="-",
+            linewidth=0.6,
+            alpha=0.18,
+        )
+
+        # Improve label readability.
+        ax.tick_params(
+            axis="both",
+            labelsize=10,
+            length=3,
+        )
+
+    fig.tight_layout(pad=2.0)
+
+    # Use the available page width.
+    st.pyplot(
+        fig,
+        use_container_width=True,
+    )
+
     plt.close(fig)
 
 
@@ -1842,29 +1882,44 @@ def page_dashboard(df):
 
     # ==================== VISUAL ANALYTICS ====================
 
+        # ==================== VISUAL ANALYTICS ====================
+
     st.subheader("Visual Analytics")
+
+    st.caption(
+        "Explore employee salary and performance through "
+        "large, easy-to-read charts."
+    )
 
     chart_functions = {
         "Department-wise salary": an.fig_dept_salary,
         "Salary distribution": an.fig_salary_dist,
         "Department-wise performance": an.fig_dept_perf,
-        "Salary vs. performance": an.fig_salary_vs_perf
+        "Salary vs. performance": an.fig_salary_vs_perf,
     }
 
     if chart_choice == "All charts":
-        a, b = st.columns(2)
 
-        with a:
-            show(an.fig_dept_salary(filtered_df))
-            show(an.fig_salary_dist(filtered_df))
+        st.markdown("### Department-wise Salary")
+        show(an.fig_dept_salary(filtered_df))
 
-        with b:
-            show(an.fig_dept_perf(filtered_df))
-            show(an.fig_salary_vs_perf(filtered_df))
+        st.divider()
+
+        st.markdown("### Salary Distribution")
+        show(an.fig_salary_dist(filtered_df))
+
+        st.divider()
+
+        st.markdown("### Department-wise Performance")
+        show(an.fig_dept_perf(filtered_df))
+
+        st.divider()
+
+        st.markdown("### Salary vs. Performance")
+        show(an.fig_salary_vs_perf(filtered_df))
 
     else:
         show(chart_functions[chart_choice](filtered_df))
-
         
 def manage_employees(df):
     uid = st.session_state.user["id"]
@@ -2306,18 +2361,23 @@ def page_analysis(df):
                 "Value": salary_stats.values
             })
             st.dataframe(salary_stats_df, hide_index=True, use_container_width=True)
-            c1, c2 = st.columns(2)
-            with c1:
-                show_optional(an.fig_salary_dist(filtered))
-            with c2:
-                show_optional(an.fig_salary_box(filtered))
+            st.markdown("### Salary Distribution")
+            show_optional(an.fig_salary_dist(filtered))
 
-            c1, c2 = st.columns(2)
-            with c1:
-                show_optional(an.fig_dept_salary(filtered))
-            with c2:
-                show_optional(an.fig_experience(filtered))
+            st.divider()
 
+            st.markdown("### Salary Outliers")
+            show_optional(an.fig_salary_box(filtered))
+
+            st.divider()
+
+            st.markdown("### Department-wise Salary")
+            show_optional(an.fig_dept_salary(filtered))
+
+            st.divider()
+
+            st.markdown("### Experience Analysis")
+            show_optional(an.fig_experience(filtered))
             st.subheader("Salary by job role")
             if "Designation" in filtered:
                 role_salary = filtered.groupby("Designation", dropna=False)["Basic_Salary"].mean().sort_values(ascending=False)
@@ -2348,18 +2408,30 @@ def page_analysis(df):
                 "Value": performance_stats.values
             })
             st.dataframe(performance_stats_df, hide_index=True, use_container_width=True)
-            c1, c2 = st.columns(2)
-            with c1:
-                show_optional(an.fig_perf_dist(filtered))
-            with c2:
-                show_optional(an.fig_performance_box(filtered))
-            c1, c2 = st.columns(2)
-            with c1:
-                show_optional(an.fig_dept_perf(filtered))
-            with c2:
-                show_optional(an.fig_numeric_relationship(
-                    filtered, "Experience_Years", "Performance_Score", "Experience vs performance"
-                ))
+                        st.markdown("### Performance Distribution")
+            show_optional(an.fig_perf_dist(filtered))
+
+            st.divider()
+
+            st.markdown("### Performance Outliers")
+            show_optional(an.fig_performance_box(filtered))
+
+            st.divider()
+
+            st.markdown("### Department-wise Performance")
+            show_optional(an.fig_dept_perf(filtered))
+
+            st.divider()
+
+            st.markdown("### Experience vs. Performance")
+            show_optional(
+                an.fig_numeric_relationship(
+                    filtered,
+                    "Experience_Years",
+                    "Performance_Score",
+                    "Experience vs performance",
+                )
+            )
 
             st.subheader("Top 10 highest-performing employees")
             top_perf_cols = [
@@ -2376,17 +2448,31 @@ def page_analysis(df):
             st.info("Performance analysis requires a Performance_Rating column.")
 
     with workforce_tab:
-        st.subheader("Workforce composition")
-        c1, c2 = st.columns(2)
-        with c1:
-            show_optional(an._categorical_chart(filtered, "Department", "Employees by department"))
-            show_optional(an._categorical_chart(filtered, "Gender", "Employee distribution by gender"))
-            show_optional(an._categorical_chart(filtered, "Education", "Employee distribution by education"))
-        with c2:
-            show_optional(an._categorical_chart(filtered, "Employment_Type", "Employment type distribution", kind="pie"))
-            show_optional(an._categorical_chart(filtered, "Designation", "Employee distribution by job role"))
-            show_optional(an._categorical_chart(filtered, "Experience_Years", "Employee distribution by experience"))
-        st.subheader("Department-level summary")
+            st.markdown("### Performance Distribution")
+            show_optional(an.fig_perf_dist(filtered))
+
+            st.divider()
+
+            st.markdown("### Performance Outliers")
+            show_optional(an.fig_performance_box(filtered))
+
+            st.divider()
+
+            st.markdown("### Department-wise Performance")
+            show_optional(an.fig_dept_perf(filtered))
+
+            st.divider()
+
+            st.markdown("### Experience vs. Performance")
+            show_optional(
+                an.fig_numeric_relationship(
+                    filtered,
+                    "Experience_Years",
+                    "Performance_Score",
+                    "Experience vs performance",
+                )
+            )
+            st.subheader("Department-level summary")
         summary = an.department_full_summary(filtered)
         if not summary.empty:
             st.dataframe(summary, hide_index=True, use_container_width=True)
@@ -2408,7 +2494,10 @@ def page_analysis(df):
         legend_fig = an.fig_department_legend(filtered)
     
         if legend_fig is not None:
-            st.pyplot(legend_fig, use_container_width=True)
+            st.pyplot(
+                legend_fig, 
+                use_container_width=True,
+            )
             plt.close(legend_fig)
     
         metrics = an.productivity_summary(filtered)
@@ -2420,24 +2509,36 @@ def page_analysis(df):
                 use_container_width=True
             )
     
-        c1, c2 = st.columns(2)
-    
-        with c1:
-            show_optional(an.fig_attendance_vs_performance(filtered))
-            show_optional(an.fig_training_vs_performance(filtered))
-    
-        with c2:
-            show_optional(an.fig_overtime_vs_satisfaction(filtered))
-    
-            show_optional(
-                an.fig_numeric_relationship(
-                    filtered,
-                    "Projects_Completed",
-                    "Experience_Years",
-                    "Projects completed vs experience"
-                )
+        st.markdown("### Attendance vs. Performance")
+        show_optional(
+            an.fig_attendance_vs_performance(filtered)
+        )
+
+        st.divider()
+
+        st.markdown("### Training vs. Performance")
+        show_optional(
+            an.fig_training_vs_performance(filtered)
+        )
+
+        st.divider()
+
+        st.markdown("### Overtime vs. Job Satisfaction")
+        show_optional(
+            an.fig_overtime_vs_satisfaction(filtered)
+        )
+
+        st.divider()
+
+        st.markdown("### Projects Completed vs. Experience")
+        show_optional(
+            an.fig_numeric_relationship(
+                filtered,
+                "Projects_Completed",
+                "Experience_Years",
+                "Projects completed vs experience",
             )
-    
+        )    
         if "Attendance_Percentage" in filtered:
             high_attendance = filtered[
                 pd.to_numeric(
@@ -2649,12 +2750,19 @@ def page_departments(df):
     """, unsafe_allow_html=True)
 
 
-    st.dataframe(an.dept_table(df), hide_index=True)
-    a, b = st.columns(2)
-    with a:
-        show(an.fig_dept_count(df))
-    with b:
-        show(an.fig_dept_salary(df))
+        st.dataframe(
+        an.dept_table(df),
+        hide_index=True,
+        use_container_width=True,
+    )
+
+    st.markdown("### Employee Count by Department")
+    show(an.fig_dept_count(df))
+
+    st.divider()
+
+    st.markdown("### Salary by Department")
+    show(an.fig_dept_salary(df))
 
 
 
