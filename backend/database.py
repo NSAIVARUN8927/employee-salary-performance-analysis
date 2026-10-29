@@ -111,10 +111,42 @@ def delete_employee(emp_id):
         for t in ("Performance", "Salary", "Employee"):
             c.execute(f"DELETE FROM {t} WHERE Employee_ID=?", (emp_id,))
 
+def save_uploaded_file(user_id, filename, file_bytes):
+    """Save an uploaded dataset for the currently logged-in user."""
+    import uuid
 
+    conn = get_conn()
+
+    try:
+        file_id = str(uuid.uuid4())
+
+        conn.execute(
+            """
+            INSERT INTO uploaded_files (
+                id,
+                user_id,
+                filename,
+                file_data
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                file_id,
+                user_id,
+                filename,
+                file_bytes,
+            ),
+        )
+
+        conn.commit()
+        return file_id
+
+    finally:
+        conn.close()
 def list_users():
     with get_conn() as c:
         return [dict(r) for r in c.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id")]
+
 def list_uploaded_files(user_id):
     """Return uploaded files belonging to this user."""
 
