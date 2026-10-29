@@ -2678,52 +2678,61 @@ def page_data(df):
     )
 
     if up is not None:
-        st.caption(f"Selected file: {up.name}")
+    st.caption(f"Selected file: {up.name}")
 
         if st.button(
             "Upload and analyse",
             key="save_uploaded_dataset",
-            use_container_width=True
+            use_container_width=True,
         ):
             try:
-                # Read and validate the uploaded dataset first.
+                # Read and validate the selected CSV.
+                up.seek(0)
                 raw_df = an.load_data(up)
+    
+                # Prepare the dataset using the existing pipeline.
                 prepared_df, log = an.prepare(raw_df)
-
+    
                 # Save the original file bytes and filename.
-               # Save the uploaded file using its original filename.
                 file_bytes = up.getvalue()
-                
+    
                 file_id = db.save_uploaded_file(
                     user["id"],
                     up.name,
-                    file_bytes
+                    file_bytes,
                 )
-
-                # Cache the processed DataFrame for the current session.
+    
+                # Cache the prepared dataset.
                 cache = st.session_state.setdefault(
-                    "uploaded_dataframe_cache", {}
+                    "uploaded_dataframe_cache",
+                    {},
                 )
-
                 cache[file_id] = prepared_df
-
-                # Automatically select the newly uploaded dataset.
+    
+                # Select the newly uploaded dataset.
                 st.session_state["selected_data_source"] = file_id
-
+    
+                # Record the upload activity.
                 db.log_activity(
                     user["id"],
-                    f"uploaded dataset {up.name}"
+                    f"uploaded dataset {up.name}",
                 )
-
+    
                 st.success(
-                    f"Successfully uploaded and saved: {up.name}"
+                    f"Successfully uploaded: {up.name}"
                 )
-
+    
                 st.rerun()
-
-            except Exception as ex:
-                st.error(f"Unable to upload the dataset: {ex}")
-
+    
+            except (ValueError, pd.errors.ParserError) as ex:
+                st.warning(f"Dataset validation failed: {ex}")
+    
+            except Exception:
+                st.error(
+                    "The upload could not be completed. "
+                    "Check the CSV format and database configuration, "
+                    "then try again."
+                )
     st.divider()
 
     st.subheader("My Uploaded Files")
