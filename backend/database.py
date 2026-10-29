@@ -134,10 +134,8 @@ def recent_activity(limit=50):
 # ============================================================
 
 def save_uploaded_file(user_id, filename, file_bytes):
-    """
-    Save an uploaded dataset permanently and associate it
-    with the user who uploaded it.
-    """
+    """Save a dataset for the logged-in user."""
+
     file_id = str(uuid.uuid4())
 
     with get_conn() as conn:
@@ -156,7 +154,6 @@ def save_uploaded_file(user_id, filename, file_bytes):
         )
 
     return file_id
-
 
 def list_uploaded_files(user_id):
     """
@@ -247,5 +244,88 @@ def migrate_uploaded_files_table():
             cursor.execute(
                 "ALTER TABLE uploaded_files ADD COLUMN stored_filename TEXT"
             )
+
+        conn.commit()
+def migrate_uploaded_files_table():
+    """Migrate uploaded_files to support UUID IDs and file contents."""
+
+    with get_conn() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS uploaded_files (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                filename TEXT NOT NULL,
+                stored_filename TEXT,
+                file_data BLOB,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        cursor.execute("PRAGMA table_info(uploaded_files)")
+        columns = {row["name"] for row in cursor.fetchall()}
+
+        # Existing table already has the required columns.
+        if (
+            "file_data" in columns
+            and "filename" in columns
+            and "user_id" in columns
+        ):
+            # SQLite INTEGER PRIMARY KEY cannot store UUID strings.
+            id_info = next(
+                (row for row in cursor.execute(
+                    "PRAGMA table_info(uploaded_files)"
+                ).fetchall() if row["name"] == "id"),
+                None
+            )
+
+            if id_info and id_info["type"].upper() == "INTEGER" and id_info["pk"]:
+                # Preserve existing records while rebuilding the table.
+                cursor.execute("""
+                    CREATE TABLE uploaded_files_new (
+                        id TEXT PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        filename TEXT NOT NULL,
+                        stored_filename TEXT,
+                        file_data BLOB,
+                        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+                """)
+
+                cursor.execute("""
+                    SELECT id, user_id, filename
+                    FROM uploaded_files
+                """)
+                old_rows = cursor.fetchall()
+
+                for row in old_rows:
+                    old_id = str(row["id"])
+                    cursor.execute("""
+                        INSERT INTO uploaded_files_new
+                            (id, user_id, filename, stored_filename, file_data, uploaded_at)
+                        SELECT ?, user_id, filename, stored_filename, file_data, uploaded_at
+                        FROM uploaded_files
+                        WHERE id = ?
+                    """, (old_id, row["id"]))
+
+                cursor.execute("DROP TABLE uploaded_files")
+                cursor.execute(
+                    "ALTER TABLE uploaded_files_new RENAME TO uploaded_files"
+                )
+
+        else:
+            # Add missing columns to an existing table.
+            if "file_data" not in columns:
+                cursor.execute(
+                    "ALTER TABLE uploaded_files ADD COLUMN file_data BLOB"
+                )
+
+            if "stored_filename" not in columns:
+                cursor.execute(
+                    "ALTER TABLE uploaded_files ADD COLUMN stored_filename TEXT"
+                )
 
         conn.commit()
