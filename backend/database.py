@@ -33,16 +33,37 @@ CREATE TABLE Performance(
     Performance_Score REAL CHECK (Performance_Score BETWEEN 0 AND 5),
     Review_Date TEXT);
 """
+
 USERS = """
 CREATE TABLE IF NOT EXISTS users(
-    id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL,
-    full_name TEXT, password_hash TEXT NOT NULL, salt TEXT NOT NULL, role TEXT DEFAULT 'user',
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT,
+    password_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS activity_log(
-    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    action TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 
-
+CREATE TABLE IF NOT EXISTS uploaded_files(
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    filename TEXT NOT NULL,
+    file_data BLOB NOT NULL,
+    uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 """
+
+
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
