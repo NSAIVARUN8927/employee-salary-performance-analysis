@@ -2691,11 +2691,12 @@ def page_data(df):
                 prepared_df, log = an.prepare(raw_df)
 
                 # Save the original file bytes and filename.
-                file_bytes = uploaded_file.getvalue()
-
+               # Save the uploaded file using its original filename.
+                file_bytes = up.getvalue()
+                
                 file_id = db.save_uploaded_file(
                     user["id"],
-                    uploaded_file.name,
+                    up.name,
                     file_bytes
                 )
 
