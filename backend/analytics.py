@@ -69,17 +69,192 @@ def _format_salary_axis(ax, axis="x"):
 # ============================================================
 
 def load_data(source):
-    df = pd.read_csv(source)
+    """Read and validate a CSV dataset without modifying the source."""
 
-    missing = [column for column in REQUIRED if column not in df.columns]
+    try:
+        df = pd.read_csv(
+            source,
+            encoding="utf-8-sig",
+            skipinitialspace=True,
+        )
+    except UnicodeDecodeError:
+        try:
+            if hasattr(source, "seek"):
+                source.seek(0)
+
+            df = pd.read_csv(
+                source,
+                encoding="latin-1",
+                skipinitialspace=True,
+            )
+        except Exception as exc:
+            raise ValueError(
+                "The file could not be read as a valid CSV. "
+                "Please check its format."
+            ) from exc
+    except pd.errors.EmptyDataError as exc:
+        raise ValueError(
+            "The CSV file is empty or has no column headers."
+        ) from exc
+    except Exception as exc:
+        raise ValueError(
+            "Unable to read this CSV file. "
+            "Please check that the file is valid."
+        ) from exc
+
+    if df.empty:
+        raise ValueError(
+            "The dataset contains no employee records."
+        )
+
+    # Remove invisible characters and extra spaces from headers.
+    df.columns = [
+        str(column).replace("\ufeff", "").strip()
+        for column in df.columns
+    ]
+
+    # Reject duplicate column names instead of silently using the wrong one.
+    if df.columns.duplicated().any():
+        duplicates = df.columns[df.columns.duplicated()].tolist()
+
+        raise ValueError(
+            "The CSV contains duplicate column names: "
+            + ", ".join(duplicates)
+        )
+
+    # Accept common equivalent names for the existing dataset fields.
+    aliases = {
+        "Employee ID": "Employee_ID",
+        "Employee_Name": "Employee_Name",
+        "Employee Name": "Employee_Name",
+        "Name": "Employee_Name",
+        "Department Name": "Department",
+        "Experience Years": "Experience_Years",
+        "Experience": "Experience_Years",
+        "Job Role": "Job_Role",
+        "Designation": "Job_Role",
+        "Basic_Salary": "Salary",
+        "Total_Salary": "Salary",
+        "Performance Score": "Performance_Rating",
+        "Performance_Score": "Performance_Rating",
+        "Performance Rating": "Performance_Rating",
+        "Joining Date": "Joining_Date",
+    }
+
+    rename_map = {}
+
+    for column in df.columns:
+        replacement = aliases.get(column)
+
+        if replacement and replacement not in df.columns:
+            rename_map[column] = replacement
+
+    if rename_map:
+        df = df.rename(columns=rename_map)
+
+    missing = [
+        column for column in REQUIRED
+        if column not in df.columns
+    ]
 
     if missing:
         raise ValueError(
-            f"The file is missing required columns: {', '.join(missing)}"
+            "This file does not match the Employee Salary & "
+            "Performance dataset. Missing required columns: "
+            + ", ".join(missing)
+            + ". Please upload a CSV containing the required "
+              "employee ID, department, experience, salary, "
+              "and performance columns."
+        )
+
+    # Normalize numeric fields so that numbers stored as text
+    # do not cause downstream calculations to fail.
+    numeric_columns = [
+        "Age",
+        "Experience_Years",
+        "Salary",
+        "Performance_Rating",
+        "Projects_Completed",
+        "Working_Hours_Per_Day",
+        "Bonus",
+        "Attendance_Percentage",
+        "Training_Hours",
+        "Leave_Days",
+        "Job_Satisfaction",
+        "Overtime_Hours",
+        "Manager_Rating",
+    ]
+
+    for column in numeric_columns:
+        if column in df.columns:
+            cleaned = (
+                df[column]
+                .astype("string")
+                .str.strip()
+                .str.replace(",", "", regex=False)
+                .str.replace("₹", "", regex=False)
+            )
+
+            df[column] = pd.to_numeric(
+                cleaned,
+                errors="coerce",
+            )
+
+    # IDs must be present and unique.
+    df["Employee_ID"] = (
+        df["Employee_ID"]
+        .astype("string")
+        .str.strip()
+    )
+
+    if df["Employee_ID"].isna().any() or (
+        df["Employee_ID"] == ""
+    ).any():
+        raise ValueError(
+            "Employee_ID contains missing or empty values."
+        )
+
+    if df["Employee_ID"].duplicated().any():
+        raise ValueError(
+            "Employee_ID contains duplicate employee IDs. "
+            "Each employee must have a unique ID."
+        )
+
+    if df["Department"].isna().all():
+        raise ValueError(
+            "The Department column has no usable values."
+        )
+
+    if df["Salary"].isna().all():
+        raise ValueError(
+            "The Salary column has no usable numeric values."
+        )
+
+    if df["Performance_Rating"].isna().all():
+        raise ValueError(
+            "The Performance_Rating column has no usable "
+            "numeric values."
+        )
+
+    # Do not allow invalid values to break database constraints.
+    valid_salary = df["Salary"].dropna()
+
+    if (valid_salary <= 0).any():
+        raise ValueError(
+            "Salary must be greater than zero."
+        )
+
+    valid_performance = df["Performance_Rating"].dropna()
+
+    if (
+        (valid_performance < 0)
+        | (valid_performance > 5)
+    ).any():
+        raise ValueError(
+            "Performance_Rating must be between 0 and 5."
         )
 
     return df
-
 
 # ============================================================
 # DATA CLEANING
