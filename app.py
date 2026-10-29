@@ -2678,7 +2678,7 @@ def page_data(df):
     )
 
     if up is not None:
-    st.caption(f"Selected file: {up.name}")
+        st.caption(f"Selected file: {up.name}")
 
         if st.button(
             "Upload and analyse",
