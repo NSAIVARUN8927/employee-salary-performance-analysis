@@ -2750,10 +2750,10 @@ def page_departments(df):
     """, unsafe_allow_html=True)
 
 
-        st.dataframe(
-        an.dept_table(df),
-        hide_index=True,
-        use_container_width=True,
+    st.dataframe(
+    an.dept_table(df),
+    hide_index=True,
+    use_container_width=True,
     )
 
     st.markdown("### Employee Count by Department")
