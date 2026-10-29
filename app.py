@@ -2474,18 +2474,18 @@ def page_analysis(df):
             )
             st.subheader("Department-level summary")
             summary = an.department_full_summary(filtered)
-        if not summary.empty:
-            st.dataframe(summary, hide_index=True, use_container_width=True)
-        st.subheader("Promotion eligibility")
-        eligible = an.promotion_eligible_count(filtered)
-        if eligible is not None:
-            a, b = st.columns(2)
-            a.metric("Promotion-eligible employees", eligible)
-            b.metric("Share of filtered workforce", f"{eligible / len(filtered) * 100:.1f}%")
-            st.dataframe(
-                filtered[filtered["Promotion_Eligible"].astype(str).str.strip().str.lower().isin(["yes", "true", "1"])],
-                hide_index=True, use_container_width=True
-            )
+            if not summary.empty:
+                st.dataframe(summary, hide_index=True, use_container_width=True)
+            st.subheader("Promotion eligibility")
+            eligible = an.promotion_eligible_count(filtered)
+            if eligible is not None:
+                a, b = st.columns(2)
+                a.metric("Promotion-eligible employees", eligible)
+                b.metric("Share of filtered workforce", f"{eligible / len(filtered) * 100:.1f}%")
+                st.dataframe(
+                    filtered[filtered["Promotion_Eligible"].astype(str).str.strip().str.lower().isin(["yes", "true", "1"])],
+                    hide_index=True, use_container_width=True
+                )
 
     with productivity_tab:
         st.subheader("Attendance and productivity statistics")
