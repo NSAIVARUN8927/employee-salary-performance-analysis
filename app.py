@@ -2408,7 +2408,7 @@ def page_analysis(df):
                 "Value": performance_stats.values
             })
             st.dataframe(performance_stats_df, hide_index=True, use_container_width=True)
-                        st.markdown("### Performance Distribution")
+            st.markdown("### Performance Distribution")
             show_optional(an.fig_perf_dist(filtered))
 
             st.divider()
