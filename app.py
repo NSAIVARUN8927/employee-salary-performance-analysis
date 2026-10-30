@@ -901,20 +901,28 @@ def banner(title, subtitle=""):
 # INTERACTIVE DASHBOARD KPI CARDS
 # ============================================================
 
+
 @st.dialog("Statistical Measure")
 def show_metric_dialog(label, value, description, formula):
 
-    st.metric(label, value)
 
-    st.markdown("### About this metric")
-    st.write(description)
+st.metric(label, value)
 
-    st.markdown("### How is it calculated?")
-    st.info(formula)
+st.markdown("### About this metric")
+st.write(description)
 
-    if st.button("Close", key="close_metric_dialog", use_container_width=True):
-        st.session_state.pop("selected_metric", None)
-        st.rerun()
+st.markdown("### How is it calculated?")
+st.info(formula)
+
+if st.button(
+    "Close",
+    key=f"close_metric_dialog_{label.replace(' ', '_').lower()}",
+    use_container_width=True
+):
+    st.session_state.pop("selected_metric", None)
+    st.rerun()
+
+
 # ============================================================
 # FULLY CLICKABLE KPI CARDS
 # ============================================================
@@ -1037,12 +1045,13 @@ def kpis(items):
 
         # The whole card is one Streamlit button.
         with col:
-            with st.container(key=f"kpi_card_{items[0][0].replace(' ', '_').lower()}_{index}"):
-
+            with st.container(
+                    key=f"kpi_card_{items[0][0].replace(' ', '_').lower()}_{index}"
+                ):
                 st.markdown(
                     f"""
                     <style>
-                    div.st-key-kpi_card_{index} {{
+                    div[class*="st-key-kpi_card_"] {{
                         --kpi-accent: {accent};
                     }}
                     </style>
