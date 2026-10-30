@@ -902,21 +902,19 @@ def banner(title, subtitle=""):
 # ============================================================
 
 
-@st.dialog("Statistical Measure")
-def show_metric_dialog(label, value, description, formula):
-
+@st.dialog("KPI Details")
+def show_metric_details(label, value, description, formula):
+    """Open a modal only after the user clicks a KPI card."""
 
     st.metric(label, value)
-    
     st.markdown("### About this metric")
     st.write(description)
-    
     st.markdown("### How is it calculated?")
     st.info(formula)
-    
+
     if st.button(
         "Close",
-        key=f"close_metric_dialog_{label.replace(' ', '_').lower()}",
+        key="close_selected_metric_dialog",
         use_container_width=True
     ):
         st.session_state.pop("selected_metric", None)
@@ -1626,14 +1624,6 @@ def show(fig):
     plt.close(fig)
 
 
-
-@st.dialog("KPI Details")
-def show_metric_popup(title, value, description):
-    st.metric(title, value)
-    st.write(description)
-
-    if st.button("Close", use_container_width=True):
-        st.rerun()
 
 def page_dashboard(df):
     # ==================== EXECUTIVE DASHBOARD WELCOME BANNER ====================
@@ -2915,50 +2905,53 @@ def page_data(df):
                 # Read and validate the selected CSV.
                 up.seek(0)
                 raw_df = an.load_data(up)
-    
+
+                if raw_df.empty:
+                    raise ValueError("The selected CSV contains no records.")
+
                 # Prepare the dataset using the existing pipeline.
                 prepared_df, log = an.prepare(raw_df)
-    
+
                 # Save the original file bytes and filename.
                 file_bytes = up.getvalue()
-    
+
                 file_id = db.save_uploaded_file(
                     user["id"],
                     up.name,
                     file_bytes,
                 )
-    
+
                 # Cache the prepared dataset.
                 cache = st.session_state.setdefault(
                     "uploaded_dataframe_cache",
                     {},
                 )
                 cache[file_id] = prepared_df
-    
+
                 # Select the newly uploaded dataset.
                 st.session_state["selected_data_source"] = file_id
-    
-                # Record the upload activity.
-                db.log_activity(
-                    user["id"],
-                    f"uploaded dataset {up.name}",
-                )
-    
-                st.success(
-                    f"Successfully uploaded: {up.name}"
-                )
-    
+
+                # Activity logging is secondary. A logging problem must not
+                # report a successful file upload as a failed upload.
+                try:
+                    db.log_activity(
+                        user["id"],
+                        f"uploaded dataset {up.name}",
+                    )
+                except Exception:
+                    pass
+
+                st.success(f"Successfully uploaded: {up.name}")
                 st.rerun()
-    
+
             except (ValueError, pd.errors.ParserError) as ex:
-                st.warning(f"Dataset validation failed: {ex}")
-    
-            except Exception:
-                st.error(
-                    "The upload could not be completed. "
-                    "Check the CSV format and database configuration, "
-                    "then try again."
-                )
+                st.warning(f"Please check the CSV: {ex}")
+
+            except Exception as ex:
+                # Show the real cause instead of a generic misleading message.
+                st.error(f"Upload failed: {type(ex).__name__}: {ex}")
+                with st.expander("Technical details"):
+                    st.exception(ex)
     st.divider()
 
     st.subheader("My Uploaded Files")
@@ -3344,9 +3337,20 @@ def main():
         st.session_state["upload"] = df
 
     # ============================================================
-    # PAGE NAVIGATION
+    # PAGE NAVIGATION - SAFE KPI DETAILS HANDLING
     # ============================================================
 
+    # Clear a stale KPI selection left by an older app version/session.
+    # This runs only once per browser session, not on every Streamlit rerun.
+    if "_kpi_dialog_state_initialized" not in st.session_state:
+        st.session_state.pop("selected_metric", None)
+        st.session_state["_kpi_dialog_state_initialized"] = True
+
+    # Never carry a selected KPI into another page.
+    if page != "Dashboard":
+        st.session_state.pop("selected_metric", None)
+
+    # Reset employee filter transfer when leaving Employees.
     if page != "Employees":
         st.session_state[
             "apply_dashboard_filters_to_employees"
@@ -3354,20 +3358,16 @@ def main():
 
     if page == "Dashboard":
         page_dashboard(df)
-    
+
         selected = st.session_state.get("selected_metric")
-    
         if selected:
-            show_metric_dialog(
+            show_metric_details(
                 selected["label"],
                 selected["value"],
                 selected["description"],
                 selected["formula"]
             )
 
-        else:
-            # Clear previously selected KPI when leaving Dashboard
-            st.session_state.pop("selected_metric", None)
     elif page == "Employees":
         page_employees(df, is_db)
 
