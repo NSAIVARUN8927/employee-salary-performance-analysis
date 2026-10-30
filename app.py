@@ -1052,8 +1052,7 @@ def kpis(items):
 
                 card_text = (
                     f"**{label}**\n\n"
-                    f"{value}\n\n"
-                    f"{'Click to view employee records' if label == 'Employees' else 'Click anywhere to view details →'}"
+                    f"{value}"
                 )
 
                 clicked = st.button(
