@@ -1128,15 +1128,7 @@ def kpis(items):
 
                     
     # Display the selected metric popup.
-    selected = st.session_state.get("selected_metric")
-
-    if selected:
-        show_metric_dialog(
-            selected["label"],
-            selected["value"],
-            selected["description"],
-            selected["formula"]
-        )
+   
 def _firebase_api_key():
     """Read the Firebase web API key from Streamlit Secrets."""
     try:
@@ -3362,6 +3354,15 @@ def main():
 
     if page == "Dashboard":
         page_dashboard(df)
+        selected = st.session_state.get("selected_metric")
+
+        if selected:
+            show_metric_dialog(
+                selected["label"],
+                selected["value"],
+                selected["description"],
+                selected["formula"]
+            )
 
     elif page == "Employees":
         page_employees(df, is_db)
