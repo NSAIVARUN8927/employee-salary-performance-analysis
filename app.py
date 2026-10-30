@@ -3353,24 +3353,18 @@ def main():
         ] = False
 
     if page == "Dashboard":
+       
         page_dashboard(df)
-        if selected_page == "Dashboard":
-            page_dashboard(df)
-        
-            selected = st.session_state.get("selected_metric")
-        
-            if selected:
-                show_metric_dialog(
-                    selected["label"],
-                    selected["value"],
-                    selected["description"],
-                    selected["formula"]
-                )
-        
-        else:
-            # Clear previously selected KPI when leaving Dashboard
-            st.session_state.pop("selected_metric", None)
 
+        selected = st.session_state.get("selected_metric")
+
+        if selected:
+            show_metric_dialog(
+                selected["label"],
+                selected["value"],
+                selected["description"],
+                selected["formula"]
+            )
     elif page == "Employees":
         page_employees(df, is_db)
 
