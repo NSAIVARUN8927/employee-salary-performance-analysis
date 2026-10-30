@@ -902,32 +902,25 @@ def banner(title, subtitle=""):
 # ============================================================
 
 
-def show_metric_details(label, value, description, formula):
-    """Display selected KPI information inline, without a dialog."""
+@st.dialog("Statistical Measure")
+def show_metric_dialog(label, value, description, formula):
 
-    st.markdown("---")
-    st.subheader(f"📊 {label} — Details")
 
-    with st.container(border=True):
-        st.markdown(f"### {label}")
-        st.markdown(
-            f"<h2 style='color:#2563EB;'>{value}</h2>",
-            unsafe_allow_html=True
-        )
-
-        st.markdown("#### About this metric")
-        st.write(description)
-
-        st.markdown("#### How is it calculated?")
-        st.info(formula)
-
-        if st.button(
-            "✖ Close Details",
-            key="close_selected_metric_details",
-            use_container_width=True
-        ):
-            st.session_state.pop("selected_metric", None)
-            st.rerun()
+    st.metric(label, value)
+    
+    st.markdown("### About this metric")
+    st.write(description)
+    
+    st.markdown("### How is it calculated?")
+    st.info(formula)
+    
+    if st.button(
+        "Close",
+        key=f"close_metric_dialog_{label.replace(' ', '_').lower()}",
+        use_container_width=True
+    ):
+        st.session_state.pop("selected_metric", None)
+        st.rerun()
 
 
 # ============================================================
@@ -1633,6 +1626,14 @@ def show(fig):
     plt.close(fig)
 
 
+
+@st.dialog("KPI Details")
+def show_metric_popup(title, value, description):
+    st.metric(title, value)
+    st.write(description)
+
+    if st.button("Close", use_container_width=True):
+        st.rerun()
 
 def page_dashboard(df):
     # ==================== EXECUTIVE DASHBOARD WELCOME BANNER ====================
@@ -3343,14 +3344,9 @@ def main():
         st.session_state["upload"] = df
 
     # ============================================================
-    # PAGE NAVIGATION - SAFE KPI DETAILS HANDLING
+    # PAGE NAVIGATION
     # ============================================================
 
-    # Never carry a selected KPI into another page.
-    if page != "Dashboard":
-        st.session_state.pop("selected_metric", None)
-
-    # Reset employee filter transfer when leaving Employees.
     if page != "Employees":
         st.session_state[
             "apply_dashboard_filters_to_employees"
@@ -3358,16 +3354,20 @@ def main():
 
     if page == "Dashboard":
         page_dashboard(df)
-
+    
         selected = st.session_state.get("selected_metric")
+    
         if selected:
-            show_metric_details(
+            show_metric_dialog(
                 selected["label"],
                 selected["value"],
                 selected["description"],
                 selected["formula"]
             )
 
+        else:
+            # Clear previously selected KPI when leaving Dashboard
+            st.session_state.pop("selected_metric", None)
     elif page == "Employees":
         page_employees(df, is_db)
 
