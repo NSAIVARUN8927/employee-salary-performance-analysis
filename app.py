@@ -906,21 +906,21 @@ def banner(title, subtitle=""):
 def show_metric_dialog(label, value, description, formula):
 
 
-st.metric(label, value)
-
-st.markdown("### About this metric")
-st.write(description)
-
-st.markdown("### How is it calculated?")
-st.info(formula)
-
-if st.button(
-    "Close",
-    key=f"close_metric_dialog_{label.replace(' ', '_').lower()}",
-    use_container_width=True
-):
-    st.session_state.pop("selected_metric", None)
-    st.rerun()
+    st.metric(label, value)
+    
+    st.markdown("### About this metric")
+    st.write(description)
+    
+    st.markdown("### How is it calculated?")
+    st.info(formula)
+    
+    if st.button(
+        "Close",
+        key=f"close_metric_dialog_{label.replace(' ', '_').lower()}",
+        use_container_width=True
+    ):
+        st.session_state.pop("selected_metric", None)
+        st.rerun()
 
 
 # ============================================================
