@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 import io
-from backend import analytics as an, auth, database as db
+from backend import analytics as an, auth, database as db, firebase_auth as firebase
 
 st.set_page_config(
     page_title="Employee Salary & Performance Analysis",
@@ -1128,6 +1128,14 @@ def kpis(items):
             selected["description"],
             selected["formula"]
         )
+def _firebase_api_key():
+    """Read the Firebase web API key from Streamlit Secrets."""
+    try:
+        return st.secrets["firebase"]["apiKey"]
+    except Exception:
+        return None
+
+
 def auth_page():
     # Login page styling
     st.markdown("""
@@ -1359,42 +1367,75 @@ def auth_page():
                 )
 
                 if st.button("Sign in", key="login_button"):
-
                     if not login_id.strip() or not login_password:
-
-                        st.warning(
-                            "Enter your username/email and password."
-                        )
-
+                        st.warning("Enter your username/email and password.")
                     else:
-
-                        user = auth.login(
-                            login_id,
-                            login_password
-                        )
-
-                        if user:
-
-                            st.session_state.user = user
-                            st.rerun()
-
+                        local_user = auth.get_user(login_id)
+                        if not local_user:
+                            st.error("No local PeoplePulse account was found. Please create an account first.")
                         else:
+                            api_key = _firebase_api_key()
+                            firebase_ok = False
+                            if api_key:
+                                try:
+                                    firebase.sign_in(local_user["email"], login_password, api_key)
+                                    firebase_ok = True
+                                except firebase.FirebaseAuthError:
+                                    # Existing SQLite users are migrated on their first successful legacy login.
+                                    pass
 
-                            st.error(
-                                "The username/email or password is incorrect."
-                            )
+                            if firebase_ok:
+                                auth.record_login(local_user)
+                                st.session_state.user = local_user
+                                st.rerun()
+                            else:
+                                legacy_user = auth.login(login_id, login_password)
+                                if legacy_user:
+                                    migration_message = ""
+                                    if api_key:
+                                        try:
+                                            firebase.sign_up(legacy_user["email"], login_password, api_key)
+                                            migration_message = " Your account has also been connected to Firebase."
+                                        except firebase.FirebaseAuthError as exc:
+                                            if exc.code == "EMAIL_EXISTS":
+                                                migration_message = " Your existing account is still using its previous local login. If Firebase already has this email, use Forgot Password to synchronize the Firebase password before switching fully."
+                                            else:
+                                                migration_message = " Firebase migration could not finish right now; your existing login is still available."
+                                    st.session_state.user = legacy_user
+                                    if migration_message:
+                                        st.session_state["auth_migration_notice"] = migration_message
+                                    st.rerun()
+                                else:
+                                    st.error("The username/email or password is incorrect.")
+
+                migration_notice = st.session_state.pop("auth_migration_notice", None)
+                if migration_notice:
+                    st.info(migration_notice)
 
                 with st.expander("Forgot your password?"):
-
-                    st.write(
-                        "Password recovery requires a configured email "
-                        "or authentication provider."
+                    reset_email = st.text_input(
+                        "Email address registered with your account",
+                        key="forgot_password_email",
+                        placeholder="name@example.com"
                     )
-
-                    st.info(
-                        "The password-reset service must be configured "
-                        "before a recovery email can be sent."
-                    )
+                    if st.button("Send password reset email", key="send_firebase_reset"):
+                        if not reset_email.strip():
+                            st.warning("Enter your registered email address.")
+                        else:
+                            api_key = _firebase_api_key()
+                            if not api_key:
+                                st.error("Firebase is not configured. Check your Streamlit Secrets.")
+                            else:
+                                try:
+                                    firebase.send_password_reset(
+                                        reset_email,
+                                        api_key,
+                                        "https://employee-salary-performance-analysis-saivarun.streamlit.app/"
+                                    )
+                                    st.success("If this email is registered with Firebase, a password-reset email has been sent. Check your inbox and spam folder.")
+                                except firebase.FirebaseAuthError as exc:
+                                    st.error(exc.message)
+                    st.caption("Existing SQLite-only accounts must sign in once with their current password to be migrated to Firebase before Firebase password recovery can work for them.")
 
             # ---------------- REGISTRATION ----------------
             with register_tab:
@@ -1513,16 +1554,23 @@ def auth_page():
                         )
 
                         if success:
+                            firebase_message = ""
+                            api_key = _firebase_api_key()
+                            if api_key:
+                                try:
+                                    firebase.sign_up(email, password, api_key)
+                                    firebase_message = " Firebase email/password sign-in and password recovery are enabled."
+                                except firebase.FirebaseAuthError as exc:
+                                    if exc.code == "EMAIL_EXISTS":
+                                        firebase_message = " This email already exists in Firebase; you can still sign in with your existing PeoplePulse credentials, and use password recovery if needed."
+                                    else:
+                                        firebase_message = " Firebase setup could not complete right now; your local account is saved and will be migrated on your first successful sign-in."
+                            else:
+                                firebase_message = " Firebase configuration was not found in Streamlit Secrets; your local account is saved."
 
-                            st.success(message)
-
-                            st.info(
-                                "Your account has been created. "
-                                "Switch to Sign in to continue."
-                            )
-
+                            st.success(message + firebase_message)
+                            st.info("Your account has been created. Switch to Sign in to continue.")
                         else:
-
                             st.error(message)
 
             st.markdown(
